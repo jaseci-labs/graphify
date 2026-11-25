@@ -18,6 +18,10 @@ import shutil;
 
 import sys;
 
+import typing;
+
+import unicodedata;
+
 import from collections { Counter }
 
 import from datetime { date }

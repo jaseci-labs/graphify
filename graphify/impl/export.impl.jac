@@ -95,11 +95,10 @@ impl _obsidian_tag(name: str) -> str {
 }
 
 impl _strip_diacritics(text: str | None) -> str {
-    import unicodedata;
     if not isinstance(text, `str) {
         text = "" if text is None else `str(text);
     }
-    nfkd: any = unicodedata.normalize("NFKD", text);
+    nfkd = unicodedata.normalize("NFKD", text);
     return "".join(c for c in nfkd if not unicodedata.combining(c));
 }
 
@@ -377,10 +376,10 @@ impl to_json(
         }
     }
     def _canonical(item: dict, lead: tuple[str, ...]) -> dict {
-        leading: any;
-        leading = [k for k in lead if k in item];
-        rest: any = sorted(k for k in item if k not in leading);
-        return {k: item[k] for k in (*leading, *rest)};
+        fields = typing.cast(object, item);
+        leading = [k for k in lead if k in fields];
+        rest = sorted([k for k in fields if k not in leading]);
+        return {k: fields[k] for k in (*leading, *rest)};
     }
 
     def _canonicalize_in_place(items: list, lead: tuple[str, ...]) {

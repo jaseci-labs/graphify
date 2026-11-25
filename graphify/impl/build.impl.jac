@@ -1360,7 +1360,9 @@ impl build_from_json(
                 `node["definition_file"] = _norm_source_file(`node["definition_file"], _root);
             }
         }
-        G.add_node(`node["id"], **{k: v for (k, v) in `node.items() if k != "id"});
+        # add_nodes_from updates the node's data as add_node(**data) does; a
+        # ** would convert every node's dict to dict[str, any] first.
+        G.add_nodes_from([(`node["id"], {k: v for (k, v) in `node.items() if k != "id"})]);
     }
     node_set: any = `set(G.nodes());
     _loc_nodes: dict[tuple[str, str], str] = {};
@@ -1702,7 +1704,7 @@ impl build_from_json(
                 }
             }
         }
-        G.add_edge(src, tgt, **attrs);
+        G.add_edges_from([(src, tgt, attrs)]);
     }
     if dropped_schema_edges {
         print(

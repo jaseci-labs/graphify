@@ -3,8 +3,8 @@ impl _topology_hash(
 ) -> str {
     acc_nodes: any = 0;
     for n in G.nodes() {
-        d: any = hashlib.sha256(b"n\x00" + `str(n).encode("utf-8", "replace")).digest();
-        acc_nodes ^= int.from_bytes(d, "big");
+        d = hashlib.sha256(b"n\x00" + `str(n).encode("utf-8", "replace")).digest();
+        acc_nodes ^= builtins.int.from_bytes(d, "big");
     }
     acc_edges: any = 0;
     for (u, v, attrs) in G.edges(data=True) {
@@ -16,7 +16,7 @@ impl _topology_hash(
         payload: any = ("e\x00" + a + "\x01" + b + "\x01" + w + "\x01" + c).encode(
             "utf-8", "replace"
         );
-        acc_edges ^= int.from_bytes(hashlib.sha256(payload).digest(), "big");
+        acc_edges ^= builtins.int.from_bytes(hashlib.sha256(payload).digest(), "big");
     }
     h: any = hashlib.sha256();
     h.update(

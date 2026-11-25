@@ -4,6 +4,8 @@ import from __future__ { annotations }
 
 import contextlib;
 
+import builtins;
+
 import hashlib;
 
 import inspect;

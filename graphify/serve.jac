@@ -26,6 +26,10 @@ import from pathlib { Path }
 
 import threading;
 
+import typing;
+
+import unicodedata;
+
 import from typing { NamedTuple }
 
 import networkx as nx;

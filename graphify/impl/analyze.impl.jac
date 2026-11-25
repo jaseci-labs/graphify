@@ -14,14 +14,14 @@ impl _node_community_map(communities: dict[int, list[str]]) -> dict[str, int] {
 }
 
 impl _is_file_node(G: nx.Graph, node_id: str) -> bool {
-    attrs: any = G.nodes[node_id];
-    label: any = attrs.get("label", "");
+    attrs = typing.cast(object, G).nodes[node_id];
+    label = attrs.get("label", "");
     if not label {
         return False;
     }
-    source_file: any = attrs.get("source_file", "");
+    source_file = attrs.get("source_file", "");
     if source_file {
-        _is_file_node_label: any = importlib.import_module("graphify.build")._is_file_node_label;
+        _is_file_node_label = importlib.import_module("graphify.build")._is_file_node_label;
         if _is_file_node_label(label, source_file) {
             return True;
         }
@@ -29,7 +29,7 @@ impl _is_file_node(G: nx.Graph, node_id: str) -> bool {
     if label.startswith(".") and label.endswith("()") {
         return True;
     }
-    bare_csharp_method_label: any = importlib.import_module(
+    bare_csharp_method_label = importlib.import_module(
         "graphify.extractors.csharp"
     ).bare_csharp_method_label;
     if bare_csharp_method_label(label, source_file) is not None {
@@ -107,8 +107,8 @@ impl surprising_connections(
 }
 
 impl _is_concept_node(G: nx.Graph, node_id: str) -> bool {
-    data: any = G.nodes[node_id];
-    source: any = data.get("source_file", "");
+    data = typing.cast(object, G).nodes[node_id];
+    source = data.get("source_file", "");
     if not source {
         return True;
     }

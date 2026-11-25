@@ -199,11 +199,10 @@ impl _node_arg(arguments: dict) -> str {
 }
 
 impl _strip_diacritics(text: str | None) -> str {
-    import unicodedata;
     if not isinstance(text, `str) {
         text = "" if text is None else `str(text);
     }
-    nfkd: any = unicodedata.normalize("NFKD", text);
+    nfkd = unicodedata.normalize("NFKD", text);
     return "".join(c for c in nfkd if not unicodedata.combining(c));
 }
 
@@ -401,12 +400,13 @@ impl _get_trigram_index(G: nx.Graph) -> dict {
         return idx;
     }
     ids: any = `list(G.nodes());
-    postings: dict[str, array] = {};
+    node_attrs = typing.cast(object, G).nodes;
+    postings = builtins.dict();
     for (i, nid) in enumerate(ids) {
-        for g in _trigrams(_node_search_text(G.nodes[nid], nid)) {
-            bucket: any = postings.get(g);
+        for g in _trigrams(_node_search_text(node_attrs[nid], nid)) {
+            bucket = postings.get(g);
             if bucket is None {
-                bucket = array("i");
+                bucket = typing.cast(object, array("i"));
                 postings[g] = bucket;
             }
             bucket.append(i);

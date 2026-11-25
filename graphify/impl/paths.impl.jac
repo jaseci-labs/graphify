@@ -387,13 +387,13 @@ impl nfc(s: str) -> str {
 }
 
 impl read_graph_json(path) -> dict {
-    shared: dict[str, str];
-    shared = {};
+    shared = builtins.dict();
 
     def share(row: dict) -> dict {
-        for (field, value) in row.items() {
-            if `type(value) is str {
-                row[field] = shared.setdefault(value, value);
+        fields = typing.cast(object, row);
+        for (field, value) in fields.items() {
+            if builtins.type(value) is str {
+                fields[field] = shared.setdefault(value, value);
             }
         }
         return row;

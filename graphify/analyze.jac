@@ -10,6 +10,8 @@ import random;
 
 import re;
 
+import typing;
+
 import from pathlib { Path }
 
 import networkx as nx;

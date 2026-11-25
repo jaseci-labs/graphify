@@ -3,6 +3,8 @@ import importlib;
 import operator;
 import from __future__ { annotations }
 
+import builtins;
+
 import errno;
 
 import functools;
@@ -18,6 +20,8 @@ import stat;
 import sys;
 
 import tempfile;
+
+import typing;
 
 import from pathlib { Path, PurePosixPath, PureWindowsPath }
 def _out_from_env -> str;

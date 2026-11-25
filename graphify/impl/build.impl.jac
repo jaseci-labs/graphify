@@ -622,8 +622,8 @@ impl _is_file_node_label(label: "str | None", source_file: "str | None") -> bool
     if not label or not source_file {
         return False;
     }
-    sf: any = `str(source_file).replace("\\", "/");
-    lbl: any = `str(label);
+    sf = `str(source_file).replace("\\", "/");
+    lbl = `str(label);
     if lbl == sf.rsplit("/", 1)[-1] {
         return True;
     }

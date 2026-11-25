@@ -78,7 +78,19 @@ does not yet allow.
 | whole session (5 rounds) | 4.35 s | 7.03 s | **1.61x** | 4.00 s | 4.53 s | **1.13x** |
 
 **Before** is the Jac as the port left it: branch `neojac-deslop`, commit `d62c18d`.
-**After** is this branch's last commit. Each ratio is against the original's median from
+**After** is commit `df72b7c`.
+
+Two later commits (`cb85573`, `7ede803`) change only extraction and the cache, so only
+`update` is affected. Re-measured at `7ede803`, same protocol:
+
+| Workload | Original | Jac | Ratio |
+|---|--:|--:|--:|
+| `update`, cold | 10.83 s | 13.78 s | **1.27x** |
+| `update --force`, warm cache | 8.20 s | 10.38 s | **1.27x** (from 1.34x) |
+| `update`, cold, 1 worker | 18.57 s | 21.54 s | **1.16x** |
+
+Load was 10-15 during these rows. The same run's query rows ran at load 23-43 and
+scattered from 0.91x to 1.13x, so the quieter run above stands for them. Each ratio is against the original's median from
 the same run, so absolute times differ between the two runs because the load did.
 
 The before run's `update --force` and one-worker `update` rows come from a rerun of that
@@ -189,10 +201,16 @@ output comparisons above confirm it.
   `str.startswith(prefix_tuple)`, which matches exactly what the generator over the same
   tuple did. Neojac had wrapped that generator's variable in a fresh `_jac.Cell` per prefix.
 
+- **No redundant casts.** The mechanical loop rewrite also cast values that were already
+  Python objects, such as the loop variable of an outer cast loop. Removing those cut 66
+  `typing.cast` calls from the hot walks, with the `held` count unchanged.
+- **Cache strings.** The warm-cache path rewrites every cached string through a callback.
+  The callback and the cached nodes and edges are now read through casts.
+
 Result: the serial `update` profile went from 285M function calls to 123M, and `held`
 calls from 96.6M to 16.7M.
 
-**What is left.** `update` is still 1.16-1.34x the original, `cluster-only` 1.21x, and the
+**What is left.** `update` is still 1.16-1.27x the original, `cluster-only` 1.21x, and the
 server's graph-walking endpoints 1.2-1.3x. The remaining cost is spread thinly:
 - `held` on dicts that come from `any` containers (the 576-line `build_from_json`, the
   extraction post-pass);

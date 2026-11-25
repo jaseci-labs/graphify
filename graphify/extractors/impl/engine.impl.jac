@@ -8652,14 +8652,15 @@ impl _extract_generic(
     _n: any;
     parser: any;
     parser_error: any;
-    (parser, parser_error) = _get_parser(config.ts_module, config.ts_language_fn) as any;
+    ts_mod = `str(config.ts_module);
+    (parser, parser_error) = _get_parser(ts_mod, config.ts_language_fn) as any;
     if parser_error is not None {
         return {"nodes": [], "edges": [], "error": parser_error};
     }
 
     try {
         source = _read_source_bytes(path) if source_override is None else source_override;
-        if config.ts_module == "tree_sitter_cpp" {
+        if ts_mod == "tree_sitter_cpp" {
             source = source.replace(b"\r\n", b"\n");
         }
         if source and not source.endswith(b"\n") {
@@ -8675,16 +8676,16 @@ impl _extract_generic(
     str_path = `str(path);
     dialect_type_quals = _CPP_DIALECT_TYPE_QUALIFIERS.get(path.suffix.lower(), frozenset());
     js_external_imports = _js_external_import_names(`root, source, str_path)
-        if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript")
+        if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
         else set[any]();
     python_receiver_shadowed = _python_receiver_shadow_checker(`root, source)
-        if config.ts_module == "tree_sitter_python"
+        if ts_mod == "tree_sitter_python"
         else None;
     python_param_shadowed = _python_param_shadow_checker(source)
-        if config.ts_module == "tree_sitter_python"
+        if ts_mod == "tree_sitter_python"
         else None;
     python_module_instances = _python_module_instance_types(`root, source)
-        if config.ts_module == "tree_sitter_python"
+        if ts_mod == "tree_sitter_python"
         else {};
     nodes = [];
     edges = [];
@@ -8698,7 +8699,7 @@ impl _extract_generic(
     callable_class_nids = set[any]();
     cpp_qualified_names = {};
     cpp_classes = {};
-    if config.ts_module == "tree_sitter_cpp" {
+    if ts_mod == "tree_sitter_cpp" {
         pending: any = [`root];
         while pending {
             current: any = pending.pop();
@@ -8736,7 +8737,7 @@ impl _extract_generic(
     type_paths = {};
     java_package = "";
     java_imports = [];
-    if config.ts_module == "tree_sitter_java" {
+    if ts_mod == "tree_sitter_java" {
         for child in `root.children {
             if child.type == "package_declaration" {
                 java_package = _read_text(child, source).removeprefix("package").strip().rstrip(
@@ -8761,7 +8762,7 @@ impl _extract_generic(
     csharp_member_ids = set[any]();
     csharp_ctor_overloads = {};
     csharp_indexer_overloads = {};
-    if config.ts_module == "tree_sitter_c_sharp" {
+    if ts_mod == "tree_sitter_c_sharp" {
         csharp_interface_names = _csharp_pre_scan_interfaces(`root, source);
         (
             csharp_type_groups,
@@ -8772,7 +8773,7 @@ impl _extract_generic(
 
     swift_protocol_names = set[any]();
     swift_class_names = set[any]();
-    if config.ts_module == "tree_sitter_swift" {
+    if ts_mod == "tree_sitter_swift" {
         (swift_protocol_names, swift_class_names) = _swift_pre_scan(`root, source) as any;
     }
     js_member_groups = {};
@@ -8786,11 +8787,11 @@ impl _extract_generic(
     scala_member_groups = {};
 
     python_underscore_groups = {};
-    if config.ts_module == "tree_sitter_python" {
+    if ts_mod == "tree_sitter_python" {
         python_underscore_groups = _python_pre_scan_underscore_collisions(`root, source, stem);
     }
     lua_field_groups = {};
-    if config.ts_module == "tree_sitter_lua" {
+    if ts_mod == "tree_sitter_lua" {
         lua_field_groups = _lua_pre_scan_field_collisions(`root, source, stem);
     }
 
@@ -8879,9 +8880,9 @@ impl _extract_generic(
             return declared;
         }
         nid: any = _make_id(stem, ".".join(namespace_stack), name);
-        if config.ts_module == "tree_sitter_c_sharp" {
+        if ts_mod == "tree_sitter_c_sharp" {
             nid = _underscore_salted_nid(nid, name, csharp_type_groups);
-        } elif config.ts_module == "tree_sitter_python" {
+        } elif ts_mod == "tree_sitter_python" {
             nid = _underscore_salted_nid(nid, name, python_underscore_groups);
         }
         if nid in seen_ids and nid != file_nid {
@@ -8936,7 +8937,7 @@ impl _extract_generic(
     if not source {
         next(n for n in nodes if n["id"] == file_nid)["source_location"] = None;
     }
-    if config.ts_module == "tree_sitter_ruby" {
+    if ts_mod == "tree_sitter_ruby" {
         file_node: any = next(n for n in nodes if n["id"] == file_nid);
         file_metadata: any = {"ruby_resolution_schema": 1};
         if _ruby_body_has_lookup_barrier(`root, source)
@@ -9016,7 +9017,7 @@ impl _extract_generic(
         func_nid: any;
         p: any;
         t: any = `node.type;
-        if config.ts_module == "tree_sitter_lua"
+        if ts_mod == "tree_sitter_lua"
             and t == "function_call"
             and config.import_handler
             and _lua_is_require_call(`node, source)
@@ -9026,7 +9027,7 @@ impl _extract_generic(
         }
         if t in config.import_types {
             if config.import_handler {
-                if config.ts_module == "tree_sitter_python" {
+                if ts_mod == "tree_sitter_python" {
                     imported_modules: any = config.import_handler(
                         `node, source, file_nid, stem, edges, str_path, scope_stack, scan_root
                     );
@@ -9075,7 +9076,7 @@ impl _extract_generic(
             }
             synthetic_name: any = None;
             if not name_node {
-                if config.ts_module == "tree_sitter_scala" and t == "given_definition" {
+                if ts_mod == "tree_sitter_scala" and t == "given_definition" {
                     synthetic_name = _scala_given_synthetic_name(`node, source);
                 }
                 if not synthetic_name {
@@ -9083,32 +9084,32 @@ impl _extract_generic(
                 }
             }
             class_name: any = synthetic_name or _read_text(name_node, source);
-            ruby_absolute_declaration: any = operator.eq(config.ts_module, "tree_sitter_ruby")
+            ruby_absolute_declaration: any = operator.eq(ts_mod, "tree_sitter_ruby")
                 and class_name.startswith("::");
             ruby_segments: list[str] = [];
-            if config.ts_module == "tree_sitter_ruby" {
+            if ts_mod == "tree_sitter_ruby" {
                 ruby_segments = class_name.split("::");
                 class_name = "::".join(ruby_namespace + ruby_segments);
             }
             class_name_for_id: any = class_name;
-            if config.ts_module == "tree_sitter_c_sharp" {
+            if ts_mod == "tree_sitter_c_sharp" {
                 class_name_for_id = _csharp_type_name_for_id(`node, class_name);
             }
             class_nid = _make_id(stem, ".".join(namespace_stack), class_name_for_id);
-            if parent_class_nid and config.ts_module != "tree_sitter_ruby" {
+            if parent_class_nid and ts_mod != "tree_sitter_ruby" {
                 class_nid = _make_id(parent_class_nid, class_name_for_id);
             }
-            if config.ts_module == "tree_sitter_c_sharp" {
+            if ts_mod == "tree_sitter_c_sharp" {
                 class_nid = _underscore_salted_nid(class_nid, class_name, csharp_type_groups);
             }
-            if config.ts_module == "tree_sitter_python" and not parent_class_nid {
+            if ts_mod == "tree_sitter_python" and not parent_class_nid {
                 class_nid = _underscore_salted_nid(class_nid, class_name, python_underscore_groups);
             }
             line = `node.start_point[0] + 1;
             metadata: any = None;
-            ruby_reopened: any = operator.eq(config.ts_module, "tree_sitter_ruby")
+            ruby_reopened: any = operator.eq(ts_mod, "tree_sitter_ruby")
                 and class_nid in seen_ids;
-            if config.ts_module == "tree_sitter_c_sharp" {
+            if ts_mod == "tree_sitter_c_sharp" {
                 if parent_class_nid {
                     metadata = {"is_nested_type": True};
                 }
@@ -9130,7 +9131,7 @@ impl _extract_generic(
                     metadata = partial_metadata;
                 }
             }
-            if config.ts_module == "tree_sitter_ruby" {
+            if ts_mod == "tree_sitter_ruby" {
                 ruby_body: any = _find_body(`node, config);
                 if ruby_absolute_declaration
                     or ruby_reopened
@@ -9148,7 +9149,7 @@ impl _extract_generic(
                     }
                 }
             }
-            if config.ts_module == "tree_sitter_python" {
+            if ts_mod == "tree_sitter_python" {
                 _py_bases: any = `node.child_by_field_name("superclasses");
                 if _py_bases is not None
                     and `any(
@@ -9175,14 +9176,14 @@ impl _extract_generic(
                 **class_node.get("metadata", {}),
                 "type_path": type_path,
             });
-            if config.ts_module == "tree_sitter_java" {
+            if ts_mod == "tree_sitter_java" {
                 class_node["_java_type"] = {
                     "path": type_path,
                     "package": java_package,
                     "imports": java_imports,
                 };
             }
-            if config.ts_module == "tree_sitter_ruby" and metadata {
+            if ts_mod == "tree_sitter_ruby" and metadata {
                 class_node = next(n for n in nodes if n["id"] == class_nid);
                 class_metadata: any = `dict(class_node.get("metadata") or {});
                 class_metadata.update(metadata);
@@ -9190,7 +9191,7 @@ impl _extract_generic(
             }
             callable_def_nids.add(class_nid);
             callable_class_nids.add(class_nid);
-            if config.ts_module == "tree_sitter_cpp" {
+            if ts_mod == "tree_sitter_cpp" {
                 qualified: any = _cpp_qualified_name(`node, class_name, source);
                 cpp_qualified_names[class_nid] = qualified
                     if cpp_qualified_names.get(class_nid, qualified) == qualified
@@ -9237,7 +9238,7 @@ impl _extract_generic(
             } else {
                 add_edge(file_nid, class_nid, "contains", line);
             }
-            if config.ts_module == "tree_sitter_c_sharp" and t != "interface_declaration" {
+            if ts_mod == "tree_sitter_c_sharp" and t != "interface_declaration" {
                 primary_params: any = next(
                     (c for c in `node.children if c.type == "parameter_list"), None
                 );
@@ -9247,18 +9248,18 @@ impl _extract_generic(
                     );
                 }
             }
-            if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript") {
+            if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript") {
                 _ts_emit_decorator_edges(
                     `node, class_nid, stem, source, ensure_named_node, add_edge
                 );
             }
 
-            if config.ts_module == "tree_sitter_swift"
+            if ts_mod == "tree_sitter_swift"
                 and `any(operator.eq(c.type, "extension") for c in `node.children)
             {
                 swift_extensions.append({"nid": class_nid, "label": class_name});
             }
-            if config.ts_module == "tree_sitter_python" {
+            if ts_mod == "tree_sitter_python" {
                 args: any = `node.child_by_field_name("superclasses");
                 if args {
                     arg: any;
@@ -9272,7 +9273,7 @@ impl _extract_generic(
                     }
                 }
             }
-            if config.ts_module == "tree_sitter_swift" {
+            if ts_mod == "tree_sitter_swift" {
                 swift_kind: any = _swift_declaration_keyword(`node)
                     if t == "class_declaration"
                     else "protocol";
@@ -9350,7 +9351,7 @@ impl _extract_generic(
                     }
                 }
             }
-            if config.ts_module == "tree_sitter_php" {
+            if ts_mod == "tree_sitter_php" {
                 def _php_emit_base(base_name: str, rel: str, at_line: int) {
                     if not base_name {
                         return;
@@ -9422,7 +9423,7 @@ impl _extract_generic(
                     }
                 }
             }
-            if config.ts_module == "tree_sitter_kotlin" {
+            if ts_mod == "tree_sitter_kotlin" {
                 for child in `node.children {
                     if child.type != "delegation_specifiers" {
                         continue;
@@ -9606,7 +9607,7 @@ impl _extract_generic(
                     }
                 }
             }
-            if config.ts_module == "tree_sitter_ruby" {
+            if ts_mod == "tree_sitter_ruby" {
                 sup: any = `node.child_by_field_name("superclass");
                 if sup is not None {
                     base = "";
@@ -9690,7 +9691,7 @@ impl _extract_generic(
                     }
                 }
             }
-            if config.ts_module == "tree_sitter_c_sharp" {
+            if ts_mod == "tree_sitter_c_sharp" {
                 csharp_type_params: any = _csharp_type_parameters_in_scope(`node, source);
                 for child in `node.children {
                     if child.type != "base_list" {
@@ -9801,7 +9802,7 @@ impl _extract_generic(
                     }
                 }
             }
-            if config.ts_module in ("tree_sitter_java", "tree_sitter_groovy") {
+            if ts_mod in ("tree_sitter_java", "tree_sitter_groovy") {
                 def _emit_java_parent(base_name: str, rel: str, at_line: int) {
                     if not base_name {
                         return;
@@ -9888,7 +9889,7 @@ impl _extract_generic(
 
                 annotation_targets = set[any]();
                 for (anno_name, anno_raw) in _java_annotation_names(`node, source) {
-                    if "." in anno_raw and config.ts_module == "tree_sitter_java" {
+                    if "." in anno_raw and ts_mod == "tree_sitter_java" {
                         anno_name = anno_raw;
                     }
                     target_nid = ensure_named_node(anno_name, line);
@@ -9942,7 +9943,7 @@ impl _extract_generic(
                     }
                 }
             }
-            if config.ts_module == "tree_sitter_scala" {
+            if ts_mod == "tree_sitter_scala" {
                 extend: any = `node.child_by_field_name("extend");
                 if extend is None {
                     for c in `node.children {
@@ -10052,7 +10053,7 @@ impl _extract_generic(
                     }
                 }
             }
-            if config.ts_module == "tree_sitter_c_sharp"
+            if ts_mod == "tree_sitter_c_sharp"
                 and t in ("class_declaration", "record_declaration", "struct_declaration")
             {
                 csharp_type_params = _csharp_type_parameters_in_scope(`node, source);
@@ -10102,7 +10103,7 @@ impl _extract_generic(
                     }
                 }
             }
-            if config.ts_module == "tree_sitter_cpp" {
+            if ts_mod == "tree_sitter_cpp" {
                 for child in `node.children {
                     if child.type != "base_class_clause" {
                         continue;
@@ -10159,11 +10160,11 @@ impl _extract_generic(
             body = _find_body(`node, config);
             if body {
                 ruby_namespace.extend(ruby_segments);
-                if config.ts_module == "tree_sitter_ruby" {
+                if ts_mod == "tree_sitter_ruby" {
                     ruby_lexical_scopes.append(class_name);
                 }
                 previous_singleton_depth: any = ruby_singleton_context_depth;
-                if config.ts_module == "tree_sitter_ruby" {
+                if ts_mod == "tree_sitter_ruby" {
                     ruby_singleton_context_depth = 0;
                 }
                 try {
@@ -10172,7 +10173,7 @@ impl _extract_generic(
                     }
                 } finally {
                     ruby_singleton_context_depth = previous_singleton_depth;
-                    if config.ts_module == "tree_sitter_ruby" {
+                    if ts_mod == "tree_sitter_ruby" {
                         ruby_lexical_scopes.pop();
                     }
                     if ruby_segments {
@@ -10257,7 +10258,7 @@ impl _extract_generic(
             }
         }
 
-        if config.ts_module == "tree_sitter_c_sharp"
+        if ts_mod == "tree_sitter_c_sharp"
             and t == "constructor_declaration"
             and parent_class_nid
         {
@@ -10306,7 +10307,7 @@ impl _extract_generic(
             }
         }
 
-        if config.ts_module == "tree_sitter_c_sharp"
+        if ts_mod == "tree_sitter_c_sharp"
             and t == "indexer_declaration"
             and parent_class_nid
         {
@@ -10347,7 +10348,7 @@ impl _extract_generic(
             return;
         }
 
-        if config.ts_module == "tree_sitter_c_sharp"
+        if ts_mod == "tree_sitter_c_sharp"
             and t in ("operator_declaration", "conversion_operator_declaration")
             and parent_class_nid
         {
@@ -10387,7 +10388,7 @@ impl _extract_generic(
             return;
         }
 
-        if config.ts_module == "tree_sitter_c_sharp"
+        if ts_mod == "tree_sitter_c_sharp"
             and t == "field_declaration"
             and parent_class_nid
         {
@@ -10473,7 +10474,7 @@ impl _extract_generic(
             return;
         }
 
-        if config.ts_module == "tree_sitter_c_sharp"
+        if ts_mod == "tree_sitter_c_sharp"
             and t == "property_declaration"
             and parent_class_nid
         {
@@ -10549,7 +10550,7 @@ impl _extract_generic(
             return;
         }
 
-        if config.ts_module == "tree_sitter_java"
+        if ts_mod == "tree_sitter_java"
             and t == "field_declaration"
             and parent_class_nid
         {
@@ -10602,7 +10603,7 @@ impl _extract_generic(
             return;
         }
 
-        if config.ts_module == "tree_sitter_java"
+        if ts_mod == "tree_sitter_java"
             and t == "annotation_type_element_declaration"
             and parent_class_nid
         {
@@ -10620,7 +10621,7 @@ impl _extract_generic(
             return;
         }
 
-        if config.ts_module == "tree_sitter_php"
+        if ts_mod == "tree_sitter_php"
             and parent_class_nid
             and t in ("const_declaration", "property_declaration")
         {
@@ -10641,7 +10642,7 @@ impl _extract_generic(
             }
         }
 
-        if config.ts_module == "tree_sitter_php"
+        if ts_mod == "tree_sitter_php"
             and t == "property_declaration"
             and parent_class_nid
         {
@@ -10673,12 +10674,12 @@ impl _extract_generic(
             return;
         }
 
-        if config.ts_module == "tree_sitter_kotlin" and t == "anonymous_initializer" {
+        if ts_mod == "tree_sitter_kotlin" and t == "anonymous_initializer" {
             initializer_nodes.append((parent_class_nid or file_nid, `node));
             return;
         }
 
-        if config.ts_module == "tree_sitter_kotlin" and t == "property_declaration" {
+        if ts_mod == "tree_sitter_kotlin" and t == "property_declaration" {
             if parent_class_nid {
                 line = `node.start_point[0] + 1;
                 type_node = _kotlin_property_type_node(`node);
@@ -10733,7 +10734,7 @@ impl _extract_generic(
             return;
         }
 
-        if config.ts_module == "tree_sitter_swift"
+        if ts_mod == "tree_sitter_swift"
             and t == "property_declaration"
             and parent_class_nid
         {
@@ -10805,7 +10806,7 @@ impl _extract_generic(
             return;
         }
 
-        if config.ts_module == "tree_sitter_scala"
+        if ts_mod == "tree_sitter_scala"
             and t in ("val_definition", "var_definition", "type_definition")
         {
             owner_nid = parent_class_nid or file_nid;
@@ -10823,7 +10824,7 @@ impl _extract_generic(
                 }
             }
         }
-        if config.ts_module == "tree_sitter_scala" and t == "self_type" and parent_class_nid {
+        if ts_mod == "tree_sitter_scala" and t == "self_type" and parent_class_nid {
             named: any = [c for c in `node.children if c.is_named];
             type_node = named[1] if len(named) >= 2 else None;
             if type_node is not None {
@@ -10840,7 +10841,7 @@ impl _extract_generic(
             return;
         }
 
-        if config.ts_module == "tree_sitter_cpp"
+        if ts_mod == "tree_sitter_cpp"
             and (
                 t == "field_declaration"
                 or t == "declaration"
@@ -10907,7 +10908,7 @@ impl _extract_generic(
             }
             return;
         }
-        if config.ts_module == "tree_sitter_ruby" and t == "singleton_class" and parent_class_nid {
+        if ts_mod == "tree_sitter_ruby" and t == "singleton_class" and parent_class_nid {
             value: any = `node.child_by_field_name("value");
             body = `node.child_by_field_name("body");
             if value is not None and _read_text(value, source) == "self" and body {
@@ -10953,7 +10954,7 @@ impl _extract_generic(
             }
 
             if not func_name {
-                if config.ts_module == "tree_sitter_php"
+                if ts_mod == "tree_sitter_php"
                     and t in ("anonymous_function", "arrow_function")
                 {
                     route_name: any = _php_get_route_name(`node, source);
@@ -10968,7 +10969,7 @@ impl _extract_generic(
                     return;
                 }
             }
-            if config.ts_module == "tree_sitter_cpp" and "<" in func_name {
+            if ts_mod == "tree_sitter_cpp" and "<" in func_name {
                 primary_name: any = _cpp_primary_template_function_name(`node, source, cpp_classes);
                 primary_qualified: any = _cpp_qualified_name(`node, primary_name, source)
                     if primary_name
@@ -10989,7 +10990,7 @@ impl _extract_generic(
 
             line = `node.start_point[0] + 1;
             ruby_method_kind: any = None;
-            if config.ts_module == "tree_sitter_ruby" and parent_class_nid {
+            if ts_mod == "tree_sitter_ruby" and parent_class_nid {
                 if t == "singleton_method" {
                     singleton_object: any = `node.child_by_field_name("object");
                     if ruby_singleton_context_depth == 0
@@ -11010,11 +11011,11 @@ impl _extract_generic(
             }
             if parent_class_nid {
                 func_nid = _make_id(parent_class_nid, sanitized_name);
-                if config.ts_module == "tree_sitter_python" {
+                if ts_mod == "tree_sitter_python" {
                     func_nid = _underscore_salted_nid(
                         func_nid, sanitized_name, python_underscore_groups
                     );
-                } elif config.ts_module == "tree_sitter_c_sharp" {
+                } elif ts_mod == "tree_sitter_c_sharp" {
                     func_nid = _underscore_salted_nid(
                         func_nid, sanitized_name, csharp_member_groups
                     );
@@ -11047,17 +11048,17 @@ impl _extract_generic(
                             func_nid = _make_id(func_nid, salt);
                         }
                     }
-                } elif config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript")
+                } elif ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
                     and t in _JS_MEMBER_METHOD_TYPES
                 {
                     func_nid = _js_member_nid(
                         parent_class_nid, `node, sanitized_name, source, js_member_groups
                     );
-                } elif config.ts_module == "tree_sitter_php" and t == "method_declaration" {
+                } elif ts_mod == "tree_sitter_php" and t == "method_declaration" {
                     func_nid = _php_member_nid(
                         parent_class_nid, `node, sanitized_name, source, php_member_groups
                     );
-                } elif config.ts_module == "tree_sitter_java" and t in _JAVA_MEMBER_CALLABLE_TYPES {
+                } elif ts_mod == "tree_sitter_java" and t in _JAVA_MEMBER_CALLABLE_TYPES {
                     func_nid = _java_member_nid(
                         parent_class_nid, `node, sanitized_name, source, java_member_groups
                     );
@@ -11073,21 +11074,21 @@ impl _extract_generic(
                             func_nid = _make_id(func_nid, salt);
                         }
                     }
-                } elif config.ts_module == "tree_sitter_kotlin" and t == "function_declaration" {
+                } elif ts_mod == "tree_sitter_kotlin" and t == "function_declaration" {
                     func_nid = _kotlin_member_nid(
                         parent_class_nid, `node, sanitized_name, source, kotlin_member_groups
                     );
-                } elif config.ts_module == "tree_sitter_swift"
+                } elif ts_mod == "tree_sitter_swift"
                     and t in _SWIFT_MEMBER_CALLABLE_TYPES
                 {
                     func_nid = _swift_member_nid(
                         parent_class_nid, `node, sanitized_name, source, swift_member_groups
                     );
-                } elif config.ts_module == "tree_sitter_cpp" and t == "function_definition" {
+                } elif ts_mod == "tree_sitter_cpp" and t == "function_definition" {
                     func_nid = _cpp_member_nid(
                         parent_class_nid, `node, sanitized_name, source, cpp_member_groups
                     );
-                } elif config.ts_module == "tree_sitter_ruby" and t in _RUBY_MEMBER_CALLABLE_TYPES {
+                } elif ts_mod == "tree_sitter_ruby" and t in _RUBY_MEMBER_CALLABLE_TYPES {
                     func_nid = _ruby_member_nid(
                         parent_class_nid,
                         `node,
@@ -11096,7 +11097,7 @@ impl _extract_generic(
                         ruby_member_groups,
                         config.sanitize_symbol_name_fn or (lambda (n) -> any { n }),
                     );
-                } elif config.ts_module == "tree_sitter_scala"
+                } elif ts_mod == "tree_sitter_scala"
                     and t in _SCALA_MEMBER_CALLABLE_TYPES
                 {
                     func_nid = _scala_member_nid(
@@ -11122,13 +11123,13 @@ impl _extract_generic(
                     }
                 }
                 method_metadata: any = ruby_method_metadata;
-                if config.ts_module == "tree_sitter_c_sharp" and t == "method_declaration" {
+                if ts_mod == "tree_sitter_c_sharp" and t == "method_declaration" {
                     method_metadata = {**csharp_sig_meta, "signature": csharp_sig};
-                } elif config.ts_module == "tree_sitter_java" and t == "method_declaration" {
+                } elif ts_mod == "tree_sitter_java" and t == "method_declaration" {
                     method_metadata = {**java_sig_meta, "signature": java_sig};
                 }
                 add_node(func_nid, f".{func_name}()", line, metadata=method_metadata);
-                if config.ts_module == "tree_sitter_c_sharp"
+                if ts_mod == "tree_sitter_c_sharp"
                     and t == "method_declaration"
                     and explicit is None
                     and csharp_group_key not in group
@@ -11137,7 +11138,7 @@ impl _extract_generic(
                 {
                     group[csharp_group_key] = nodes[-1];
                 }
-                if config.ts_module == "tree_sitter_java"
+                if ts_mod == "tree_sitter_java"
                     and t == "method_declaration"
                     and java_sig not in java_group
                     and nodes
@@ -11146,14 +11147,14 @@ impl _extract_generic(
                     java_group[java_sig] = nodes[-1];
                 }
                 add_edge(parent_class_nid, func_nid, "method", line);
-                if config.ts_module == "tree_sitter_c_sharp" and t == "method_declaration" {
+                if ts_mod == "tree_sitter_c_sharp" and t == "method_declaration" {
                     csharp_method_returns.setdefault(parent_class_nid, {}).setdefault(
                         func_name, []
                     ).append(_csharp_return_info(`node, source));
                 }
             } else {
                 func_nid = _make_id(stem, sanitized_name);
-                if config.ts_module == "tree_sitter_python" {
+                if ts_mod == "tree_sitter_python" {
                     func_nid = _underscore_salted_nid(
                         func_nid, sanitized_name, python_underscore_groups
                     );
@@ -11165,7 +11166,7 @@ impl _extract_generic(
                         leaf=_lua_field_leaf,
                     );
                 }
-                if config.ts_module == "tree_sitter_cpp"
+                if ts_mod == "tree_sitter_cpp"
                     and "::" in func_name
                     and cpp_qualified_names.get(func_nid)
                         != _cpp_qualified_name(`node, func_name, source)
@@ -11182,7 +11183,7 @@ impl _extract_generic(
                     }
                 }
                 if not (
-                    config.ts_module == "tree_sitter_cpp"
+                    ts_mod == "tree_sitter_cpp"
                     and "::" in func_name
                     and cpp_qualified_names.get(func_nid)
                         == _cpp_qualified_name(`node, func_name, source)
@@ -11192,7 +11193,7 @@ impl _extract_generic(
                 add_edge(file_nid, func_nid, "contains", line);
             }
             callable_def_nids.add(func_nid);
-            if config.ts_module == "tree_sitter_cpp" and (parent_class_nid or "::" in func_name) {
+            if ts_mod == "tree_sitter_cpp" and (parent_class_nid or "::" in func_name) {
                 qualified = _cpp_qualified_name(`node, func_name, source);
                 cpp_qualified_names[func_nid] = qualified
                     if cpp_qualified_names.get(func_nid, qualified) == qualified
@@ -11202,13 +11203,13 @@ impl _extract_generic(
                     _cpp_member_record(`node, declarator, func_name, source)
                 );
             }
-            if config.ts_module == "tree_sitter_python" {
+            if ts_mod == "tree_sitter_python" {
                 local_bound_names[func_nid] = _python_local_bound_names(`node, source);
-            } elif config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript") {
+            } elif ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript") {
                 local_bound_names[func_nid] = _js_local_bound_names(`node, source);
             }
 
-            if config.ts_module == "tree_sitter_python" {
+            if ts_mod == "tree_sitter_python" {
                 params_node: any = `node.child_by_field_name("parameters");
                 for (ref_name, role) in _python_collect_param_refs(params_node, source) {
                     ctx = "generic_arg" if role == "generic_arg" else "parameter_type";
@@ -11235,7 +11236,7 @@ impl _extract_generic(
                 }
             }
 
-            if config.ts_module == "tree_sitter_c_sharp" {
+            if ts_mod == "tree_sitter_c_sharp" {
                 csharp_type_params = _csharp_type_parameters_in_scope(`node, source);
                 params_node = `node.child_by_field_name("parameters");
                 if params_node is not None {
@@ -11321,7 +11322,7 @@ impl _extract_generic(
                 }
             }
 
-            if config.ts_module == "tree_sitter_java" {
+            if ts_mod == "tree_sitter_java" {
                 params_node = `node.child_by_field_name("parameters");
                 if params_node is not None {
                     for p in params_node.children {
@@ -11380,7 +11381,7 @@ impl _extract_generic(
                 }
             }
 
-            if config.ts_module == "tree_sitter_php" {
+            if ts_mod == "tree_sitter_php" {
                 params_container: any = None;
                 for c in `node.children {
                     if c.type == "formal_parameters" {
@@ -11469,7 +11470,7 @@ impl _extract_generic(
                 }
             }
 
-            if config.ts_module == "tree_sitter_kotlin" {
+            if ts_mod == "tree_sitter_kotlin" {
                 params_container = None;
                 for c in `node.children {
                     if c.type == "function_value_parameters" {
@@ -11522,7 +11523,7 @@ impl _extract_generic(
                 }
             }
 
-            if config.ts_module == "tree_sitter_swift" {
+            if ts_mod == "tree_sitter_swift" {
                 for p in `node.children {
                     if p.type != "parameter" {
                         continue;
@@ -11574,7 +11575,7 @@ impl _extract_generic(
                 }
             }
 
-            if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript")
+            if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
                 and func_name == "constructor"
             {
                 params_node = `node.child_by_field_name("parameters");
@@ -11608,8 +11609,8 @@ impl _extract_generic(
                 }
             }
 
-            if config.ts_module in ("tree_sitter_c", "tree_sitter_cpp") {
-                if config.ts_module == "tree_sitter_cpp" {
+            if ts_mod in ("tree_sitter_c", "tree_sitter_cpp") {
+                if ts_mod == "tree_sitter_cpp" {
                     def collect(`node, source: bytes, generic: bool, out: list[tuple[str, str]]) {
                         _cpp_collect_type_refs(
                             `node, source, generic, out, None, dialect_type_quals
@@ -11661,7 +11662,7 @@ impl _extract_generic(
                 }
             }
 
-            if config.ts_module == "tree_sitter_scala" {
+            if ts_mod == "tree_sitter_scala" {
                 params_node = None;
                 for c in `node.children {
                     if c.type == "parameters" {
@@ -11717,7 +11718,7 @@ impl _extract_generic(
                 }
             }
 
-            if config.ts_module == "tree_sitter_java"
+            if ts_mod == "tree_sitter_java"
                 and parent_class_nid
                 and `node.type == "method_declaration"
             {
@@ -11730,7 +11731,7 @@ impl _extract_generic(
 
             body = _find_body(`node, config);
             if body is not None
-                and config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript")
+                and ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
             {
                 function_owner_nid: any = parent_class_nid or func_nid;
                 _js_scan_member_assignments(
@@ -11745,14 +11746,14 @@ impl _extract_generic(
                 );
             }
             if body {
-                if config.ts_module == "tree_sitter_java" and parent_class_nid {
+                if ts_mod == "tree_sitter_java" and parent_class_nid {
                     java_method_scopes[id(body)] = (`node, parent_class_nid);
                 }
-                if config.ts_module == "tree_sitter_c_sharp" and parent_class_nid {
+                if ts_mod == "tree_sitter_c_sharp" and parent_class_nid {
                     csharp_method_scopes[id(body)] = (`node, parent_class_nid);
                 }
                 function_bodies.append((func_nid, body));
-                if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript") {
+                if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript") {
                     _scan_js_nested_function_declarations(
                         body,
                         func_nid,
@@ -11767,7 +11768,7 @@ impl _extract_generic(
                         lexical_nids_by_scope=lexical_nids_by_scope,
                     );
                 }
-                if config.ts_module == "tree_sitter_python" {
+                if ts_mod == "tree_sitter_python" {
                     _scan_python_nested_function_declarations(
                         body,
                         func_nid,
@@ -11782,10 +11783,10 @@ impl _extract_generic(
                         lexical_nids_by_scope=lexical_nids_by_scope,
                     );
                 }
-                if config.ts_module == "tree_sitter_php" {
+                if ts_mod == "tree_sitter_php" {
                     walk(body, parent_class_nid=parent_class_nid);
                 }
-                if config.ts_module == "tree_sitter_kotlin" {
+                if ts_mod == "tree_sitter_kotlin" {
                     _kt_literals: any = [];
                     _kt_stack: any = `list(body.children);
                     while _kt_stack {
@@ -11866,7 +11867,7 @@ impl _extract_generic(
                         }
                     }
                 }
-                if config.ts_module in ("tree_sitter_java", "tree_sitter_groovy") {
+                if ts_mod in ("tree_sitter_java", "tree_sitter_groovy") {
                     _jv_anon: any = [];
                     _jv_stack: any = `list(body.children);
                     while _jv_stack {
@@ -11906,7 +11907,7 @@ impl _extract_generic(
             }
             return;
         }
-        if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript") {
+        if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript") {
             if _js_extra_walk(
                 `node,
                 source,
@@ -11933,7 +11934,7 @@ impl _extract_generic(
                 return;
             }
         }
-        if config.ts_module == "tree_sitter_typescript" {
+        if ts_mod == "tree_sitter_typescript" {
             if _ts_extra_walk(
                 `node,
                 source,
@@ -11955,7 +11956,7 @@ impl _extract_generic(
             }
         }
 
-        if config.ts_module == "tree_sitter_c_sharp" {
+        if ts_mod == "tree_sitter_c_sharp" {
             if _csharp_extra_walk(
                 `node,
                 source,
@@ -11978,7 +11979,7 @@ impl _extract_generic(
             }
         }
 
-        if config.ts_module == "tree_sitter_swift" {
+        if ts_mod == "tree_sitter_swift" {
             if _swift_extra_walk(
                 `node,
                 source,
@@ -11997,7 +11998,7 @@ impl _extract_generic(
                 return;
             }
         }
-        if config.ts_module in ("tree_sitter_java", "tree_sitter_groovy") {
+        if ts_mod in ("tree_sitter_java", "tree_sitter_groovy") {
             if _java_extra_walk(
                 `node,
                 source,
@@ -12017,7 +12018,7 @@ impl _extract_generic(
             }
         }
 
-        if config.ts_module == "tree_sitter_kotlin" {
+        if ts_mod == "tree_sitter_kotlin" {
             if _kotlin_extra_walk(
                 `node,
                 source,
@@ -12036,7 +12037,7 @@ impl _extract_generic(
                 return;
             }
         }
-        if config.ts_module == "tree_sitter_php" {
+        if ts_mod == "tree_sitter_php" {
             if _php_extra_walk(
                 `node,
                 source,
@@ -12054,7 +12055,7 @@ impl _extract_generic(
                 return;
             }
         }
-        if config.ts_module == "tree_sitter_scala" {
+        if ts_mod == "tree_sitter_scala" {
             if _scala_extra_walk(
                 `node,
                 source,
@@ -12074,7 +12075,7 @@ impl _extract_generic(
                 return;
             }
         }
-        if config.ts_module == "tree_sitter_cpp" {
+        if ts_mod == "tree_sitter_cpp" {
             if _cpp_extra_walk(
                 `node,
                 source,
@@ -12094,7 +12095,7 @@ impl _extract_generic(
             }
         }
 
-        if config.ts_module == "tree_sitter_ruby" {
+        if ts_mod == "tree_sitter_ruby" {
             if _ruby_extra_walk(
                 `node,
                 source,
@@ -12118,7 +12119,7 @@ impl _extract_generic(
             }
         }
         if t in ("type_alias_statement", "expression_statement")
-            and config.ts_module == "tree_sitter_python"
+            and ts_mod == "tree_sitter_python"
             and parent_class_nid is None
             and `node.parent is not None
             and `node.parent.type == "module"
@@ -12134,7 +12135,7 @@ impl _extract_generic(
             }
         }
         if t == "decorated_definition" {
-            if config.ts_module == "tree_sitter_python" {
+            if ts_mod == "tree_sitter_python" {
                 inner = `node.child_by_field_name("definition");
                 inner_name: any = None;
                 if inner is not None {
@@ -12144,7 +12145,7 @@ impl _extract_generic(
                 if inner_name and normalize_id(inner_name) {
                     if inner.type in config.class_types {
                         owner_nid = _make_id(stem, ".".join(namespace_stack), inner_name);
-                        if config.ts_module == "tree_sitter_python" and parent_class_nid {
+                        if ts_mod == "tree_sitter_python" and parent_class_nid {
                             owner_nid = _make_id(parent_class_nid, inner_name);
                         }
                     } elif parent_class_nid {
@@ -12182,7 +12183,7 @@ impl _extract_generic(
             }
             return;
         }
-        if config.ts_module == "tree_sitter_kotlin" and t == "companion_object" {
+        if ts_mod == "tree_sitter_kotlin" and t == "companion_object" {
             for child in `node.children {
                 if child.type == "class_body" {
                     for member in child.children {
@@ -12206,13 +12207,13 @@ impl _extract_generic(
             }
             return;
         }
-        if config.ts_module == "tree_sitter_cpp" and t == "template_declaration" {
+        if ts_mod == "tree_sitter_cpp" and t == "template_declaration" {
             for child in `node.children {
                 walk(child, parent_class_nid=parent_class_nid);
             }
             return;
         }
-        if config.ts_module == "tree_sitter_ruby"
+        if ts_mod == "tree_sitter_ruby"
             and t == "call"
             and parent_class_nid
             and `node.child_by_field_name("receiver") is None
@@ -12262,7 +12263,7 @@ impl _extract_generic(
     _case_of_targets: any = {e.get("target") for e in edges if e.get("relation") == "case_of"};
     python_free_label_to_nid = {};
     _python_method_nids: any = {e["target"] for e in edges if e.get("relation") == "method"}
-        if config.ts_module == "tree_sitter_python"
+        if ts_mod == "tree_sitter_python"
         else set[any]();
     for n in nodes {
         nid_to_sf[n["id"]] = `str(n.get("source_file") or "");
@@ -12272,19 +12273,19 @@ impl _extract_generic(
         if n["id"] in _case_of_targets {
             continue;
         }
-        if config.ts_module == "tree_sitter_c_sharp"
+        if ts_mod == "tree_sitter_c_sharp"
             and (n.get("metadata") or {}).get("kind") == "constructor"
         {
             continue;
         }
-        if config.ts_module == "tree_sitter_c_sharp"
+        if ts_mod == "tree_sitter_c_sharp"
             and (n.get("metadata") or {}).get("explicit_interface")
         {
             continue;
         }
         raw: any = n["label"];
         normalised: any = raw.strip("()").lstrip(".");
-        if config.ts_module == "tree_sitter_lua" {
+        if ts_mod == "tree_sitter_lua" {
             sep: any = ":" if ":" in normalised else "." if "." in normalised else None;
             if sep {
                 lua_self_table[n["id"]] = normalised.rsplit(sep, 1)[0];
@@ -12293,10 +12294,10 @@ impl _extract_generic(
         if n["id"] not in scope_parents {
             label_to_nid[normalised] = n["id"];
             label_to_nid_ci[normalised.lower()] = n["id"];
-            if config.ts_module == "tree_sitter_python" and n["id"] not in _python_method_nids {
+            if ts_mod == "tree_sitter_python" and n["id"] not in _python_method_nids {
                 python_free_label_to_nid[normalised] = n["id"];
             }
-        } elif config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript") {
+        } elif ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript") {
             continue;
         } else {
             label_to_nid.setdefault(normalised, n["id"]);
@@ -12343,19 +12344,19 @@ impl _extract_generic(
     methods_by_owner = {};
     class_parent = {};
     lexical_bases = {};
-    lexical_calls = config.ts_module in _LEXICAL_CALL_LANGUAGES;
+    lexical_calls = ts_mod in _LEXICAL_CALL_LANGUAGES;
     js_factory_scope = {};
-    if config.ts_module in _SELF_CALL_LANGUAGES or lexical_calls {
+    if ts_mod in _SELF_CALL_LANGUAGES or lexical_calls {
         label_by_nid: any = {n["id"]: n["label"] for n in nodes};
         csharp_explicit_nids: any = {
             n["id"]
             for n in nodes
             if (n.get("metadata") or {}).get("explicit_interface")
         }
-            if config.ts_module == "tree_sitter_c_sharp"
+            if ts_mod == "tree_sitter_c_sharp"
             else set[any]();
         for e in edges {
-            if config.ts_module == "tree_sitter_c_sharp"
+            if ts_mod == "tree_sitter_c_sharp"
                 and e["relation"] == "defines"
                 and e.get("context") == "field"
             {
@@ -12364,13 +12365,13 @@ impl _extract_generic(
             if e["relation"] == "method" {
                 method_owner[e["target"]] = e["source"];
                 name = label_by_nid.get(e["target"], "").strip("()").lstrip(".");
-                if config.ts_module == "tree_sitter_php" {
+                if ts_mod == "tree_sitter_php" {
                     name = name.casefold();
                 }
                 if e["target"] not in csharp_explicit_nids {
                     methods_by_owner.setdefault((e["source"], name), e["target"]);
                 }
-            } elif config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript")
+            } elif ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
                 and e["relation"] == "contains"
             {
                 js_factory_scope.setdefault(e["target"], e["source"]);
@@ -12383,7 +12384,7 @@ impl _extract_generic(
         if lexical_calls {
             lexical_bases = _lexical_class_bases(
                 edges,
-                _LEXICAL_CALL_LANGUAGES[config.ts_module],
+                _LEXICAL_CALL_LANGUAGES[ts_mod],
                 label_by_nid,
                 nid_to_sf,
                 method_owner,
@@ -12396,7 +12397,7 @@ impl _extract_generic(
     kotlin_types_by_label = {};
     kotlin_methods_by_owner = {};
     kotlin_callable_counts = {};
-    if config.ts_module == "tree_sitter_kotlin" {
+    if ts_mod == "tree_sitter_kotlin" {
         kotlin_labels: any = {n["id"]: n["label"] for n in nodes};
         for e in edges {
             if e["relation"] == "method" {
@@ -12469,7 +12470,7 @@ impl _extract_generic(
     };
     def _emit_indirect_by_name(ident_name: str, loc_node, scope_nid: str, context: str) {
         ref_nid: any = None;
-        if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript") {
+        if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript") {
             curr_scope: any = scope_nid;
             while curr_scope and ref_nid is None {
                 ref_nid = lexical_nids_by_scope.get(curr_scope, {}).get(ident_name);
@@ -12579,7 +12580,7 @@ impl _extract_generic(
         if ident_name in js_external_imports {
             return;
         }
-        if config.ts_module == "tree_sitter_python"
+        if ts_mod == "tree_sitter_python"
             and _python_lambda_param_shadows(ident, ident_name)
         {
             return;
@@ -12708,15 +12709,19 @@ impl _extract_generic(
 
     extra_locals_default_: any = frozenset();
 
+    fn_boundary_types: any = config.function_boundary_types;
+    call_types_: any = config.call_types;
+
     def walk_calls(
         `node,
         caller_nid: str,
         receiver_types: dict[str, str] | tuple | None = None,
         extra_locals: frozenset[str] = extra_locals_default_,
     ) {
-        if `node.type in config.function_boundary_types {
-            if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript")
-                and `node.type in _JS_DESCEND_TYPES
+        ntype: any = `node.type;
+        if ntype in fn_boundary_types {
+            if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
+                and ntype in _JS_DESCEND_TYPES
             {
                 body: any = `node.child_by_field_name("body");
                 if body is not None and body not in _tracked_body_ids {
@@ -12729,13 +12734,13 @@ impl _extract_generic(
             }
             return;
         }
-        if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript")
-            and `node.type in ("lexical_declaration", "variable_declaration")
+        if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
+            and ntype in ("lexical_declaration", "variable_declaration")
         {
             _require_imports_js(`node, source, caller_nid, stem, edges, str_path);
         }
         _ruby_bare_self_send: any = False;
-        if config.ts_module == "tree_sitter_ruby" and `node.type == "identifier" {
+        if ts_mod == "tree_sitter_ruby" and ntype == "identifier" {
             _parent: any = `node.parent;
             _call_field: any = _parent is not None
                 and operator.eq(_parent.type, "call")
@@ -12755,8 +12760,8 @@ impl _extract_generic(
             }
         }
 
-        if `node.type in config.call_types or _ruby_bare_self_send {
-            if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript") {
+        if ntype in call_types_ or _ruby_bare_self_send {
+            if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript") {
                 if _dynamic_import_js(
                     `node, source, caller_nid, str_path, edges, seen_dyn_import_pairs
                 ) {
@@ -12785,8 +12790,8 @@ impl _extract_generic(
             if _ruby_bare_self_send {
                 callee_name = _read_text(`node, source);
                 self_receiver = "self";
-            } elif config.ts_module == "tree_sitter_swift" {
-                if `node.type == "macro_invocation" {
+            } elif ts_mod == "tree_sitter_swift" {
+                if ntype == "macro_invocation" {
                     for child in `node.children {
                         if child.type == "simple_identifier" {
                             callee_name = _read_text(child, source);
@@ -12795,7 +12800,7 @@ impl _extract_generic(
                     }
                 }
                 first: any = _swift_operand_tail(`node.children[0]) if `node.children else None;
-                if `node.type != "macro_invocation" and first {
+                if ntype != "macro_invocation" and first {
                     if first.type == "simple_identifier" {
                         callee_name = _read_text(first, source);
                         self_receiver = "self";
@@ -12822,7 +12827,7 @@ impl _extract_generic(
                         }
                     }
                 }
-            } elif config.ts_module == "tree_sitter_kotlin" {
+            } elif ts_mod == "tree_sitter_kotlin" {
                 first = `node.children[0] if `node.children else None;
                 while first is not None and first.type == "unary_expression" {
                     first = first.child_by_field_name("argument");
@@ -12876,7 +12881,7 @@ impl _extract_generic(
                         }
                     }
                 }
-            } elif config.ts_module == "tree_sitter_scala" {
+            } elif ts_mod == "tree_sitter_scala" {
                 first = `node.children[0] if `node.children else None;
                 if first {
                     if first.type == "identifier" {
@@ -12896,8 +12901,8 @@ impl _extract_generic(
                         }
                     }
                 }
-            } elif config.ts_module == "tree_sitter_php"
-                and `node.type == "object_creation_expression"
+            } elif ts_mod == "tree_sitter_php"
+                and ntype == "object_creation_expression"
             {
                 for _oce_child in `node.children {
                     if _oce_child.type in ("name", "qualified_name") {
@@ -12908,8 +12913,8 @@ impl _extract_generic(
                         break;
                     }
                 }
-            } elif config.ts_module == "tree_sitter_c_sharp"
-                and `node.type == "object_creation_expression"
+            } elif ts_mod == "tree_sitter_c_sharp"
+                and ntype == "object_creation_expression"
             {
                 type_info: any = _read_csharp_type_name(`node.child_by_field_name("type"), source);
                 if type_info and type_info[0] {
@@ -12918,8 +12923,8 @@ impl _extract_generic(
                         csharp_qualified_prefix = type_info[2];
                     }
                 }
-            } elif config.ts_module == "tree_sitter_c_sharp"
-                and `node.type == "invocation_expression"
+            } elif ts_mod == "tree_sitter_c_sharp"
+                and ntype == "invocation_expression"
             {
                 fn_node: any = `node.child_by_field_name("function");
                 member_parts: any = _csharp_member_call_parts(fn_node);
@@ -13087,8 +13092,8 @@ impl _extract_generic(
                         }
                     }
                 }
-            } elif config.ts_module == "tree_sitter_php" {
-                if `node.type == "function_call_expression" {
+            } elif ts_mod == "tree_sitter_php" {
+                if ntype == "function_call_expression" {
                     func_node: any = `node.child_by_field_name("function");
                     if func_node {
                         callee_name = _read_text(func_node, source);
@@ -13096,7 +13101,7 @@ impl _extract_generic(
                             callee_name = None;
                         }
                     }
-                } elif `node.type == "scoped_call_expression" {
+                } elif ntype == "scoped_call_expression" {
                     is_member_call = True;
                     is_scoped_call = True;
                     name_node = `node.child_by_field_name("name");
@@ -13134,7 +13139,7 @@ impl _extract_generic(
                         }
                     }
                 }
-            } elif config.ts_module == "tree_sitter_cpp" {
+            } elif ts_mod == "tree_sitter_cpp" {
                 cpp_chain: any = [];
                 cpp_binding: any = None;
                 func_node = `node.child_by_field_name(config.call_function_field)
@@ -13188,8 +13193,8 @@ impl _extract_generic(
                         }
                     }
                 }
-            } elif config.ts_module == "tree_sitter_java" {
-                if `node.type == "object_creation_expression" {
+            } elif ts_mod == "tree_sitter_java" {
+                if ntype == "object_creation_expression" {
                     type_node: any = `node.child_by_field_name("type");
                     if type_node is not None {
                         raw = _read_text(type_node, source).split("<", 1)[0].strip();
@@ -13197,7 +13202,7 @@ impl _extract_generic(
                             callee_name = raw.rsplit(".", 1)[-1];
                         }
                     }
-                } elif `node.type == "method_invocation" {
+                } elif ntype == "method_invocation" {
                     name_node = `node.child_by_field_name("name");
                     if name_node is not None {
                         callee_name = _read_text(name_node, source);
@@ -13223,7 +13228,7 @@ impl _extract_generic(
                         }
                     }
                 }
-            } elif config.ts_module == "tree_sitter_ruby" {
+            } elif ts_mod == "tree_sitter_ruby" {
                 meth: any = `node.child_by_field_name("method");
                 if meth is not None {
                     callee_name = _read_text(meth, source);
@@ -13244,10 +13249,10 @@ impl _extract_generic(
                 func_node = `node.child_by_field_name(config.call_function_field)
                     if config.call_function_field
                     else None;
-                if func_node is None and `node.type == "new_expression" {
+                if func_node is None and ntype == "new_expression" {
                     func_node = `node.child_by_field_name("constructor");
                 }
-                if `node.type in _JSX_ELEMENT_TYPES {
+                if ntype in _JSX_ELEMENT_TYPES {
                     func_node = `node.child_by_field_name("name");
                     if func_node is None
                         or func_node.type != "identifier"
@@ -13259,7 +13264,7 @@ impl _extract_generic(
                 if func_node {
                     if func_node.type == "identifier" {
                         callee_name = _read_text(func_node, source);
-                    } elif config.ts_module == "tree_sitter_c"
+                    } elif ts_mod == "tree_sitter_c"
                         and func_node.type == "field_expression"
                     {
                         callee_name = None;
@@ -13275,7 +13280,7 @@ impl _extract_generic(
                             `obj = func_node.child_by_field_name(config.call_accessor_object_field);
                             if `obj is not None and `obj.type == "identifier" {
                                 member_receiver = _read_text(`obj, source);
-                                if config.ts_module
+                                if ts_mod
                                     in ("tree_sitter_javascript", "tree_sitter_typescript")
                                 {
                                     _this_field: any = _ts_field_destructured_from_this(
@@ -13288,10 +13293,10 @@ impl _extract_generic(
                                 }
                             } elif `obj is not None
                                 and `obj.type in ("this", "super")
-                                and config.ts_module in _SELF_CALL_LANGUAGES
+                                and ts_mod in _SELF_CALL_LANGUAGES
                             {
                                 self_receiver = `obj.type;
-                            } elif config.ts_module == "tree_sitter_python"
+                            } elif ts_mod == "tree_sitter_python"
                                 and `obj is not None
                                 and `obj.type == "call"
                             {
@@ -13325,7 +13330,7 @@ impl _extract_generic(
                     }
                 }
             }
-            if config.ts_module == "tree_sitter_lua"
+            if ts_mod == "tree_sitter_lua"
                 and is_member_call
                 and member_receiver == "self"
                 and callee_name
@@ -13342,7 +13347,7 @@ impl _extract_generic(
                 }
             }
             _builtin_member_call: any = is_member_call and callee_name in _LANGUAGE_BUILTIN_GLOBALS;
-            php_builtin_self_call: any = operator.eq(config.ts_module, "tree_sitter_php")
+            php_builtin_self_call: any = operator.eq(ts_mod, "tree_sitter_php")
                 and operator.eq(self_receiver, "this");
             _python_param_call: any = python_param_shadowed is not None
                 and not is_member_call
@@ -13352,29 +13357,29 @@ impl _extract_generic(
                 and not _python_param_call
                 and (callee_name not in _LANGUAGE_BUILTIN_GLOBALS or _builtin_member_call)
                 and not (
-                    config.ts_module == "tree_sitter_python"
+                    ts_mod == "tree_sitter_python"
                     and not is_member_call
                     and _python_lambda_param_shadows(`node, callee_name)
                 )
             {
-                _csharp_defer: any = operator.eq(config.ts_module, "tree_sitter_c_sharp")
+                _csharp_defer: any = operator.eq(ts_mod, "tree_sitter_c_sharp")
                     and is_member_call;
-                _python_defer: any = operator.eq(config.ts_module, "tree_sitter_python")
+                _python_defer: any = operator.eq(ts_mod, "tree_sitter_python")
                     and is_member_call
                     and member_receiver not in {"self", "cls", "super"};
-                _java_defer: any = operator.eq(config.ts_module, "tree_sitter_java")
+                _java_defer: any = operator.eq(ts_mod, "tree_sitter_java")
                     and is_member_call;
-                _kotlin_member_defer: any = operator.eq(config.ts_module, "tree_sitter_kotlin")
+                _kotlin_member_defer: any = operator.eq(ts_mod, "tree_sitter_kotlin")
                     and is_member_call
                     and kotlin_receiver is not None;
-                _swift_defer: any = operator.eq(config.ts_module, "tree_sitter_swift")
+                _swift_defer: any = operator.eq(ts_mod, "tree_sitter_swift")
                     and is_member_call
                     and not self_receiver;
-                _lua_member_defer: any = operator.eq(config.ts_module, "tree_sitter_lua")
+                _lua_member_defer: any = operator.eq(ts_mod, "tree_sitter_lua")
                     and is_member_call
                     and not lua_self_qualified;
                 _js_factory_sibling_call: any = False;
-                if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript")
+                if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
                     and is_member_call
                     and member_receiver
                 {
@@ -13385,12 +13390,12 @@ impl _extract_generic(
                         _js_factory_sibling_call = True;
                     }
                 }
-                _js_member_defer: any = config.ts_module
+                _js_member_defer: any = ts_mod
                     in ("tree_sitter_javascript", "tree_sitter_typescript")
                     and is_member_call
                     and not self_receiver
                     and not _js_factory_sibling_call;
-                _cpp_member_defer: any = operator.eq(config.ts_module, "tree_sitter_cpp")
+                _cpp_member_defer: any = operator.eq(ts_mod, "tree_sitter_cpp")
                     and is_member_call
                     and not is_scoped_call
                     and func_node is not None
@@ -13431,7 +13436,7 @@ impl _extract_generic(
                         }
                     }
                 } else {
-                    if config.ts_module
+                    if ts_mod
                         in (
                             "tree_sitter_python",
                             "tree_sitter_javascript",
@@ -13453,14 +13458,14 @@ impl _extract_generic(
                         if not tgt_nid {
                             tgt_nid = label_to_nid.get(callee_name);
                         }
-                        if config.ts_module == "tree_sitter_python"
+                        if ts_mod == "tree_sitter_python"
                             and tgt_nid in method_owner
                             and method_owner[tgt_nid] != caller_nid
                         {
                             tgt_nid = python_free_label_to_nid.get(callee_name);
                         }
                     } elif self_receiver
-                        or config.ts_module == "tree_sitter_python"
+                        or ts_mod == "tree_sitter_python"
                             and is_member_call
                             and member_receiver in ("self", "cls", "super")
                     {
@@ -13473,7 +13478,7 @@ impl _extract_generic(
                             method_owner,
                             methods_by_owner,
                             _local_bases,
-                            walk_bases=config.ts_module
+                            walk_bases=ts_mod
                                 not in ("tree_sitter_javascript", "tree_sitter_typescript"),
                             require_method_owner=php_builtin_self_call,
                         );
@@ -13498,8 +13503,8 @@ impl _extract_generic(
                     if csharp_qualified_prefix and tgt_nid and not nid_to_sf.get(tgt_nid) {
                         tgt_nid = None;
                     }
-                    if config.ts_module == "tree_sitter_c_sharp"
-                        and `node.type == "object_creation_expression"
+                    if ts_mod == "tree_sitter_c_sharp"
+                        and ntype == "object_creation_expression"
                         and tgt_nid in method_owner
                     {
                         tgt_nid = None;
@@ -13510,13 +13515,13 @@ impl _extract_generic(
                     picked: any = _csharp_pick_overload(
                         peers,
                         _java_argc(`node)
-                            if config.ts_module == "tree_sitter_java"
+                            if ts_mod == "tree_sitter_java"
                             else _csharp_argc(`node),
                     );
                     tgt_nid = (picked or peers[0])["id"];
                 }
-                if config.ts_module == "tree_sitter_c_sharp"
-                    and `node.type == "object_creation_expression"
+                if ts_mod == "tree_sitter_c_sharp"
+                    and ntype == "object_creation_expression"
                     and callee_name
                 {
                     csharp_ctor_records.append({
@@ -13546,7 +13551,7 @@ impl _extract_generic(
                         });
                     }
                 } elif callee_name and (not tgt_nid or external_stub_target) {
-                    is_py_local_data: any = operator.eq(config.ts_module, "tree_sitter_python")
+                    is_py_local_data: any = operator.eq(ts_mod, "tree_sitter_python")
                         and not is_member_call
                         and callee_name
                             in local_bound_names.get(caller_nid, frozenset()) | extra_locals;
@@ -13559,20 +13564,20 @@ impl _extract_generic(
                             "source_location": f"L{`node.start_point[0] + 1}",
                             "receiver": swift_receiver or member_receiver,
                         };
-                        if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript")
+                        if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
                             and is_member_call
                         {
                             rc_entry["_js_receiver_shadowed"] = _js_receiver_shadowed(
                                 `node, member_receiver, source, js_receiver_bindings
                             );
-                            rc_entry["_js_construct"] = operator.eq(`node.type, "new_expression");
+                            rc_entry["_js_construct"] = operator.eq(ntype, "new_expression");
                         }
                         if python_receiver_shadowed is not None and is_member_call {
                             rc_entry["_python_receiver_shadowed"] = python_receiver_shadowed(
                                 `node, member_receiver or ""
                             );
                         }
-                        if config.ts_module == "tree_sitter_python" and is_member_call {
+                        if ts_mod == "tree_sitter_python" and is_member_call {
                             _fn: any = `node.child_by_field_name("function");
                             _recv: any = _fn.child_by_field_name("object")
                                 if _fn is not None
@@ -13588,12 +13593,12 @@ impl _extract_generic(
                         if external_stub_target {
                             rc_entry["via_stub"] = True;
                         }
-                        if member_receiver and config.ts_module == "tree_sitter_ruby" {
+                        if member_receiver and ts_mod == "tree_sitter_ruby" {
                             rc_entry["receiver_type"] = ruby_var_types.get(caller_nid, {}).get(
                                 member_receiver
                             );
                         }
-                        if member_receiver and config.ts_module == "tree_sitter_python" {
+                        if member_receiver and ts_mod == "tree_sitter_python" {
                             _py_type: any = python_var_types.get(caller_nid, {}).get(
                                 member_receiver
                             );
@@ -13616,10 +13621,10 @@ impl _extract_generic(
                                 }
                             }
                         }
-                        if config.ts_module == "tree_sitter_python" {
+                        if ts_mod == "tree_sitter_python" {
                             rc_entry["_python_call_site"] = [`node.start_byte, `node.end_byte];
                         }
-                        if member_receiver == "super" and config.ts_module == "tree_sitter_python" {
+                        if member_receiver == "super" and ts_mod == "tree_sitter_python" {
                             _sfn: any = `node.child_by_field_name("function");
                             _sobj: any = _sfn.child_by_field_name("object")
                                 if _sfn is not None
@@ -13632,7 +13637,7 @@ impl _extract_generic(
                             }
                         }
                         if is_this_field_call
-                            and config.ts_module
+                            and ts_mod
                                 in ("tree_sitter_javascript", "tree_sitter_typescript")
                         {
                             rc_entry["ts_this_field"] = True;
@@ -13640,7 +13645,7 @@ impl _extract_generic(
                                 rc_entry["ts_static_this"] = True;
                             }
                         }
-                        if config.ts_module == "tree_sitter_cpp" {
+                        if ts_mod == "tree_sitter_cpp" {
                             rc_entry["lang"] = "cpp";
                             rc_entry["cpp_call_byte"] = `node.start_byte;
                             rc_entry["cpp_call_scope"] = _cpp_lookup_scope(`node, source);
@@ -13655,16 +13660,16 @@ impl _extract_generic(
                                 }
                             }
                         }
-                        if config.ts_module == "tree_sitter_php" {
+                        if ts_mod == "tree_sitter_php" {
                             rc_entry["php_scoped"] = is_scoped_call;
                         }
-                        if config.ts_module == "tree_sitter_c_sharp" {
+                        if ts_mod == "tree_sitter_c_sharp" {
                             rc_entry["lang"] = "csharp";
                             argc: any = _csharp_argc(`node);
                             if argc is not None {
                                 rc_entry["arity"] = argc;
                             }
-                            if `node.type == "object_creation_expression" {
+                            if ntype == "object_creation_expression" {
                                 rc_entry["csharp_new"] = True;
                             }
                             if csharp_qualified_prefix {
@@ -13730,7 +13735,7 @@ impl _extract_generic(
                                 rc_entry["receiver_undeclared"] = True;
                             }
                         }
-                        if config.ts_module == "tree_sitter_java" {
+                        if ts_mod == "tree_sitter_java" {
                             rc_entry["lang"] = "java";
                             java_argc: any = _java_argc(`node);
                             if java_argc is not None {
@@ -13786,7 +13791,7 @@ impl _extract_generic(
                     }
                 }
             }
-            if config.ts_module == "tree_sitter_python" {
+            if ts_mod == "tree_sitter_python" {
                 args_node: any = `node.child_by_field_name("arguments");
                 if args_node is not None {
                     enclosing_locals: any = local_bound_names.get(caller_nid, frozenset())
@@ -13812,7 +13817,7 @@ impl _extract_generic(
                     (ref_name, loc) = getattr_ref as any;
                     _emit_indirect_by_name(ref_name, loc, caller_nid, "getattr");
                 }
-            } elif config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript") {
+            } elif ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript") {
                 args_node = `node.child_by_field_name("arguments");
                 if args_node is not None {
                     enclosing_locals = local_bound_names.get(caller_nid, frozenset())
@@ -13872,7 +13877,7 @@ impl _extract_generic(
                     }
                 }
             }
-            if `node.type == "member_call_expression"
+            if ntype == "member_call_expression"
                 and callee_name
                 and callee_name in config.container_bind_methods
             {
@@ -13923,7 +13928,7 @@ impl _extract_generic(
                 }
             }
         }
-        if `node.type in config.static_prop_types {
+        if ntype in config.static_prop_types {
             scope_node = `node.child_by_field_name("scope");
             if scope_node is None {
                 for child in `node.children {
@@ -13955,8 +13960,8 @@ impl _extract_generic(
                 }
             }
         }
-        if config.ts_module == "tree_sitter_php"
-            and `node.type == "class_constant_access_expression"
+        if ts_mod == "tree_sitter_php"
+            and ntype == "class_constant_access_expression"
         {
             class_name = _php_class_const_scope(`node);
             if class_name {
@@ -13980,8 +13985,8 @@ impl _extract_generic(
                 }
             }
         }
-        if config.ts_module == "tree_sitter_python"
-            and `node.type in ("dictionary", "list", "set", "tuple")
+        if ts_mod == "tree_sitter_python"
+            and ntype in ("dictionary", "list", "set", "tuple")
         {
             enclosing_locals = local_bound_names.get(caller_nid, frozenset()) | extra_locals;
             ident: any;
@@ -13991,28 +13996,28 @@ impl _extract_generic(
             for attr in _python_dispatch_value_attrs(`node) {
                 _emit_indirect_member_ref(attr, caller_nid, enclosing_locals, "collection");
             }
-        } elif config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript")
-            and `node.type in ("object", "array")
+        } elif ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
+            and ntype in ("object", "array")
         {
             enclosing_locals = local_bound_names.get(caller_nid, frozenset()) | extra_locals;
             for ident in _js_dispatch_value_idents(`node) {
                 _emit_indirect_ref(ident, caller_nid, enclosing_locals, "collection");
             }
         }
-        if config.ts_module == "tree_sitter_python" and `node.type == "assignment" {
+        if ts_mod == "tree_sitter_python" and ntype == "assignment" {
             enclosing_locals = local_bound_names.get(caller_nid, frozenset()) | extra_locals;
             for ident in _python_ref_value_idents(`node.child_by_field_name("right")) {
                 _emit_indirect_ref(ident, caller_nid, enclosing_locals, "assignment");
             }
-        } elif config.ts_module == "tree_sitter_python" and `node.type == "return_statement" {
+        } elif ts_mod == "tree_sitter_python" and ntype == "return_statement" {
             enclosing_locals = local_bound_names.get(caller_nid, frozenset()) | extra_locals;
             value: any = next((c for c in `node.children if c.is_named), None);
             for ident in _python_ref_value_idents(value) {
                 _emit_indirect_ref(ident, caller_nid, enclosing_locals, "return");
             }
         }
-        if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript")
-            and `node.type == "catch_clause"
+        if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
+            and ntype == "catch_clause"
         {
             param: any = `node.child_by_field_name("parameter");
             if param is not None {
@@ -14021,16 +14026,16 @@ impl _extract_generic(
                 extra_locals = extra_locals | frozenset(caught);
             }
         }
-        if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript")
-            and `node.type in ("statement_block", "for_statement")
+        if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
+            and ntype in ("statement_block", "for_statement")
         {
             block_locals: any = _js_direct_lexical_names(`node, source);
             if block_locals {
                 extra_locals = extra_locals | block_locals;
             }
         }
-        if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript")
-            and `node.type == "for_in_statement"
+        if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
+            and ntype == "for_in_statement"
         {
             left: any = `node.child_by_field_name("left");
             if left is not None {
@@ -14048,7 +14053,7 @@ impl _extract_generic(
     }
     python_attr_types = {};
     python_factory_bindings = {};
-    if config.ts_module == "tree_sitter_python" {
+    if ts_mod == "tree_sitter_python" {
         caller_nid: any;
         body_node: any;
         for (caller_nid, body_node) in function_bodies {
@@ -14068,14 +14073,14 @@ impl _extract_generic(
         }
     }
 
-    if config.ts_module == "tree_sitter_ruby" {
+    if ts_mod == "tree_sitter_ruby" {
         for (caller_nid, body_node) in function_bodies {
             ruby_var_types[caller_nid] = _ruby_local_class_bindings(body_node, source);
             ruby_local_names[caller_nid] = _ruby_local_names(body_node, source);
         }
     }
 
-    if config.ts_module == "tree_sitter_python" {
+    if ts_mod == "tree_sitter_python" {
         _py_node_by_id: any = {n["id"]: n for n in nodes};
         _py_test_module: any = _python_is_test_module(str_path);
         for (caller_nid, body_node) in function_bodies {
@@ -14107,7 +14112,7 @@ impl _extract_generic(
     }
     cpp_local_bindings = {};
     cpp_unknown_fields = {};
-    if config.ts_module == "tree_sitter_cpp" {
+    if ts_mod == "tree_sitter_cpp" {
         cpp_unknown_fields = {
             n["id"]: {name for (name, value) in n.get("_cpp_fields", {}).items() if not value}
             for n in nodes
@@ -14138,7 +14143,7 @@ impl _extract_generic(
             type_table.pop(var, None);
         }
     }
-    if config.ts_module == "tree_sitter_swift" {
+    if ts_mod == "tree_sitter_swift" {
         for (_caller_nid, body_node) in function_bodies {
             _swift_local_var_types(body_node, source, type_table, factory=swift_factory_bindings);
         }
@@ -14180,7 +14185,7 @@ impl _extract_generic(
             "weight": 1.0,
         });
     }
-    if config.ts_module == "tree_sitter_python" {
+    if ts_mod == "tree_sitter_python" {
         module_bound = _python_module_bound_names(`root, source);
 
         def _scan_module_dispatch(n) {
@@ -14214,7 +14219,7 @@ impl _extract_generic(
         }
 
         _scan_module_dispatch(`root);
-    } elif config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript") {
+    } elif ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript") {
         js_module_bound = _js_module_bound_names(`root, source);
 
         def _scan_js_module_dispatch(n) {
@@ -14263,7 +14268,7 @@ impl _extract_generic(
     if _ruby_mixin_calls {
         raw_calls.extend(_ruby_mixin_calls);
     }
-    if config.ts_module == "tree_sitter_python" {
+    if ts_mod == "tree_sitter_python" {
         raw_calls.extend(
             _python_property_reads(
                 function_bodies, source, str_path, python_var_types, python_attr_types, method_owner
@@ -14313,7 +14318,7 @@ impl _extract_generic(
             result["parse_errors"]["lossy_error_line"] = _first_multiline_error_line(`root);
         }
     }
-    if config.ts_module == "tree_sitter_kotlin" {
+    if ts_mod == "tree_sitter_kotlin" {
         _pkg: any = _kotlin_package_name(`root, source);
         if _pkg {
             result["kotlin_package"] = _pkg;
@@ -14347,12 +14352,12 @@ impl _extract_generic(
         result["swift_extensions"] = swift_extensions;
     }
     ts_field_types: dict[str, dict[str, str]] = {};
-    if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript") {
+    if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript") {
         _ts_receiver_type_table(`root, source, type_table, ts_field_types);
         _ts_mark_public_twins(`root, source, result);
         _ts_attach_class_fields(result, ts_field_types, str_path);
     }
-    if config.ts_module == "tree_sitter_cpp" {
+    if ts_mod == "tree_sitter_cpp" {
         file_node = next(n for n in nodes if n["id"] == file_nid);
         items_: any = list(_cpp_resolution_facts(`root, source) as any);
         if len(items_) != 3 {
@@ -14366,10 +14371,10 @@ impl _extract_generic(
         file_node["_cpp_include_positions"] = items_[1];
         file_node["_cpp_include_paths"] = items_[2];
     }
-    if config.ts_module == "tree_sitter_php" {
+    if ts_mod == "tree_sitter_php" {
         _php_receiver_type_table(`root, source, type_table);
     }
-    if config.ts_module == "tree_sitter_swift" {
+    if ts_mod == "tree_sitter_swift" {
         if type_table or swift_factory_bindings {
             result["swift_type_table"] = {"path": str_path, "table": type_table};
             if swift_factory_bindings {
@@ -14380,11 +14385,11 @@ impl _extract_generic(
             }
         }
     } elif type_table {
-        if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript") {
+        if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript") {
             result["ts_type_table"] = {"path": str_path, "table": type_table};
-        } elif config.ts_module == "tree_sitter_cpp" {
+        } elif ts_mod == "tree_sitter_cpp" {
             result["cpp_type_table"] = {"path": str_path, "table": type_table};
-        } elif config.ts_module == "tree_sitter_php" {
+        } elif ts_mod == "tree_sitter_php" {
             result["php_type_table"] = {"path": str_path, "table": type_table};
         }
     }

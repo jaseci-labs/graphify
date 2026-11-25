@@ -374,9 +374,6 @@ impl _cross_community_surprises(
 }
 
 impl _betweenness_centrality(G: nx.Graph, k: int | None, seed: int) -> dict[str, float] {
-    i: any;
-    v: any;
-    w: any;
     if not _NETWORKX_RESCALES_SAMPLES_BY_SOURCE {
         return nx.betweenness_centrality(G, k=k, seed=seed);
     }
@@ -384,30 +381,30 @@ impl _betweenness_centrality(G: nx.Graph, k: int | None, seed: int) -> dict[str,
         return nx.betweenness_centrality(G, k=k, seed=seed);
     }
     nodes: any = `list(G);
-    n: any = len(nodes);
+    n = len(nodes);
     if k == n {
         k = None;
     }
     index: any = {`node: i for (i, `node) in enumerate(nodes)};
-    neighbors: any = [[index[w] for w in G[v]] for v in nodes];
-    sources: any = range(n)
+    neighbors = [[`int(index[w]) for w in G[v]] for v in nodes];
+    sources = `list(range(n))
         if k is None
-        else [index[v] for v in random.Random(seed).sample(nodes, k)];
-    scores: any = [0.0] * n;
-    dist: any = [-1] * n;
-    sigma: any = [0.0] * n;
-    delta: any = [0.0] * n;
-    preds: list[list[int]] = [[] for _ in range(n)];
+        else [`int(index[v]) for v in random.Random(seed).sample(nodes, k)];
+    scores = [0.0] * n;
+    dist = [-1] * n;
+    sigma = [0.0] * n;
+    delta = [0.0] * n;
+    preds = [list[int]() for _ in range(n)];
     for s in sources {
         dist[s] = 0;
         sigma[s] = 1.0;
-        order: any = [s];
+        order = [s];
         i = 0;
         while i < len(order) {
             v = order[i];
             i += 1;
-            next_dist: any = dist[v] + 1;
-            sigma_v: any = sigma[v];
+            next_dist = dist[v] + 1;
+            sigma_v = sigma[v];
             for w in neighbors[v] {
                 if dist[w] < 0 {
                     dist[w] = next_dist;
@@ -420,7 +417,7 @@ impl _betweenness_centrality(G: nx.Graph, k: int | None, seed: int) -> dict[str,
             }
         }
         for w in reversed(order) {
-            coeff: any = (1 + delta[w]) / sigma[w];
+            coeff = (1 + delta[w]) / sigma[w];
             for v in preds[w] {
                 delta[v] += sigma[v] * coeff;
             }
@@ -430,21 +427,20 @@ impl _betweenness_centrality(G: nx.Graph, k: int | None, seed: int) -> dict[str,
         }
         for v in order {
             dist[v] = -1;
-            value_: any = 0.0;
-            sigma[v] = value_;
-            delta[v] = value_;
-            preds[v] = [];
+            sigma[v] = 0.0;
+            delta[v] = 0.0;
+            preds[v] = list[int]();
         }
     }
-    targets: any = n - 1;
+    targets = n - 1;
     if targets >= 2 {
         if k is None {
-            scale: any = 1 / (targets * (targets - 1));
+            scale = 1 / (targets * (targets - 1));
             scores = [score * scale for score in scores];
         } else {
             source_scale: any = 1 / ((k - 1) * (targets - 1)) if k > 1 else math.nan;
             other_scale: any = 1 / (k * (targets - 1));
-            sampled: any = `set(sources);
+            sampled = `set(sources);
             scores = [
                 score * (source_scale if i in sampled else other_scale)
                 for (i, score) in enumerate(scores)

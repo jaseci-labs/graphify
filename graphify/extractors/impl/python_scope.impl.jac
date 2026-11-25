@@ -17,7 +17,7 @@ impl _python_param_names(params_node, source: bytes) -> set[str] {
         {
             name_n: any = child.child_by_field_name("name");
             if name_n is None {
-                name_n = next((c for c in typing.cast(object, child).children if c.type == "identifier"), None);
+                name_n = next((c for c in child.children if c.type == "identifier"), None);
             }
             if name_n is not None {
                 out.add(_read_text(name_n, source));

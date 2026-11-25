@@ -379,7 +379,7 @@ impl _csharp_type_parameters_in_scope(`node, source: bytes) -> frozenset[str] {
                 if child.type != "type_parameter_list" {
                     continue;
                 }
-                for param in typing.cast(object, child).children {
+                for param in child.children {
                     if param.type == "type_parameter" {
                         name_node: any = next(
                             (sub for sub in typing.cast(object, param).children if sub.type == "identifier"), None
@@ -509,7 +509,7 @@ impl _csharp_attribute_names(method_node, source: bytes) -> list[tuple[str, bool
         if child.type != "attribute_list" {
             continue;
         }
-        for attr in typing.cast(object, child).children {
+        for attr in child.children {
             if attr.type != "attribute" {
                 continue;
             }
@@ -549,7 +549,7 @@ impl _java_type_parameters_in_scope(`node, source: bytes) -> frozenset[str] {
                         continue;
                     }
                     name_node: any = next(
-                        (child for child in typing.cast(object, param).children if child.type == "type_identifier"), None
+                        (child for child in param.children if child.type == "type_identifier"), None
                     );
                     if name_node is not None {
                         names.add(_read_text(name_node, source));
@@ -929,7 +929,7 @@ impl _java_method_receiver_types(
 impl _java_has_modifier(declaration_node, modifier: str) -> bool {
     for child in typing.cast(object, declaration_node).children {
         if child.type == "modifiers" {
-            return `any(operator.eq(mod.type, modifier) for mod in typing.cast(object, child).children);
+            return `any(operator.eq(mod.type, modifier) for mod in child.children);
         }
     }
     return False;
@@ -1172,7 +1172,7 @@ impl _kotlin_user_type_name(user_type_node, source: bytes) -> str | None {
                 name = text;
             }
         } elif c.type == "simple_user_type" {
-            for sub in typing.cast(object, c).children {
+            for sub in c.children {
                 if sub.type in ("identifier", "type_identifier") {
                     text = _read_text(sub, source);
                     if text {
@@ -1205,7 +1205,7 @@ impl _kotlin_annotation_names(declaration_node, source: bytes) -> list[tuple[str
         if anno.type != "annotation" {
             continue;
         }
-        for sub in typing.cast(object, anno).children {
+        for sub in anno.children {
             user_type_node: any = None;
             if sub.type == "user_type" {
                 user_type_node = sub;
@@ -1249,7 +1249,7 @@ impl _kotlin_annotation_class_literal_refs(declaration_node, source: bytes) -> l
         if anno.type != "annotation" {
             continue;
         }
-        for sub in typing.cast(object, anno).children {
+        for sub in anno.children {
             ci: any = sub if sub.type == "constructor_invocation" else None;
             if ci is None {
                 continue;
@@ -1313,7 +1313,7 @@ impl _kotlin_type_parameters_in_scope(`node, source: bytes) -> frozenset[str] {
             if child.type != "type_parameters" {
                 continue;
             }
-            for param in typing.cast(object, child).children {
+            for param in child.children {
                 if param.type != "type_parameter" {
                     continue;
                 }
@@ -1386,7 +1386,7 @@ impl _kotlin_collect_type_refs(
             if c.type == "type_arguments" {
                 for arg in typing.cast(object, c).children {
                     if arg.type == "type_projection" {
-                        for sub in typing.cast(object, arg).children {
+                        for sub in arg.children {
                             if sub.is_named {
                                 _kotlin_collect_type_refs(sub, source, True, out, `skip);
                             }
@@ -1430,7 +1430,7 @@ impl _kotlin_collect_type_refs(
 impl _kotlin_property_type_node(property_node) -> any {
     for c in typing.cast(object, property_node).children {
         if c.type == "variable_declaration" {
-            for sub in typing.cast(object, c).children {
+            for sub in c.children {
                 if sub.type in ("user_type", "nullable_type", "type_reference") {
                     return sub;
                 }
@@ -1803,11 +1803,11 @@ impl _java_type_var_bounds(`node, source: bytes) -> dict[str, str] {
             if tp.type != "type_parameter" {
                 continue;
             }
-            name_node: any = next((c for c in typing.cast(object, tp).children if c.type == "type_identifier"), None);
+            name_node: any = next((c for c in tp.children if c.type == "type_identifier"), None);
             if name_node is None {
                 continue;
             }
-            bound: any = next((c for c in typing.cast(object, tp).children if c.type == "type_bound"), None);
+            bound: any = next((c for c in tp.children if c.type == "type_bound"), None);
             first: any = next((c for c in typing.cast(object, bound).children if c.is_named), None)
                 if bound is not None
                 else None;
@@ -2094,7 +2094,7 @@ impl _scala_member_nid(
             {
                 continue;
             }
-            for b in typing.cast(object, decl).children {
+            for b in decl.children {
                 if b.type not in ("template_body", "enum_body", "with_template_body") {
                     continue;
                 }
@@ -2277,7 +2277,7 @@ impl _swift_type_parameters_in_scope(`node, source: bytes) -> frozenset[str] {
             if child.type != "type_parameters" {
                 continue;
             }
-            for param in typing.cast(object, child).children {
+            for param in child.children {
                 if param.type != "type_parameter" {
                     continue;
                 }
@@ -2387,7 +2387,7 @@ impl _swift_attribute_type_name(property_node, source: bytes) -> str | None {
         if c.type != "modifiers" {
             continue;
         }
-        for attr in typing.cast(object, c).children {
+        for attr in c.children {
             if attr.type != "attribute" {
                 continue;
             }
@@ -2452,7 +2452,7 @@ impl _swift_factory_call(call_node, source: bytes) -> tuple[str, str] | None {
 impl _swift_property_name(property_node, source: bytes) -> str | None {
     for c in typing.cast(object, property_node).children {
         if c.type == "pattern" {
-            for sc in typing.cast(object, c).children {
+            for sc in c.children {
                 if sc.type == "simple_identifier" {
                     return _read_text(sc, source);
                 }
@@ -2588,7 +2588,7 @@ impl _cpp_type_parameters_in_scope(`node, source: bytes) -> frozenset[str] {
                 continue;
             }
             param: any;
-            for param in typing.cast(object, child).children {
+            for param in child.children {
                 if param.type == "template_template_parameter_declaration" {
                     param = next((c for c in typing.cast(object, param).children if c.type in parameter_types), None);
                 }
@@ -2716,7 +2716,7 @@ impl _scala_given_synthetic_name(`node, source: bytes) -> str | None {
         if c.type == "generic_type" {
             base = next(
                 (cc
-                for cc in typing.cast(object, c).children
+                for cc in c.children
                 if cc.type in ("type_identifier", "stable_type_identifier", "identifier")),
                 None,
             );
@@ -2741,7 +2741,7 @@ impl _scala_type_parameters_in_scope(`node, source: bytes) -> frozenset[str] {
             if child.type != "type_parameters" {
                 continue;
             }
-            for param in typing.cast(object, child).children {
+            for param in child.children {
                 if param.type in ("identifier", "type_identifier") {
                     name: any = _read_text(param, source);
                     if name {
@@ -3187,7 +3187,7 @@ impl _python_local_bound_names(func_def_node, source: bytes) -> set[str] {
                     child.child_by_field_name("left"), source, bound
                 );
             } elif t == "with_statement" {
-                for item in typing.cast(object, child).children {
+                for item in child.children {
                     if item.type == "with_clause" {
                         for wi in typing.cast(object, item).children {
                             if wi.type == "with_item" {
@@ -3419,7 +3419,7 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
                         unsafe = True;
                     }
                 } elif kind == "delete_statement" {
-                    for item in typing.cast(object, child).named_children {
+                    for item in child.named_children {
                         if not target_names(item, bound) {
                             unsafe = True;
                         }
@@ -3492,7 +3492,7 @@ impl _python_module_instance_types(`root, source: bytes) -> any {
                 }
             }
         } elif statement.type == "expression_statement" {
-            assignments.extend(c for c in typing.cast(object, statement).named_children if c.type == "assignment");
+            assignments.extend(c for c in statement.named_children if c.type == "assignment");
         }
     }
 
@@ -3751,7 +3751,7 @@ impl _js_local_bound_names(func_node, source: bytes) -> set[str] {
                     _js_collect_pattern_idents(name, source, bound);
                 }
             } elif c.type == "for_in_statement"
-                and `any(operator.eq(gc.type, "var") for gc in typing.cast(object, c).children)
+                and `any(operator.eq(gc.type, "var") for gc in c.children)
             {
                 left: any = c.child_by_field_name("left");
                 if left is not None {
@@ -3775,7 +3775,7 @@ impl _js_direct_lexical_names(`node, source: bytes) -> frozenset[str] {
         if child.type != "lexical_declaration" {
             continue;
         }
-        for declarator in typing.cast(object, child).children {
+        for declarator in child.children {
             if declarator.type == "variable_declarator" {
                 val: any = declarator.child_by_field_name("value");
                 if val is not None and val.type == "call_expression" {
@@ -3927,13 +3927,13 @@ impl _js_external_import_names(`root, source: bytes, str_path: str) -> set[str] 
             if c.type == "identifier" {
                 bound.add(_read_text(c, source));
             } elif c.type == "namespace_import" {
-                for ident in typing.cast(object, c).children {
+                for ident in c.children {
                     if ident.type == "identifier" {
                         bound.add(_read_text(ident, source));
                     }
                 }
             } elif c.type == "named_imports" {
-                for spec in typing.cast(object, c).children {
+                for spec in c.children {
                     if spec.type != "import_specifier" {
                         continue;
                     }
@@ -3953,7 +3953,7 @@ impl _js_external_import_names(`root, source: bytes, str_path: str) -> set[str] 
                 if src_node is not None {
                     raw: any = _read_text(src_node, source).strip("\"'`");
                     if _js_import_binds_external(raw, str_path) {
-                        for child in typing.cast(object, c).children {
+                        for child in c.children {
                             if child.type == "import_clause" {
                                 _clause_names(child);
                             }
@@ -4048,7 +4048,7 @@ impl _dynamic_import_js(
     }
     for arg in typing.cast(object, args).children {
         if arg.type == "template_string" {
-            if `any(operator.eq(c.type, "template_substitution") for c in typing.cast(object, arg).children) {
+            if `any(operator.eq(c.type, "template_substitution") for c in arg.children) {
                 break;
             }
             raw: any = _read_text(arg, source).strip("`");
@@ -5341,13 +5341,13 @@ impl _csharp_method_receiver_types(
                         continue;
                     }
                     name_node: any = declarator.child_by_field_name("name")
-                        or next((g for g in typing.cast(object, declarator).children if g.type == "identifier"), None);
+                        or next((g for g in declarator.children if g.type == "identifier"), None);
                     if name_node is None {
                         continue;
                     }
                     type_name: any = declared;
                     if type_name is None {
-                        for g in typing.cast(object, declarator).children {
+                        for g in declarator.children {
                             if g.type == "object_creation_expression" {
                                 type_name = _csharp_receiver_type_name(
                                     g.child_by_field_name("type"), source
@@ -5990,7 +5990,7 @@ impl _scan_js_nested_function_declarations(
         if child.type in ("function_declaration", "generator_function_declaration") {
             name_node: any = child.child_by_field_name(config.name_field);
             if name_node is None {
-                for c in typing.cast(object, child).children {
+                for c in child.children {
                     if c.type in config.name_fallback_child_types {
                         name_node = c;
                         break;
@@ -6304,7 +6304,7 @@ impl _js_find_exported_objects(program_node, source: bytes) -> set[str] {
     exported: any = set[any]();
     for child in typing.cast(object, program_node).children {
         if child.type == "export_statement" {
-            for c in typing.cast(object, child).children {
+            for c in child.children {
                 if c.type == "identifier" {
                     exported.add(_read_text(c, source));
                 } elif c.type == "export_clause" {
@@ -6329,7 +6329,7 @@ impl _js_find_exported_objects(program_node, source: bytes) -> set[str] {
                 }
             }
         } elif child.type in ("variable_declaration", "lexical_declaration") {
-            for decl in typing.cast(object, child).children {
+            for decl in child.children {
                 if decl.type != "variable_declarator" {
                     continue;
                 }
@@ -6361,7 +6361,7 @@ impl _js_find_exported_objects(program_node, source: bytes) -> set[str] {
             }
         } elif child.type == "expression_statement" {
             assign: any = next(
-                (c for c in typing.cast(object, child).children if c.type == "assignment_expression"), None
+                (c for c in child.children if c.type == "assignment_expression"), None
             );
             if assign {
                 left = assign.child_by_field_name("left");
@@ -7112,7 +7112,7 @@ impl _scala_extra_walk(
             if `case.type not in ("simple_enum_case", "full_enum_case") {
                 continue;
             }
-            name_node: any = next((c for c in typing.cast(object, `case).children if c.type == "identifier"), None);
+            name_node: any = next((c for c in `case.children if c.type == "identifier"), None);
             if name_node is None {
                 continue;
             }
@@ -7328,7 +7328,7 @@ impl _java_extra_walk(
         add_edge_fn(parent_class_nid, const_nid, "case_of", line);
         for child in typing.cast(object, `node).children {
             if child.type == "class_body" {
-                for member in typing.cast(object, child).children {
+                for member in child.children {
                     walk_fn(member, parent_class_nid=const_nid);
                 }
             }
@@ -7387,7 +7387,7 @@ impl _kotlin_package_name(`root, source: bytes) -> str | None {
         if child.type != "package_header" {
             continue;
         }
-        for c in typing.cast(object, child).children {
+        for c in child.children {
             if c.type in ("qualified_identifier", "identifier") {
                 pkg: any = _read_text(c, source).strip();
                 return pkg or None;
@@ -7810,7 +7810,7 @@ impl _python_local_class_bindings(
         for child in typing.cast(object, params).children {
             if child.type in ("typed_parameter", "typed_default_parameter") {
                 name_n: any = child.child_by_field_name("name")
-                    or next((c for c in typing.cast(object, child).children if c.type == "identifier"), None);
+                    or next((c for c in child.children if c.type == "identifier"), None);
                 if name_n is not None {
                     name = _read_text(name_n, source);
                     bindings.pop(name, None);
@@ -7882,7 +7882,7 @@ impl _python_local_class_bindings(
                 target: any = next((c for c in typing.cast(object, alias).children if c.type == "identifier"), None)
                     if alias is not None
                     else None;
-                value: any = next((c for c in typing.cast(object, child).children if c.is_named), None);
+                value: any = next((c for c in child.children if c.is_named), None);
                 if target is not None {
                     name = _read_text(target, source);
                     if child.parent is not None
@@ -7904,7 +7904,7 @@ impl _python_local_class_bindings(
             } elif child.type == "named_expression" {
                 poison(child.child_by_field_name("name"));
             } elif child.type in ("global_statement", "nonlocal_statement") {
-                for c in typing.cast(object, child).children {
+                for c in child.children {
                     if c.type == "identifier" {
                         bindings[_read_text(c, source)] = None;
                     }
@@ -8047,7 +8047,7 @@ impl _ruby_local_names(body_node, source: bytes) -> frozenset[str] {
                     names.add(_read_text(ident, source));
                 }
             } elif child.type == "for" {
-                for sub in typing.cast(object, child).children {
+                for sub in child.children {
                     if sub.type == "identifier" {
                         names.add(_read_text(sub, source));
                     } elif sub.type == "left_assignment_list" {
@@ -8413,7 +8413,7 @@ impl _php_get_route_name(closure_node, src: bytes) -> str | None {
                         target: any = sibling;
                         if sibling.type == "argument" {
                             c: any;
-                            for c in typing.cast(object, sibling).children {
+                            for c in sibling.children {
                                 if c.type in ("string", "encapsed_string") {
                                     target = c;
                                     break;
@@ -9525,7 +9525,7 @@ impl _extract_generic(
                         for cp_list in typing.cast(object, c).children {
                             if cp_list.type == "class_parameters" {
                                 cp: any;
-                                for cp in typing.cast(object, cp_list).children {
+                                for cp in cp_list.children {
                                     if cp.type != "class_parameter" {
                                         continue;
                                     }
@@ -9719,7 +9719,7 @@ impl _extract_generic(
                                 if _tal.type != "type_argument_list" {
                                     continue;
                                 }
-                                base_arity = sum(1 for _a in typing.cast(object, _tal).children if _a.is_named);
+                                base_arity = sum(1 for _a in _tal.children if _a.is_named);
                             }
                         }
                         base_nid = None;
@@ -9771,7 +9771,7 @@ impl _extract_generic(
                                 if tal.type != "type_argument_list" {
                                     continue;
                                 }
-                                for arg in typing.cast(object, tal).children {
+                                for arg in tal.children {
                                     if not arg.is_named {
                                         continue;
                                     }
@@ -9918,7 +9918,7 @@ impl _extract_generic(
                             } elif component.type == "spread_parameter" {
                                 type_node = next(
                                     (child
-                                    for child in typing.cast(object, component).children
+                                    for child in component.children
                                     if child.is_named
                                         and child.type not in ("modifiers", "variable_declarator")),
                                     None,
@@ -10194,7 +10194,7 @@ impl _extract_generic(
                 }
                 prop_name: str | None = None;
                 array_node: any = None;
-                for c in typing.cast(object, element).children {
+                for c in element.children {
                     if c.type == "variable_name" {
                         sc: any;
                         for sc in typing.cast(object, c).children {
@@ -10220,7 +10220,7 @@ impl _extract_generic(
                     }
                     event_cls: str | None = None;
                     listener_arr: any = None;
-                    for sub in typing.cast(object, `entry).children {
+                    for sub in `entry.children {
                         if sub.type == "class_constant_access_expression" and event_cls is None {
                             for sc in typing.cast(object, sub).children {
                                 if sc.is_named and sc.type in ("name", "qualified_name") {
@@ -10239,7 +10239,7 @@ impl _extract_generic(
                         if listener_entry.type != "array_element_initializer" {
                             continue;
                         }
-                        for item in typing.cast(object, listener_entry).children {
+                        for item in listener_entry.children {
                             if item.type != "class_constant_access_expression" {
                                 continue;
                             }
@@ -10288,7 +10288,7 @@ impl _extract_generic(
                         csharp_method_scopes[id(part)] = (`node, parent_class_nid);
                         function_bodies.append((ctor_nid, part));
                         keyword: any = next(
-                            (c.type for c in typing.cast(object, part).children if c.type in ("base", "this")), None
+                            (c.type for c in part.children if c.type in ("base", "this")), None
                         );
                         if keyword is not None {
                             csharp_ctor_records.append({
@@ -11811,7 +11811,7 @@ impl _extract_generic(
                             if dchild.type != "delegation_specifiers" {
                                 continue;
                             }
-                            for spec in typing.cast(object, dchild).children {
+                            for spec in dchild.children {
                                 if spec.type != "delegation_specifier" {
                                     continue;
                                 }

@@ -2083,7 +2083,7 @@ impl _js_module_specifier(`node, source: bytes) -> str | None {
                 break;
             }
             if child.type == "import_require_clause" {
-                source_node = next((sub for sub in typing.cast(object, child).children if sub.type == "string"), None);
+                source_node = next((sub for sub in child.children if sub.type == "string"), None);
                 break;
             }
         }
@@ -2133,7 +2133,7 @@ impl _js_namespace_export_name(`node, source: bytes) -> str | None {
         if child.type != "namespace_export" {
             continue;
         }
-        for sub in typing.cast(object, child).children {
+        for sub in child.children {
             if sub.type == "identifier" {
                 return _read_text(sub, source) or None;
             }
@@ -2207,7 +2207,7 @@ impl _js_exported_declaration_names(`node, source: bytes) -> list[str] {
 impl _js_default_import_name(`node, source: bytes) -> str | None {
     for child in typing.cast(object, `node).children {
         if child.type == "import_clause" {
-            for sub in typing.cast(object, child).children {
+            for sub in child.children {
                 if sub.type == "identifier" {
                     return _read_text(sub, source);
                 }
@@ -2221,7 +2221,7 @@ impl _js_namespace_import_name(`node, source: bytes) -> str | None {
     for child in typing.cast(object, `node).children {
         if child.type == "import_clause" {
             sub: any;
-            for sub in typing.cast(object, child).children {
+            for sub in child.children {
                 if sub.type == "namespace_import" {
                     for nested in typing.cast(object, sub).children {
                         if nested.type == "identifier" {
@@ -2231,7 +2231,7 @@ impl _js_namespace_import_name(`node, source: bytes) -> str | None {
                 }
             }
         } elif child.type == "namespace_import" {
-            for sub in typing.cast(object, child).children {
+            for sub in child.children {
                 if sub.type == "identifier" {
                     return _read_text(sub, source) or None;
                 }
@@ -2267,7 +2267,7 @@ impl _js_default_object_members(path: Path) -> dict[str, tuple[str, str]] {
     (source, root_node) = parsed as any;
     for `node in typing.cast(object, root_node).named_children {
         if `node.type != "export_statement"
-            or not `any(operator.eq(child.type, "default") for child in typing.cast(object, `node).children)
+            or not `any(operator.eq(child.type, "default") for child in `node.children)
         {
             continue;
         }
@@ -2296,7 +2296,7 @@ impl _js_default_object_members(path: Path) -> dict[str, tuple[str, str]] {
             }
             seen.add(name);
             if prop.type == "method_definition"
-                and not `any(child.type in ("get", "set") for child in typing.cast(object, prop).children)
+                and not `any(child.type in ("get", "set") for child in prop.children)
             {
                 members[name] = (f"{raw_name}()", f"L{prop.start_point[0] + 1}");
             }
@@ -2388,7 +2388,7 @@ impl _ts_heritage_clause_entries(clause_node, source: bytes) -> list[str] {
         } elif child.type == "generic_type" {
             name_node: any = child.child_by_field_name("name");
             if name_node is None {
-                for sub in typing.cast(object, child).children {
+                for sub in child.children {
                     if sub.type in ("type_identifier", "nested_type_identifier", "identifier") {
                         name_node = sub;
                         break;
@@ -2484,7 +2484,7 @@ impl _ts_walk_class_members(
     for child in typing.cast(object, class_node).children {
         if child.type == "class_heritage" {
             saw_clause: any = False;
-            for clause in typing.cast(object, child).children {
+            for clause in child.children {
                 if clause.type == "extends_clause" {
                     saw_clause = True;
                     name: any;
@@ -2579,7 +2579,7 @@ impl _ts_walk_class_members(
             }
         } elif member.type in ("public_field_definition", "property_signature") {
             type_anno = None;
-            for c in typing.cast(object, member).children {
+            for c in member.children {
                 if c.type == "type_annotation" {
                     type_anno = c;
                     break;
@@ -3061,7 +3061,7 @@ impl _python_import_from_module(`node, source: bytes) -> tuple[int, str] | None 
             if remainder {
                 module_name = remainder;
             }
-            for sub in typing.cast(object, child).children {
+            for sub in child.children {
                 if sub.type == "dotted_name" {
                     module_name = _read_text(sub, source);
                 }
@@ -5143,7 +5143,7 @@ impl _resolve_php_type_references(
                             if member.type != "use_declaration" {
                                 continue;
                             }
-                            for sub in typing.cast(object, member).children {
+                            for sub in member.children {
                                 if sub.type in ("name", "qualified_name") {
                                     _record_raw("mixes_in", _read_text(sub, source));
                                 }

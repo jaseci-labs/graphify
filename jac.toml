@@ -1,0 +1,612 @@
+[project]
+exclude = ["tests/fixtures/*", "worked/*"]
+
+[pypi."."]
+[pypi.".".build-system]
+requires = ["setuptools>=83.0.0"]
+build-backend = "setuptools.build_meta"
+
+[pypi.".".project]
+name = "graphifyy"
+version = "0.9.119"
+description = "AI coding assistant skill (Claude Code, CodeBuddy, Codex, OpenCode, Kilo Code, Cursor, Gemini CLI, Aider, OpenClaw, Factory Droid, Trae, Hermes, Kiro, Pi, Devin CLI, Google Antigravity) - turn any folder of code, docs, papers, images, or videos into a queryable knowledge graph"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "LICENSE-MIT", "NOTICE"]
+keywords = ["claude", "claude-code", "codex", "opencode", "kilo", "cursor", "gemini", "aider", "kiro", "pi", "devin", "knowledge-graph", "rag", "graphrag", "obsidian", "community-detection", "tree-sitter", "leiden", "llm"]
+requires-python = ">=3.11.5,<3.16"
+dependencies = [
+    "networkx>=3.4",
+    "numpy>=1.21",
+    "rapidfuzz>=3.0",
+    # Structural YAML extraction (#2214) plus manifest/markdown config parsing.
+    "pyyaml>=6.0",
+    "tomli>=2.0.1; python_version < '3.11'",
+    # Runtime floor is 0.25, not 0.23: 0.23/0.24 cap out at ABI 14
+    # (LANGUAGE_VERSION=14) while the grammars pinned below ship ABI 15
+    # (e.g. tree-sitter-javascript 0.25.0, tree-sitter-powershell 0.26.x).
+    # A resolver is free to pick 0.23.2 for the runtime and 0.25.x for the
+    # grammars, which then fails every parse with "Incompatible Language
+    # version 15". Floor at the oldest runtime that can load them; this also
+    # matches what uv.lock already resolves to.
+    "tree-sitter>=0.25,<0.26",
+    "tree-sitter-python>=0.23,<0.26",
+    "tree-sitter-javascript>=0.23,<0.26",
+    "tree-sitter-typescript>=0.23,<0.25",
+    "tree-sitter-go>=0.23,<0.26",
+    "tree-sitter-rust>=0.23,<0.25",
+    "tree-sitter-java>=0.23,<0.25",
+    "tree-sitter-groovy>=0.1,<0.3",
+    "tree-sitter-c>=0.23,<0.25",
+    "tree-sitter-cpp>=0.23,<0.25",
+    "tree-sitter-ruby>=0.23,<0.25",
+    "tree-sitter-c-sharp>=0.23,<0.25",
+    "tree-sitter-kotlin>=1.0,<2.0",
+    "tree-sitter-scala>=0.23,<0.27",
+    "tree-sitter-php>=0.23,<0.25",
+    "tree-sitter-swift>=0.7,<0.9",
+    "tree-sitter-lua>=0.2,<0.6",
+    "tree-sitter-zig>=1.0,<2.0",
+    "tree-sitter-powershell>=0.26,<0.28",
+    "tree-sitter-elixir>=0.3,<0.5",
+    "tree-sitter-objc>=3.0,<4.0",
+    "tree-sitter-julia>=0.23,<0.25",
+    "tree-sitter-verilog>=1.0,<2.0",
+    "tree-sitter-fortran>=0.6,<0.8",
+    "tree-sitter-bash>=0.23,<0.27",
+    "tree-sitter-json>=0.23,<0.26",
+]
+
+[pypi.".".project.urls]
+Homepage = "https://graphify.com"
+Documentation = "https://docs.graphify.com"
+Repository = "https://github.com/Graphify-Labs/graphify"
+Issues = "https://github.com/Graphify-Labs/graphify/issues"
+
+[pypi.".".project.optional-dependencies]
+# starlette is pulled in transitively by mcp, but graphify/serve.py imports it
+# directly for the HTTP transport, so declare it here and floor it above the
+# CVE-2026-48818 / CVE-2026-54283 fixes (both resolved by 1.3.1) (#1391, #1396).
+# serve.py is dual-compat with the 1.x decorator API and the 2.x on_*
+# constructor-callback API (registration is picked at runtime in
+# _build_server), lifting the <2 cap 0.9.30 introduced for #2277/#2279/#2291;
+# cap below 3 as the tested range. starlette stays capped below its next major.
+# anyio arrives transitively through mcp/starlette/httpx; floor it above the
+# CVE-2026-63374 fix (IDNA 2003 vs 2008 hostname validation let a MITM on a
+# non-ASCII domain pass a cert for a different ASCII host; patched in 4.14.2) so
+# a future re-resolution cannot drop below it. The lock already picks 4.15.1.
+mcp = ["mcp>=1,<3", "starlette>=1.3.1,<2", "anyio>=4.14.2"]
+neo4j = ["neo4j"]
+falkordb = ["falkordb"]
+pdf = ["pypdf>=6.21.4", "markdownify"]
+watch = ["watchdog"]
+svg = ["matplotlib", "pillow>=13.0.0", "numpy>=2.0; python_version >= '3.13'"]
+leiden = [
+    "graspologic; python_version < '3.13'",
+    "graspologic-native>=1.3.1,<2; python_version >= '3.13'",
+]
+office = ["python-docx", "openpyxl"]
+google = ["openpyxl"]
+# --postgres reconstructs DDL and feeds it to extract_sql(), which needs the
+# tree-sitter-sql grammar; without it introspection silently returns 0 nodes,
+# so the postgres extra must carry the grammar too.
+postgres = ["psycopg[binary]", "tree-sitter-sql"]
+# faster-whisper 1.2.1 (current PyPI release) decodes audio with
+# `av.open(..., metadata_errors="ignore")`. PyAV 19.0.0 removed that
+# argument; 16.1.0 through 18.1.0 still accept it. faster-whisper only
+# requires `av>=11`, so a fresh `[video]` install on Python 3.12+ resolves
+# av 19 and transcription raises
+# `TypeError: open() got an unexpected keyword argument 'metadata_errors'`.
+# Cap PyAV below 19 on the same interpreter marker as faster-whisper
+# (Python 3.10 never installs it). The unreleased faster-whisper master
+# already omits the argument on PyAV 19; drop this cap once that ships.
+video = [
+    "faster-whisper; python_version >= '3.11'",
+    "av>=11,<19; python_version >= '3.11'",
+    "yt-dlp>=2026.7.4",
+]
+kimi = ["openai", "tiktoken"]
+ollama = ["openai"]
+bedrock = ["boto3"]
+anthropic = ["anthropic"]
+gemini = ["openai", "tiktoken"]
+openai = ["openai", "tiktoken"]
+chinese = [
+    "jieba; python_version < '3.12'",
+    "jieba-py>=0.46.12,<1; python_version >= '3.12'",
+]
+sql = ["tree-sitter-sql"]
+# extract_pascal() uses tree-sitter-pascal for AST-quality extraction (more
+# accurate calls/inherits edges) and falls back to a regex extractor when it is
+# absent (#781), so this stays optional. Unlike tree-sitter-dm below, it ships
+# prebuilt wheels for every platform (win/macOS/Linux), so no C toolchain needed.
+pascal = ["tree-sitter-pascal"]
+# tree-sitter-dm (BYOND DreamMaker) ships only a Windows wheel, so on Linux/Mac it
+# must compile from source (needs a C toolchain + python3-dev). Keeping it optional
+# avoids breaking the default `uv tool install graphifyy` for everyone (#1104).
+# Capped <0.26: the 0.26.0 grammar changed the type-path node shape, so
+# extract_dm() stops finding type definitions (a fresh `uvx --from graphifyy[dm]`
+# would otherwise pull it and silently break DM extraction). uv.lock pins 0.25.1.
+dm = ["tree-sitter-dm>=0.25,<0.26"]
+terraform = ["tree-sitter-hcl"]
+# tree-sitter-ocaml ships prebuilt abi3 wheels for every platform, so no C
+# toolchain is needed; kept optional because OCaml is a niche corpus language.
+ocaml = ["tree-sitter-ocaml"]
+# tree-sitter-commonlisp ships prebuilt abi3 wheels for every platform; optional
+# because Common Lisp is a niche corpus language.
+commonlisp = ["tree-sitter-commonlisp"]
+# The official Robot Framework parser (robot.api) - pure Python, wheels for
+# every platform, no C toolchain; optional because Robot Framework corpora are
+# QA-automation specific.
+robot = ["robotframework>=4.0"]
+vbnet = ["tree-sitter-vb-dotnet==0.3.0"]
+# No standalone tree-sitter-r / tree-sitter-erlang wheel exists on PyPI; the
+# language pack bundles both grammars in a prebuilt, offline-compatible wheel.
+# Optional extras (large shared dep, resolved once in `all`).
+r = ["tree-sitter-language-pack==0.11.0"]
+erlang = ["tree-sitter-language-pack==0.11.0"]
+solidity = ["tree-sitter-solidity==1.2.13"]
+all = ["mcp>=1,<3", "starlette>=1.3.1,<2", "anyio>=4.14.2", "neo4j", "falkordb", "pypdf>=6.21.4", "markdownify", "watchdog", "graspologic; python_version < '3.13'", "graspologic-native>=1.3.1,<2; python_version >= '3.13'", "python-docx", "openpyxl", "psycopg[binary]", "faster-whisper; python_version >= '3.11'", "av>=11,<19; python_version >= '3.11'", "yt-dlp>=2026.7.4", "matplotlib", "pillow>=13.0.0", "numpy>=2.0; python_version >= '3.13'", "openai", "tiktoken", "boto3", "anthropic", "tree-sitter-sql", "jieba; python_version < '3.12'", "jieba-py>=0.46.12,<1; python_version >= '3.12'", "tree-sitter-dm>=0.25,<0.26", "tree-sitter-hcl", "tree-sitter-pascal", "tree-sitter-ocaml", "tree-sitter-commonlisp", "robotframework>=4.0", "tree-sitter-vb-dotnet==0.3.0", "tree-sitter-language-pack==0.11.0", "tree-sitter-solidity==1.2.13"]
+
+[pypi.".".project.scripts]
+graphify = "graphify.__main__:main"
+graphify-mcp = "graphify.serve:_main"
+
+[pypi.".".dependency-groups]
+dev = [
+    "bandit>=1.9.4",
+    "build>=1.5.0",
+    "hypothesis>=6.152.7",
+    "nuitka>=4.1",
+    "patchelf>=0.17.2.4 ; sys_platform != 'win32'",
+    "pip-audit>=2.10.0",
+    "pre-commit>=4.6.0",
+    "pyright>=1.1.409",
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+    "pytest-xdist>=3.6.0",
+    "ruff>=0.15.13",
+    "setuptools>=83.0.0",
+    "wheel>=0.47.0",
+    "tomli>=2.0 ; python_version < '3.11'",
+    "tree-sitter-hcl>=1.2.0",
+    "tree-sitter-ocaml>=0.25.0",
+    "tree-sitter-commonlisp>=0.4.1",
+]
+
+[pypi.".".tool.uv]
+# Install via: uv tool install graphifyy
+# Run without installing: uvx graphifyy install
+package = true
+
+[pypi.".".tool.setuptools]
+packages = ["graphify", "graphify.extractors", "graphify.exporters"]
+include-package-data = false
+
+[pypi.".".tool.setuptools.package-data]
+# The skill bodies ship as graphify/skill*.md (the SKILL.md a host installs is
+# copied from one of these). The progressive-disclosure references sidecar ships
+# under graphify/skills/<host>/references/, and the always-on injection blocks
+# under graphify/always_on/. There is no graphify/skills/<host>/SKILL.md in the
+# repo, so no SKILL.md glob is needed here.
+# graphify/pi/ is the native Pi guard package; Pi registers it in place from the installation.
+graphify = ["skill.md", "skill-codex.md", "skill-opencode.md", "skill-kilo.md", "command-kilo.md", "skill-aider.md", "skill-amp.md", "skill-agents.md", "skill-copilot.md", "skill-claw.md", "skill-windows.md", "skill-droid.md", "skill-trae.md", "skill-kiro.md", "skill-vscode.md", "skill-pi.md", "skill-devin.md", "skills/*/references/*.md", "always_on/*.md", "pi/package.json", "pi/index.ts"]
+
+[pypi.".".tool.pytest.ini_options]
+testpaths = ["tests"]
+# `serial` marks tests that must not run under xdist parallelism: they assert
+# wall-clock timing (serve/reload latency) or drive their own process pools, so
+# concurrent CPU load from sibling workers makes them flaky. The fast path runs
+# `-n auto -m "not serial"`; a quick second pass runs `-m serial` serially.
+markers = [
+    "serial: run outside xdist parallelism (timing- or concurrency-sensitive)",
+]
+norecursedirs = [
+    "graphify-benchmark", "graphify_eval", "graphify_test",
+    "worked", "llm-stack-corpus", "llm-stack-demo", "product-site",
+    "scripts", "ebook", ".github", "dist", "build",
+]
+
+[pypi.".".tool.bandit]
+skips = ["B404"]
+
+[pypi.".".tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[pypi.".".tool.ruff.lint]
+# Keep the committed baseline conservative until upstream adopts a broader lint policy.
+select = ["E9", "F63", "F7", "F82"]
+
+[pypi.".".tool.pyright]
+include = ["graphify", "tests"]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+
+[test.pypi."."]
+command = ["pytest", "--import-mode=append"]
+groups = ["dev"]
+
+[install.pypi."."]
+groups = ["dev"]
+extras = ["mcp", "neo4j", "falkordb", "pdf", "watch", "svg", "office", "google", "postgres", "kimi", "bedrock", "anthropic", "chinese", "sql", "pascal", "dm", "terraform", "ocaml", "commonlisp", "robot", "vbnet", "r", "solidity"]
+
+[npm."graphify/pi"]
+name = "graphify-pi"
+private = true
+description = "Native Pi (and Oh My Pi) bridge to Graphify's installed hook-guard CLI"
+license = "Apache-2.0"
+type = "module"
+
+[npm."graphify/pi".pi]
+extensions = ["./index.ts"]
+
+[cargo."tests/fixtures/crate_a"]
+[cargo."tests/fixtures/crate_a".package]
+name = "crate_a"
+version = "0.1.0"
+edition = "2021"
+
+[cargo."tests/fixtures/crate_b"]
+[cargo."tests/fixtures/crate_b".package]
+name = "crate_b"
+version = "0.1.0"
+edition = "2021"
+
+[wheel."."]
+files = [
+    "graphify/__init__.jac",
+    "graphify/__main__.py",
+    "graphify/_minhash.jac",
+    "graphify/affected.py",
+    "graphify/always_on/agents-md.md",
+    "graphify/always_on/antigravity-rules.md",
+    "graphify/always_on/claude-md.md",
+    "graphify/always_on/gemini-md.md",
+    "graphify/always_on/kiro-steering.md",
+    "graphify/always_on/vscode-instructions.md",
+    "graphify/analyze.py",
+    "graphify/benchmark.py",
+    "graphify/build.py",
+    "graphify/cache.jac",
+    "graphify/callflow_html.jac",
+    "graphify/cargo_introspect.jac",
+    "graphify/cli.py",
+    "graphify/cluster.jac",
+    "graphify/command-kilo.md",
+    "graphify/cpp_resolution.jac",
+    "graphify/cross_repo_calls.jac",
+    "graphify/cross_repo_types.jac",
+    "graphify/csharp_dispatch.jac",
+    "graphify/dedup.py",
+    "graphify/detect.jac",
+    "graphify/dfm_resolution.jac",
+    "graphify/diagnostics.py",
+    "graphify/export.py",
+    "graphify/exporters/__init__.jac",
+    "graphify/exporters/base.jac",
+    "graphify/exporters/graphdb.py",
+    "graphify/exporters/html.py",
+    "graphify/extract.py",
+    "graphify/extractors/__init__.py",
+    "graphify/extractors/apex.py",
+    "graphify/extractors/base.jac",
+    "graphify/extractors/bash.py",
+    "graphify/extractors/blade.jac",
+    "graphify/extractors/cobol.py",
+    "graphify/extractors/commonlisp.py",
+    "graphify/extractors/csharp.jac",
+    "graphify/extractors/dart.py",
+    "graphify/extractors/dm.py",
+    "graphify/extractors/elixir.py",
+    "graphify/extractors/engine.py",
+    "graphify/extractors/erlang.py",
+    "graphify/extractors/fortran.py",
+    "graphify/extractors/go.py",
+    "graphify/extractors/json_config.py",
+    "graphify/extractors/julia.py",
+    "graphify/extractors/markdown.py",
+    "graphify/extractors/models.jac",
+    "graphify/extractors/objc.py",
+    "graphify/extractors/ocaml.py",
+    "graphify/extractors/pascal.py",
+    "graphify/extractors/pascal_forms.py",
+    "graphify/extractors/powershell.py",
+    "graphify/extractors/python_scope.jac",
+    "graphify/extractors/r.py",
+    "graphify/extractors/razor.py",
+    "graphify/extractors/resolution.py",
+    "graphify/extractors/robot.py",
+    "graphify/extractors/rust.py",
+    "graphify/extractors/sln.jac",
+    "graphify/extractors/solidity.py",
+    "graphify/extractors/sql.py",
+    "graphify/extractors/terraform.jac",
+    "graphify/extractors/vbnet.py",
+    "graphify/extractors/verilog.py",
+    "graphify/extractors/yaml_config.py",
+    "graphify/extractors/zig.py",
+    "graphify/file_slice.jac",
+    "graphify/global_graph.py",
+    "graphify/go_dispatch.jac",
+    "graphify/google_workspace.jac",
+    "graphify/hooks.jac",
+    "graphify/ids.jac",
+    "graphify/ingest.jac",
+    "graphify/install.jac",
+    "graphify/interface_dispatch.jac",
+    "graphify/kotlin_dispatch.jac",
+    "graphify/llm.py",
+    "graphify/manifest.jac",
+    "graphify/manifest_ingest.jac",
+    "graphify/markdown_resolution.py",
+    "graphify/mcp_ingest.py",
+    "graphify/multigraph_compat.jac",
+    "graphify/pascal_class_resolution.jac",
+    "graphify/pascal_resolution.jac",
+    "graphify/pascal_singleton_resolution.jac",
+    "graphify/paths.jac",
+    "graphify/pg_introspect.py",
+    "graphify/pi/index.ts",
+    "graphify/pi/package.json",
+    "graphify/prs.py",
+    "graphify/querylog.jac",
+    "graphify/rcfile.jac",
+    "graphify/reflect.jac",
+    "graphify/report.py",
+    "graphify/resolver_registry.jac",
+    "graphify/ruby_resolution.py",
+    "graphify/scip_ingest.jac",
+    "graphify/sections.py",
+    "graphify/security.jac",
+    "graphify/semantic_cleanup.py",
+    "graphify/serve.py",
+    "graphify/skill-agents.md",
+    "graphify/skill-aider.md",
+    "graphify/skill-amp.md",
+    "graphify/skill-claw.md",
+    "graphify/skill-codex.md",
+    "graphify/skill-copilot.md",
+    "graphify/skill-devin.md",
+    "graphify/skill-droid.md",
+    "graphify/skill-kilo.md",
+    "graphify/skill-kiro.md",
+    "graphify/skill-opencode.md",
+    "graphify/skill-pi.md",
+    "graphify/skill-trae.md",
+    "graphify/skill-vscode.md",
+    "graphify/skill-windows.md",
+    "graphify/skill.md",
+    "graphify/skills/agents/references/add-watch.md",
+    "graphify/skills/agents/references/exports.md",
+    "graphify/skills/agents/references/extraction-spec.md",
+    "graphify/skills/agents/references/github-and-merge.md",
+    "graphify/skills/agents/references/hooks.md",
+    "graphify/skills/agents/references/query.md",
+    "graphify/skills/agents/references/transcribe.md",
+    "graphify/skills/agents/references/update.md",
+    "graphify/skills/amp/references/add-watch.md",
+    "graphify/skills/amp/references/exports.md",
+    "graphify/skills/amp/references/extraction-spec.md",
+    "graphify/skills/amp/references/github-and-merge.md",
+    "graphify/skills/amp/references/hooks.md",
+    "graphify/skills/amp/references/query.md",
+    "graphify/skills/amp/references/transcribe.md",
+    "graphify/skills/amp/references/update.md",
+    "graphify/skills/claude/references/add-watch.md",
+    "graphify/skills/claude/references/exports.md",
+    "graphify/skills/claude/references/extraction-spec.md",
+    "graphify/skills/claude/references/github-and-merge.md",
+    "graphify/skills/claude/references/hooks.md",
+    "graphify/skills/claude/references/query.md",
+    "graphify/skills/claude/references/transcribe.md",
+    "graphify/skills/claude/references/update.md",
+    "graphify/skills/claw/references/add-watch.md",
+    "graphify/skills/claw/references/exports.md",
+    "graphify/skills/claw/references/extraction-spec.md",
+    "graphify/skills/claw/references/github-and-merge.md",
+    "graphify/skills/claw/references/hooks.md",
+    "graphify/skills/claw/references/query.md",
+    "graphify/skills/claw/references/transcribe.md",
+    "graphify/skills/claw/references/update.md",
+    "graphify/skills/codex/references/add-watch.md",
+    "graphify/skills/codex/references/exports.md",
+    "graphify/skills/codex/references/extraction-spec.md",
+    "graphify/skills/codex/references/github-and-merge.md",
+    "graphify/skills/codex/references/hooks.md",
+    "graphify/skills/codex/references/query.md",
+    "graphify/skills/codex/references/transcribe.md",
+    "graphify/skills/codex/references/update.md",
+    "graphify/skills/copilot/references/add-watch.md",
+    "graphify/skills/copilot/references/exports.md",
+    "graphify/skills/copilot/references/extraction-spec.md",
+    "graphify/skills/copilot/references/github-and-merge.md",
+    "graphify/skills/copilot/references/hooks.md",
+    "graphify/skills/copilot/references/query.md",
+    "graphify/skills/copilot/references/transcribe.md",
+    "graphify/skills/copilot/references/update.md",
+    "graphify/skills/droid/references/add-watch.md",
+    "graphify/skills/droid/references/exports.md",
+    "graphify/skills/droid/references/extraction-spec.md",
+    "graphify/skills/droid/references/github-and-merge.md",
+    "graphify/skills/droid/references/hooks.md",
+    "graphify/skills/droid/references/query.md",
+    "graphify/skills/droid/references/transcribe.md",
+    "graphify/skills/droid/references/update.md",
+    "graphify/skills/kilo/references/add-watch.md",
+    "graphify/skills/kilo/references/exports.md",
+    "graphify/skills/kilo/references/extraction-spec.md",
+    "graphify/skills/kilo/references/github-and-merge.md",
+    "graphify/skills/kilo/references/hooks.md",
+    "graphify/skills/kilo/references/query.md",
+    "graphify/skills/kilo/references/transcribe.md",
+    "graphify/skills/kilo/references/update.md",
+    "graphify/skills/kiro/references/add-watch.md",
+    "graphify/skills/kiro/references/exports.md",
+    "graphify/skills/kiro/references/extraction-spec.md",
+    "graphify/skills/kiro/references/github-and-merge.md",
+    "graphify/skills/kiro/references/hooks.md",
+    "graphify/skills/kiro/references/query.md",
+    "graphify/skills/kiro/references/transcribe.md",
+    "graphify/skills/kiro/references/update.md",
+    "graphify/skills/opencode/references/add-watch.md",
+    "graphify/skills/opencode/references/exports.md",
+    "graphify/skills/opencode/references/extraction-spec.md",
+    "graphify/skills/opencode/references/github-and-merge.md",
+    "graphify/skills/opencode/references/hooks.md",
+    "graphify/skills/opencode/references/query.md",
+    "graphify/skills/opencode/references/transcribe.md",
+    "graphify/skills/opencode/references/update.md",
+    "graphify/skills/pi/references/add-watch.md",
+    "graphify/skills/pi/references/exports.md",
+    "graphify/skills/pi/references/extraction-spec.md",
+    "graphify/skills/pi/references/github-and-merge.md",
+    "graphify/skills/pi/references/hooks.md",
+    "graphify/skills/pi/references/query.md",
+    "graphify/skills/pi/references/transcribe.md",
+    "graphify/skills/pi/references/update.md",
+    "graphify/skills/trae/references/add-watch.md",
+    "graphify/skills/trae/references/exports.md",
+    "graphify/skills/trae/references/extraction-spec.md",
+    "graphify/skills/trae/references/github-and-merge.md",
+    "graphify/skills/trae/references/hooks.md",
+    "graphify/skills/trae/references/query.md",
+    "graphify/skills/trae/references/transcribe.md",
+    "graphify/skills/trae/references/update.md",
+    "graphify/skills/vscode/references/add-watch.md",
+    "graphify/skills/vscode/references/exports.md",
+    "graphify/skills/vscode/references/extraction-spec.md",
+    "graphify/skills/vscode/references/github-and-merge.md",
+    "graphify/skills/vscode/references/hooks.md",
+    "graphify/skills/vscode/references/query.md",
+    "graphify/skills/vscode/references/transcribe.md",
+    "graphify/skills/vscode/references/update.md",
+    "graphify/skills/windows/references/add-watch.md",
+    "graphify/skills/windows/references/exports.md",
+    "graphify/skills/windows/references/extraction-spec.md",
+    "graphify/skills/windows/references/github-and-merge.md",
+    "graphify/skills/windows/references/hooks.md",
+    "graphify/skills/windows/references/query.md",
+    "graphify/skills/windows/references/transcribe.md",
+    "graphify/skills/windows/references/update.md",
+    "graphify/swift_dispatch.jac",
+    "graphify/symbol_resolution.py",
+    "graphify/transcribe.jac",
+    "graphify/tree_html.py",
+    "graphify/validate.jac",
+    "graphify/watch.py",
+    "graphify/wiki.jac",
+]
+
+[wheel.".".metadata]
+Requires-Dist = [
+    "networkx>=3.4",
+    "numpy>=1.21",
+    "rapidfuzz>=3.0",
+    "pyyaml>=6.0",
+    "tomli>=2.0.1; python_version < \"3.11\"",
+    "tree-sitter<0.26,>=0.25",
+    "tree-sitter-python<0.26,>=0.23",
+    "tree-sitter-javascript<0.26,>=0.23",
+    "tree-sitter-typescript<0.25,>=0.23",
+    "tree-sitter-go<0.26,>=0.23",
+    "tree-sitter-rust<0.25,>=0.23",
+    "tree-sitter-java<0.25,>=0.23",
+    "tree-sitter-groovy<0.3,>=0.1",
+    "tree-sitter-c<0.25,>=0.23",
+    "tree-sitter-cpp<0.25,>=0.23",
+    "tree-sitter-ruby<0.25,>=0.23",
+    "tree-sitter-c-sharp<0.25,>=0.23",
+    "tree-sitter-kotlin<2.0,>=1.0",
+    "tree-sitter-scala<0.27,>=0.23",
+    "tree-sitter-php<0.25,>=0.23",
+    "tree-sitter-swift<0.9,>=0.7",
+    "tree-sitter-lua<0.6,>=0.2",
+    "tree-sitter-zig<2.0,>=1.0",
+    "tree-sitter-powershell<0.28,>=0.26",
+    "tree-sitter-elixir<0.5,>=0.3",
+    "tree-sitter-objc<4.0,>=3.0",
+    "tree-sitter-julia<0.25,>=0.23",
+    "tree-sitter-verilog<2.0,>=1.0",
+    "tree-sitter-fortran<0.8,>=0.6",
+    "tree-sitter-bash<0.27,>=0.23",
+    "tree-sitter-json<0.26,>=0.23",
+    "mcp<3,>=1; extra == \"mcp\"",
+    "starlette<2,>=1.3.1; extra == \"mcp\"",
+    "anyio>=4.14.2; extra == \"mcp\"",
+    "neo4j; extra == \"neo4j\"",
+    "falkordb; extra == \"falkordb\"",
+    "pypdf>=6.21.4; extra == \"pdf\"",
+    "markdownify; extra == \"pdf\"",
+    "watchdog; extra == \"watch\"",
+    "matplotlib; extra == \"svg\"",
+    "pillow>=13.0.0; extra == \"svg\"",
+    "numpy>=2.0; python_version >= \"3.13\" and extra == \"svg\"",
+    "graspologic; python_version < \"3.13\" and extra == \"leiden\"",
+    "graspologic-native<2,>=1.3.1; python_version >= \"3.13\" and extra == \"leiden\"",
+    "python-docx; extra == \"office\"",
+    "openpyxl; extra == \"office\"",
+    "openpyxl; extra == \"google\"",
+    "psycopg[binary]; extra == \"postgres\"",
+    "tree-sitter-sql; extra == \"postgres\"",
+    "faster-whisper; python_version >= \"3.11\" and extra == \"video\"",
+    "av<19,>=11; python_version >= \"3.11\" and extra == \"video\"",
+    "yt-dlp>=2026.7.4; extra == \"video\"",
+    "openai; extra == \"kimi\"",
+    "tiktoken; extra == \"kimi\"",
+    "openai; extra == \"ollama\"",
+    "boto3; extra == \"bedrock\"",
+    "anthropic; extra == \"anthropic\"",
+    "openai; extra == \"gemini\"",
+    "tiktoken; extra == \"gemini\"",
+    "openai; extra == \"openai\"",
+    "tiktoken; extra == \"openai\"",
+    "jieba; python_version < \"3.12\" and extra == \"chinese\"",
+    "jieba-py<1,>=0.46.12; python_version >= \"3.12\" and extra == \"chinese\"",
+    "tree-sitter-sql; extra == \"sql\"",
+    "tree-sitter-pascal; extra == \"pascal\"",
+    "tree-sitter-dm<0.26,>=0.25; extra == \"dm\"",
+    "tree-sitter-hcl; extra == \"terraform\"",
+    "tree-sitter-ocaml; extra == \"ocaml\"",
+    "tree-sitter-commonlisp; extra == \"commonlisp\"",
+    "robotframework>=4.0; extra == \"robot\"",
+    "tree-sitter-vb-dotnet==0.3.0; extra == \"vbnet\"",
+    "tree-sitter-language-pack==0.11.0; extra == \"r\"",
+    "tree-sitter-language-pack==0.11.0; extra == \"erlang\"",
+    "tree-sitter-solidity==1.2.13; extra == \"solidity\"",
+    "mcp<3,>=1; extra == \"all\"",
+    "starlette<2,>=1.3.1; extra == \"all\"",
+    "anyio>=4.14.2; extra == \"all\"",
+    "neo4j; extra == \"all\"",
+    "falkordb; extra == \"all\"",
+    "pypdf>=6.21.4; extra == \"all\"",
+    "markdownify; extra == \"all\"",
+    "watchdog; extra == \"all\"",
+    "graspologic; python_version < \"3.13\" and extra == \"all\"",
+    "graspologic-native<2,>=1.3.1; python_version >= \"3.13\" and extra == \"all\"",
+    "python-docx; extra == \"all\"",
+    "openpyxl; extra == \"all\"",
+    "psycopg[binary]; extra == \"all\"",
+    "faster-whisper; python_version >= \"3.11\" and extra == \"all\"",
+    "av<19,>=11; python_version >= \"3.11\" and extra == \"all\"",
+    "yt-dlp>=2026.7.4; extra == \"all\"",
+    "matplotlib; extra == \"all\"",
+    "pillow>=13.0.0; extra == \"all\"",
+    "numpy>=2.0; python_version >= \"3.13\" and extra == \"all\"",
+    "openai; extra == \"all\"",
+    "tiktoken; extra == \"all\"",
+    "boto3; extra == \"all\"",
+    "anthropic; extra == \"all\"",
+    "tree-sitter-sql; extra == \"all\"",
+    "jieba; python_version < \"3.12\" and extra == \"all\"",
+    "jieba-py<1,>=0.46.12; python_version >= \"3.12\" and extra == \"all\"",
+    "tree-sitter-dm<0.26,>=0.25; extra == \"all\"",
+    "tree-sitter-hcl; extra == \"all\"",
+    "tree-sitter-pascal; extra == \"all\"",
+    "tree-sitter-ocaml; extra == \"all\"",
+    "tree-sitter-commonlisp; extra == \"all\"",
+    "robotframework>=4.0; extra == \"all\"",
+    "tree-sitter-vb-dotnet==0.3.0; extra == \"all\"",
+    "tree-sitter-language-pack==0.11.0; extra == \"all\"",
+    "tree-sitter-solidity==1.2.13; extra == \"all\"",
+]

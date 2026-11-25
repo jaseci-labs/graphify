@@ -13,6 +13,7 @@ equivalent to datasketch so dedup quality is unchanged.
 from __future__ import annotations
 import hashlib
 import struct
+from functools import partial
 
 import numpy as np
 
@@ -21,7 +22,7 @@ _MP = np.uint64((1 << 61) - 1)  # Mersenne prime for the hash family
 _MH = np.uint64(0xFFFF_FFFF)    # mask to 32-bit values
 
 # One (a, b) coefficient array per num_perm, shared across all instances.
-_MH_COEFFS: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+_MH_COEFFS = {}  # num_perm -> (a, b) coefficient arrays
 
 
 def _mh_coeffs(num_perm: int) -> tuple[np.ndarray, np.ndarray]:
@@ -58,6 +59,14 @@ def _lsh_integrate(f, lo: float, hi: float, n: int = 128) -> float:
 _LSH_PARAMS_CACHE: dict[tuple[float, int], tuple[int, int]] = {}
 
 
+def _lsh_false_positive(s: float, _b: float, _r: float) -> float:
+    return 1 - (1 - s ** _r) ** _b
+
+
+def _lsh_false_negative(s: float, _b: float, _r: float) -> float:
+    return 1 - (1 - (1 - s ** _r) ** _b)
+
+
 def _optimal_lsh_params(threshold: float, num_perm: int) -> tuple[int, int]:
     """Find (bands, rows) that minimise weighted FP+FN error, without scipy."""
     key = (threshold, num_perm)
@@ -67,11 +76,11 @@ def _optimal_lsh_params(threshold: float, num_perm: int) -> tuple[int, int]:
     for b in range(1, num_perm + 1):
         for r in range(1, num_perm // b + 1):
             fp = _lsh_integrate(
-                lambda s, _b=float(b), _r=float(r): 1 - (1 - s ** _r) ** _b,
+                partial(_lsh_false_positive, _b=float(b), _r=float(r)),
                 0.0, threshold,
             )
             fn = _lsh_integrate(
-                lambda s, _b=float(b), _r=float(r): 1 - (1 - (1 - s ** _r) ** _b),
+                partial(_lsh_false_negative, _b=float(b), _r=float(r)),
                 threshold, 1.0,
             )
             err = 0.5 * fp + 0.5 * fn
@@ -86,7 +95,7 @@ class MinHashLSH:
 
     def __init__(self, threshold: float = 0.5, num_perm: int = 128) -> None:
         self.b, self.r = _optimal_lsh_params(threshold, num_perm)
-        self._tables: list[dict[bytes, list[str]]] = [{} for _ in range(self.b)]
+        self._tables: list[dict[bytes, list[str]]] = [dict() for _ in range(self.b)]
         self._keys: set[str] = set()
 
     def insert(self, key: str, minhash: MinHash) -> None:

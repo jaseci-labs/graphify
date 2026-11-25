@@ -1566,7 +1566,7 @@ def _ollama_request_extras(user_message: str, max_completion_tokens: int,
 # instructions and answered in prose (#4413). The native /api/chat endpoint honours it. Servers
 # that only speak /v1 (LM Studio, llama.cpp behind the ollama backend) 404 on
 # /api/chat; remember them so each chunk doesn't pay for a failed request.
-_OLLAMA_NO_NATIVE: set[str] = set()
+_OLLAMA_NO_NATIVE = set()
 
 
 def _call_ollama_native(

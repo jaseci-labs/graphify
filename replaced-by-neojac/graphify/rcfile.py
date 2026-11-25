@@ -214,7 +214,7 @@ def load_graphifyrc(root: Path) -> dict:
 # the main thread, and a spawn pool worker sets its own copy in `_worker_init`
 # on its main thread, the same thread that then runs `_extract_single_file`.
 _local = threading.local()
-_warned_roots: set[str] = set()  # warning-dedup only; harmless to share
+_warned_roots = set()  # warning-dedup only; harmless to share
 
 
 def _active() -> dict[str, str]:

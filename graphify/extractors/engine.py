@@ -12104,7 +12104,7 @@ def _extract_generic(
                 if func_node:
                     if func_node.type in ("identifier", "template_function"):
                         callee_name = _cpp_call_name(func_node, source)
-                        if callee_name and any(start <= node.start_byte < end for start, end, *_ in
+                        if callee_name and any(_span[0] <= node.start_byte < _span[1] for _span in
                                cpp_local_bindings.get(caller_nid, {}).get(callee_name, ())):
                             callee_name = None
                     elif func_node.type == "field_expression":

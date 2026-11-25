@@ -11843,7 +11843,7 @@ def _spawn_cannot_reimport_main() -> bool:
         and sys.platform != "win32"
     ):
         return False
-    import __main__
+    __main__ = sys.modules["__main__"]
 
     if getattr(getattr(__main__, "__spec__", None), "name", None) is not None:
         return False

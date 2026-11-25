@@ -148,7 +148,7 @@ def os_replace_with_fallback(src: "str | Path", dst: "str | Path") -> None:
         os.replace(src, dst)
         return
     except OSError as exc:
-        if not isinstance(exc, PermissionError) and getattr(exc, "winerror", None) != 17:
+        if not isinstance(exc, PermissionError) and getattr(exc, "winerror", 0) != 17:
             raise
     import shutil
     dst = os.fspath(dst)

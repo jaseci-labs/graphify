@@ -1356,7 +1356,7 @@ def _alias_index(nodes: "Iterable[tuple[str, dict]]") -> dict[str, str]:
     so the clustered and the raw (``--no-cluster``) write paths resolve an
     endpoint the same way (#4670).
     """
-    from graphify.extractors.base import _file_stem as _fs
+    from graphify.extractors.base import _file_stem
     from graphify.extractors.csharp import bare_csharp_method_label
     from graphify.extractors.resolution import _PYTHON_STDLIB_MODULE_NAMES
 
@@ -1370,7 +1370,7 @@ def _alias_index(nodes: "Iterable[tuple[str, dict]]") -> dict[str, str]:
         rel = Path(str(sf))
         if _is_abs(str(sf)):
             continue
-        new_stem = make_id(_fs(rel))
+        new_stem = make_id(_file_stem(rel))
         if not new_stem:
             continue
         is_py_stdlib_stem = (

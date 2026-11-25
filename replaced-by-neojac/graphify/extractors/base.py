@@ -153,7 +153,7 @@ _UTF16_BOMS = (b"\xff\xfe", b"\xfe\xff")
 # Fixed, not the host locale: extraction must give the same graph on every
 # machine (CONTRIBUTING: deterministic extraction).
 _SOURCE_FALLBACK_ENCODINGS = ("cp1252", "latin-1")
-_warned_source_encodings: set[str] = set()
+_warned_source_encodings = set()
 
 
 def _read_source_bytes(path: Path, *, warn: bool = True) -> bytes:

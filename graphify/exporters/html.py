@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from graphify.exporters.base import COMMUNITY_COLORS  # noqa: E402,F401
 from pathlib import Path
-import html as _html
+from html import escape as _html_escape
 from graphify.analyze import _node_community_map
 from graphify.paths import write_text_atomic
 import json
@@ -709,7 +709,7 @@ def to_html(
     legend_data = []
     for cid in sorted((community_labels or {}).keys()):
         color = COMMUNITY_COLORS[cid % len(COMMUNITY_COLORS)]
-        lbl = _html.escape(sanitize_label((community_labels or {}).get(cid, f"Community {cid}")))
+        lbl = _html_escape(sanitize_label((community_labels or {}).get(cid, f"Community {cid}")))
         n = member_counts.get(cid, len(communities.get(cid, []))) if member_counts else len(communities.get(cid, []))
         legend_data.append({"cid": cid, "color": color, "label": lbl, "count": n})
 
@@ -725,7 +725,7 @@ def to_html(
     edges_json = _js_safe(vis_edges)
     legend_json = _js_safe(legend_data)
     hyperedges_json = _js_safe(getattr(G, "graph", {}).get("hyperedges", []))
-    title = _html.escape(sanitize_label(_html_document_title(output_path)))
+    title = _html_escape(sanitize_label(_html_document_title(output_path)))
     stats = f"{G.number_of_nodes()} nodes &middot; {G.number_of_edges()} edges &middot; {len(communities)} communities"
 
     html = f"""<!DOCTYPE html>

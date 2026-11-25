@@ -308,8 +308,8 @@ def generate(
     _has_code = any(
         d.get("file_type") == "code" for _, d in G.nodes(data=True)
     ) or any(
-        d.get("relation") in ("imports", "imports_from")
-        for *_e, d in G.edges(data=True)
+        _edge[-1].get("relation") in ("imports", "imports_from")
+        for _edge in G.edges(data=True)
     )
     if _has_code:
         from .analyze import find_import_cycles

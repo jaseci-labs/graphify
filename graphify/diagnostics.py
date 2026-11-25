@@ -132,7 +132,7 @@ def scan_producer_suppression_sites(path: str | Path) -> dict[str, Any]:
 
     sites: list[dict[str, Any]] = []
     lines = source_path.read_text(encoding="utf-8").splitlines()
-    for lineno, line in enumerate(lines, start=1):
+    for lineno, line in enumerate(lines, 1):
         match = _SUPPRESSION_DECL_RE.match(line)
         if not match:
             continue

@@ -11,6 +11,7 @@ import time
 import warnings
 from collections.abc import Callable, Iterable
 from pathlib import Path
+from typing import Any
 
 # Output directory name — override with GRAPHIFY_OUT env var for worktrees or
 # shared-output setups. Accepts a relative name ("graphify-out-feature") or an
@@ -81,7 +82,7 @@ def _grammar_fingerprint() -> str:
     return _GRAMMAR_FINGERPRINT_CACHE
 
 # Version dirs already swept this process — cleanup runs once per (base, version).
-_cleaned_ast_dirs: set[str] = set()
+_cleaned_ast_dirs = set()
 
 
 def _cleanup_stale_ast_entries(ast_base: Path, current_dir: Path) -> None:
@@ -138,7 +139,7 @@ _corrupt_cache_entries = 0
 # the same stat signature the hash index uses. check_semantic_cache resolves the
 # prompt once per FILE in the corpus, so without this a 500-doc run re-reads and
 # re-hashes the same spec 500 times (and warns 500 times when it is unreadable).
-_prompt_fp_cache: dict[tuple, str] = {}
+_prompt_fp_cache: dict[tuple[Any, ...], str] = {}
 
 
 def prompt_fingerprint(prompt: "str | Path") -> str:
@@ -241,7 +242,7 @@ def _body_content(content: bytes) -> bytes:
 # racily-clean guard below closes that hole (see _stat_sig_fresh).
 # `graphify extract --force` / `graphify update --force` (or GRAPHIFY_FORCE=1)
 # skip the cache reads and re-dispatch everything when needed (#1894).
-_stat_index: dict[str, dict] = {}
+_stat_index: dict[str, dict[str, Any]] = {}
 _stat_index_root: Path | None = None
 # Key anchor for the ON-DISK index (#2199): the first caller's key-root, i.e.
 # the corpus. Distinct from _stat_index_root, which is the cache-FILE location

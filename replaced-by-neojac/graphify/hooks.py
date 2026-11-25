@@ -2,6 +2,7 @@
 from __future__ import annotations
 import os
 import re
+import subprocess as _sp
 import sys
 from pathlib import Path
 
@@ -772,7 +773,6 @@ def _rev_parse_path(root: Path, flag: str) -> Path | None:
     ``-c core.hooksPath=`` is not used: an empty value makes ``--git-path hooks``
     print ``./`` instead of the real hooks directory.
     """
-    import subprocess as _sp
     try:
         res = _sp.run(
             ["git", "-C", str(root), "rev-parse", flag],
@@ -834,7 +834,6 @@ def _hooks_dir(root: Path) -> Path:
     # phantom directory to be created (#907). git -C <root> already returns an
     # absolute path for worktree/external-gitdir cases, and a path relative to
     # <root> for normal repos — anchoring on root covers both.
-    import subprocess as _sp
     try:
         res = _sp.run(
             ["git", "-C", str(root), "rev-parse", "--git-path", "hooks"],
@@ -1010,7 +1009,6 @@ def _register_merge_driver(root: Path) -> str:
     same way the hook scripts pin it, so the driver works even when the graphify
     launcher is not on PATH at merge time.
     """
-    import subprocess as _sp
     pinned = _pinned_python()
     if pinned:
         # Double-quoted: the allowlist in _pinned_python() permits a space (Windows
@@ -1050,7 +1048,6 @@ def _register_merge_driver(root: Path) -> str:
 
 def _unregister_merge_driver(root: Path) -> str:
     """Remove the merge-driver git config keys and the .gitattributes line."""
-    import subprocess as _sp
     for key in ("merge.graphify.name", "merge.graphify.driver"):
         try:
             # --unset exits nonzero if the key is absent; that is fine.
@@ -1080,7 +1077,6 @@ def _unregister_merge_driver(root: Path) -> str:
 
 def _merge_driver_status(root: Path) -> str:
     """Report whether the merge driver is registered (config + gitattributes)."""
-    import subprocess as _sp
     try:
         res = _sp.run(
             ["git", "-C", str(root), "config", "--get", "merge.graphify.driver"],

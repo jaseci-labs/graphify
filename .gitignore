@@ -45,3 +45,10 @@ paper/
 # .csproj files on open
 tests/fixtures/**/obj/
 tests/fixtures/**/bin/
+/graphify/pi/package.json
+/graphify/pi/package-lock.json
+/graphify/pi/node_modules/
+/pyproject.toml
+/tests/fixtures/crate_a/Cargo.toml
+/tests/fixtures/crate_b/Cargo.toml
+.jac/

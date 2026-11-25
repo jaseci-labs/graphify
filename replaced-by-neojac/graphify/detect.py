@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 import unicodedata
+import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 from pathlib import Path
@@ -93,7 +94,6 @@ def _zip_within_caps(path: Path) -> bool:
        directory cannot expand past the cap undetected. Decompression is chunked
        and bounded, so checking a bomb never materializes more than the ceiling.
     """
-    import zipfile
     if not _file_within_size_cap(path):
         return False
     try:
@@ -586,7 +586,7 @@ def classify_file(path: Path) -> FileType | None:
 _pypdf_missing_warned = False
 # Unreadable PDFs are per-file, so warn once per path: detect() counts words and
 # the semantic pass reads the text again, and the same file must not warn twice.
-_pdf_failed_warned: set[str] = set()
+_pdf_failed_warned = set()
 
 
 def extract_pdf_text(path: Path) -> str:
@@ -1418,7 +1418,7 @@ def _git_tracked_path_keys(root: Path) -> tuple[set[str], set[str]]:
             stderr=subprocess.DEVNULL,
             check=False,
             timeout=30,
-            env={**os.environ, "GIT_OPTIONAL_LOCKS": "0"},
+            env=dict(os.environ, GIT_OPTIONAL_LOCKS="0"),
         )
     except (OSError, subprocess.SubprocessError):
         return set(), set()
@@ -1588,7 +1588,7 @@ def _git_global_excludes(vcs_root: Path) -> Path | None:
             stderr=subprocess.DEVNULL,
             check=False,
             timeout=10,
-            env={**os.environ, "GIT_OPTIONAL_LOCKS": "0"},
+            env=dict(os.environ, GIT_OPTIONAL_LOCKS="0"),
         )
         if proc.returncode == 0:
             configured = proc.stdout.decode("utf-8", errors="replace").strip()
@@ -1605,7 +1605,7 @@ def _git_global_excludes(vcs_root: Path) -> Path | None:
     return path if path.is_file() else None
 
 
-_warned_ignore_encodings: set[str] = set()
+_warned_ignore_encodings = set()
 
 
 def _read_ignore_text(path: Path) -> str:
@@ -2168,7 +2168,7 @@ def detect(root: Path, *, follow_symlinks: bool | None = None, google_workspace:
         # PDFs/docx aren't re-parsed on every run just to size the corpus (#1656).
         # cache_root (when given, e.g. from `extract --out`) keeps this cache out
         # of the scanned corpus (#1747).
-        from graphify import cache as _cache
+        import graphify.cache as _cache
         return _cache.cached_word_count(path, root, count_words, cache_root=cache_root)
 
     skipped_sensitive: list[str] = []
@@ -2497,7 +2497,7 @@ def _md5_file(path: Path) -> str:
     h = _hl.md5(usedforsecurity=False)
     try:
         with open(_os_path(path), "rb") as f:
-            for chunk in iter(lambda: f.read(65536), b""):
+            while chunk := f.read(65536):
                 h.update(chunk)
     except OSError:
         return ""
@@ -2511,18 +2511,6 @@ def _stat_and_hash(path_str: str) -> tuple[str, float, str] | None:
         return path_str, os.stat(_os_path(p)).st_mtime, _md5_file(p)
     except OSError:
         return None
-
-
-def _nfc(s: str) -> str:
-    """NFC-normalize a path string used as a manifest key.
-
-    On macOS, ``os.walk`` / ``getcwd`` yield NFD paths while path literals
-    and many skill-substituted roots are NFC. Raw string compare then treats
-    every file as both deleted and new, forcing a full re-extract (#2221).
-    Same boundary as the Office sidecar hash fix (#1226).
-    """
-    import unicodedata
-    return unicodedata.normalize("NFC", s)
 
 
 def _to_relative_for_storage(key: str, root: Path) -> str:

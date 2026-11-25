@@ -26,7 +26,7 @@ import tempfile
 import threading
 import time
 from pathlib import Path
-from typing import NoReturn
+from typing import Any, NoReturn
 
 if sys.platform == "win32":
     import msvcrt
@@ -747,7 +747,7 @@ def _register_always_on_block(target: Path, prefix: str, registration: str) -> N
             f"{target} manually to finish always-on registration",
             file=sys.stderr,
         )
-_PLATFORM_CONFIG: dict[str, dict] = {
+_PLATFORM_CONFIG: dict[str, dict[str, Any]] = {
     "claude": {
         "skill_file": "skill.md",
         "skill_dst": Path(".claude") / "skills" / "graphify" / "SKILL.md",

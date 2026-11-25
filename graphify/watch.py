@@ -1191,14 +1191,14 @@ def _reconcile_existing_graph(
                 _backfill_origin(_item)
 
     try:
-        from graphify.build import _norm_source_file as _nsf
+        from graphify.build import _norm_source_file
         from graphify.extract import _get_extractor
         source_paths = _StoredSourcePaths(
             existing,
             out=out,
             project_root=project_root,
             watch_root=watch_root,
-            normalize_source=_nsf,
+            normalize_source=_norm_source_file,
         )
         new_ast_ids = {n["id"] for n in result["nodes"]}
         current_sources = {
@@ -2520,7 +2520,7 @@ def _rebuild_code(
             is_resolution_input,
             load_manifest,
         )
-        from graphify.build import build_from_json, _is_ast_tier, _norm_source_file as _nsf
+        from graphify.build import build_from_json, _is_ast_tier, _norm_source_file
         from graphify.cluster import cluster, remap_communities_to_previous, score_all
         from graphify.analyze import god_nodes, surprising_connections, suggest_questions
         from graphify.report import generate
@@ -2718,7 +2718,7 @@ def _rebuild_code(
                     out=out,
                     project_root=project_root,
                     watch_root=watch_root,
-                    normalize_source=_nsf,
+                    normalize_source=_norm_source_file,
                 )
                 # Semantic doc nodes lack the AST origin marker. Gate on the
                 # doc-shaped subset of the six-value file_type enum
@@ -2766,7 +2766,7 @@ def _rebuild_code(
         def _add_deleted_source(path: Path) -> None:
             deleted_source_identities.add(Path(os.path.abspath(path)).as_posix())
             for root in (project_root, watch_root):
-                deleted_paths.add(_nsf(str(path), str(root)) or str(path))
+                deleted_paths.add(_norm_source_file(str(path), str(root)) or str(path))
 
         if changed_paths is not None:
             code_set = {Path(os.path.abspath(p)) for p in code_files}
@@ -2874,7 +2874,7 @@ def _rebuild_code(
                     out=out,
                     project_root=project_root,
                     watch_root=watch_root,
-                    normalize_source=_nsf,
+                    normalize_source=_norm_source_file,
                 )
                 from graphify.extractors.resolution import _cpp_reconciliation_paths
                 extract_targets = _cpp_reconciliation_paths(
@@ -3139,14 +3139,14 @@ def _rebuild_code(
         _rebuilt_root = str(project_root)
         if changed_paths is None:
             rebuilt_sources = {
-                _nsf(str(p.relative_to(project_root)), _rebuilt_root)
+                _norm_source_file(str(p.relative_to(project_root)), _rebuilt_root)
                 for p in code_files if p.is_relative_to(project_root)
             }
         else:
-            rebuilt_sources = {(_nsf(str(p), _rebuilt_root) or str(p)) for p in extract_targets}
+            rebuilt_sources = {(_norm_source_file(str(p), _rebuilt_root) or str(p)) for p in extract_targets}
         rebuilt_sources |= set(deleted_paths)
         failed_sources = {
-            _nsf(source, _rebuilt_root) or source
+            _norm_source_file(source, _rebuilt_root) or source
             for source in _failed_ast_sources
         }
         out.mkdir(exist_ok=True)

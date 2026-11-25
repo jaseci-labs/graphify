@@ -3252,11 +3252,12 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
     scopes = {};
     dynamic_binding = False;
     dynamic_names: any = {"exec", "eval", "globals", "locals", "vars", "setattr", "delattr"};
-    pending: any = [`root];
+    pending = builtins.list((typing.cast(object, `root),));
     while pending {
-        candidate: any = pending.pop();
-        if candidate.type in {"global_statement", "nonlocal_statement"}
-            or candidate.type == "identifier" and _read_text(candidate, source) in dynamic_names
+        candidate = pending.pop();
+        ctype = candidate.type;
+        if ctype in {"global_statement", "nonlocal_statement"}
+            or ctype == "identifier" and _read_text(candidate, source) in dynamic_names
         {
             dynamic_binding = True;
             break;
@@ -3320,19 +3321,20 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
         bound: set[str];
         plain_imports: dict[str, int];
         unsafe: any;
-        key: any = scope.id;
+        fsc = typing.cast(object, scope);
+        key = fsc.id;
         if key in scopes {
             return scopes[key];
         }
         bound = set[any]();
         plain_imports = {};
         unsafe = `bool(
-            scope.has_error
-                or scope.child_by_field_name("type_parameters")
-                or operator.eq(scope.type, "module") and dynamic_binding,
+            fsc.has_error
+                or fsc.child_by_field_name("type_parameters")
+                or operator.eq(fsc.type, "module") and dynamic_binding,
         );
-        if scope.type in {"function_definition", "lambda"} {
-            bound.update(_python_param_names(scope.child_by_field_name("parameters"), source));
+        if fsc.type in {"function_definition", "lambda"} {
+            bound.update(_python_param_names(fsc.child_by_field_name("parameters"), source));
         }
 
         def bind_names(`node, names) {
@@ -3340,7 +3342,7 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
                 name
                 for name in names
                 if not (
-                    scope.type == "module"
+                    fsc.type == "module"
                     and module_bindings is not None
                     and `node.id in module_bindings.get(name, ())
                 ),
@@ -3371,7 +3373,7 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
                     if names is None {
                         unsafe = True;
                     } elif kind == "import_statement"
-                        and scope.type == "module"
+                        and fsc.type == "module"
                         and `node == scope
                     {
                         for name in names {
@@ -3427,7 +3429,7 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
             }
         }
 
-        body: any = scope if scope.type == "module" else scope.child_by_field_name("body");
+        body: any = scope if fsc.type == "module" else fsc.child_by_field_name("body");
         if body is None {
             unsafe = True;
         } else {
@@ -3438,18 +3440,18 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
     }
 
     def is_shadowed(call, receiver: str) -> bool {
-        `node: any = call;
+        scope_node = typing.cast(object, call);
         found_module: any = False;
-        while `node is not None {
-            if `node.type in scope_types {
+        while scope_node is not None {
+            if scope_node.type in scope_types {
                 bound: any;
                 plain_imports: any;
                 unsafe: any;
-                (bound, plain_imports, unsafe) = facts(`node) as any;
+                (bound, plain_imports, unsafe) = facts(scope_node) as any;
                 if unsafe or receiver in bound {
                     return True;
                 }
-                if `node.type == "module" {
+                if scope_node.type == "module" {
                     found_module = True;
                     if module_bindings is not None {
                         if receiver not in module_bindings or plain_imports.get(receiver) {
@@ -3460,7 +3462,7 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
                     }
                 }
             }
-            `node = `node.parent;
+            scope_node = scope_node.parent;
         }
         return not found_module;
     }
@@ -3577,17 +3579,18 @@ impl _python_property_reads(
     for (caller_nid, body) in function_bodies {
         owner: any = method_owner.get(caller_nid, "");
         fields: any = attr_types.get(owner, {});
-        stack: any = `list(getattr(body, "children", ()));
+        stack = builtins.list(builtins.getattr(body, "children", ()));
         while stack {
-            `node: any = stack.pop();
-            if `node.type in ("function_definition", "class_definition", "lambda") {
+            `node = stack.pop();
+            ntype = `node.type;
+            if ntype in ("function_definition", "class_definition", "lambda") {
                 continue;
             }
             stack.extend(`node.children);
-            if `node.type != "attribute" {
+            if ntype != "attribute" {
                 continue;
             }
-            parent: any = `node.parent;
+            parent = `node.parent;
             if parent is not None
                 and parent.type == "call"
                 and _same_node(parent.child_by_field_name("function"), `node)
@@ -6081,9 +6084,9 @@ impl _scan_python_nested_function_declarations(
         return;
     }
     for child in typing.cast(object, container_node).children {
-        target: any = child;
+        target = child;
         if target.type == "decorated_definition" {
-            inner: any = target.child_by_field_name("definition");
+            inner = target.child_by_field_name("definition");
             if inner is not None {
                 target = inner;
             }

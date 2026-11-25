@@ -1548,10 +1548,12 @@ impl _extract_python_rationale(path: Path, result: dict) {
     }
 
     walk_docstrings(`root, file_nid);
-    source_text: any = source.decode("utf-8", errors="replace");
-    for (lineno, line_text) in enumerate(source_text.splitlines(), 1) {
+    source_text = typing.cast(object, source).decode("utf-8", errors="replace");
+    lineno = 0;
+    for line_text in source_text.splitlines() {
+        lineno += 1;
         stripped = line_text.strip();
-        if `any(stripped.startswith(p) for p in _RATIONALE_PREFIXES) {
+        if stripped.startswith(_RATIONALE_PREFIXES) {
             _add_rationale(stripped, lineno, file_nid);
         }
     }
@@ -2096,9 +2098,11 @@ impl _extract_js_rationale(path: Path, result: dict) {
         });
     }
 
-    for (lineno, line_text) in enumerate(source_text.splitlines(), 1) {
+    lineno = 0;
+    for line_text in typing.cast(object, source_text).splitlines() {
+        lineno += 1;
         stripped = line_text.strip();
-        if `any(stripped.startswith(p) for p in _JS_RATIONALE_PREFIXES) {
+        if stripped.startswith(_JS_RATIONALE_PREFIXES) {
             _add_rationale(stripped.lstrip("/* "), lineno);
         }
         if _JS_COMMENT_LINE_RE.match(line_text) {

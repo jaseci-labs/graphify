@@ -33,10 +33,10 @@ impl _python_param_shadow_checker(source: bytes) -> any {
 
     def rebound_names(body) -> set[str] {
         names: set[str] = set[any]();
-        pending: any = `list(body.named_children);
+        pending = builtins.list(typing.cast(object, body).named_children);
         while pending {
-            `node: any = pending.pop();
-            kind: any = `node.type;
+            `node = pending.pop();
+            kind = `node.type;
             if kind in ("function_definition", "class_definition") {
                 name: any = `node.child_by_field_name("name");
                 if name is not None {
@@ -66,7 +66,7 @@ impl _python_param_shadow_checker(source: bytes) -> any {
     }
 
     def is_shadowed(call, name: str) -> bool {
-        `node: any = call;
+        `node = typing.cast(object, call);
         nearest: any = True;
         while (parent := `node.parent) is not None {
             if parent.type in ("function_definition", "class_definition") {

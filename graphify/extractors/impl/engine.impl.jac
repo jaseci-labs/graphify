@@ -3256,7 +3256,7 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
     while pending {
         candidate = pending.pop();
         ctype = candidate.type;
-        if ctype in {"global_statement", "nonlocal_statement"}
+        if ctype in ("global_statement", "nonlocal_statement")
             or ctype == "identifier" and _read_text(candidate, source) in dynamic_names
         {
             dynamic_binding = True;
@@ -3333,7 +3333,7 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
                 or fsc.child_by_field_name("type_parameters")
                 or operator.eq(fsc.type, "module") and dynamic_binding,
         );
-        if fsc.type in {"function_definition", "lambda"} {
+        if fsc.type in ("function_definition", "lambda") {
             bound.update(_python_param_names(fsc.child_by_field_name("parameters"), source));
         }
 
@@ -4272,7 +4272,7 @@ impl _cpp_member_record(`node, declarator, name: str, source: bytes) -> dict {
             or next(
                 (n
                 for n in typing.cast(object, function).named_children
-                if n.type in {"function_declarator", "pointer_declarator", "reference_declarator"}),
+                if n.type in ("function_declarator", "pointer_declarator", "reference_declarator")),
                 None,
             );
     }
@@ -4375,7 +4375,7 @@ impl _cpp_zero_arg_member_signature(`node, source: bytes) -> tuple | None {
         or declarator is None
         or declarator.type != "function_declarator"
         or `any(
-            c.type not in {"primitive_type", "function_declarator", "compound_statement", "comment"}
+            c.type not in ("primitive_type", "function_declarator", "compound_statement", "comment")
             for c in typing.cast(object, `node).named_children,
         )
     {
@@ -4827,7 +4827,7 @@ impl _cpp_class_lookup_facts(`node, source: bytes) -> dict {
         `enum: any = member if member.type == "enum_specifier" else nested_type;
         if `enum is not None
             and `enum.type == "enum_specifier"
-            and not `any(c.type in {"class", "struct"} for c in typing.cast(object, `enum).children)
+            and not `any(c.type in ("class", "struct") for c in typing.cast(object, `enum).children)
         {
             enum_body: any = `enum.child_by_field_name("body");
             for enumerator in enum_body.named_children if enum_body is not None else [] {
@@ -8092,7 +8092,7 @@ impl _ruby_body_has_lookup_barrier(body_node, source: bytes) -> bool {
 
     def `visit(`node, *, direct: bool = False) -> bool {
         for child in typing.cast(object, `node).children {
-            if child.type in {"class", "module"} {
+            if child.type in ("class", "module") {
                 continue;
             }
             if child.type == "singleton_class" {
@@ -8107,7 +8107,7 @@ impl _ruby_body_has_lookup_barrier(body_node, source: bytes) -> bool {
                 }
                 continue;
             }
-            if child.type in {"alias", "undef"} {
+            if child.type in ("alias", "undef") {
                 return True;
             }
             if child.type == "call" {

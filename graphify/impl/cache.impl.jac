@@ -587,18 +587,19 @@ impl _relativize_ids_in(payload: dict, path: "str | Path", `root: Path) {
 impl _make_id_anchor_fn(id_anchors: list, path_anchors: list) -> any {
     def anchor(value: str) -> str {
         a: any;
+        text = typing.cast(object, value);
         for a in path_anchors {
             if value == a {
                 return _ROOT_MARKER;
             }
             for sep in ("/", "\\") {
-                if value.startswith(a + sep) {
+                if text.startswith(a + sep) {
                     return _ROOT_MARKER + "/" + value[len(a) + 1:].replace("\\", "/");
                 }
             }
         }
         for a in id_anchors {
-            if value.startswith(a + "_") {
+            if text.startswith(a + "_") {
                 return _ROOT_MARKER + "_" + value[len(a) + 1:];
             }
         }
@@ -789,12 +790,13 @@ impl _present_target_files(result: dict, `root: Path) -> list[str] {
 }
 
 impl _rewrite_strings_cow(`obj: object, fn) -> any {
+    rewrite = typing.cast(object, fn);
     if isinstance(`obj, `dict) {
         new: "dict | None" = None;
         value: any;
-        for (key, value) in `obj.items() {
+        for (key, value) in typing.cast(object, `obj).items() {
             if isinstance(value, `str) {
-                nv: any = fn(value);
+                nv: any = rewrite(value);
                 if nv != value {
                     if new is None {
                         new = `dict(`obj);
@@ -817,7 +819,7 @@ impl _rewrite_strings_cow(`obj: object, fn) -> any {
         new_list: "list | None" = None;
         for (i, value) in enumerate(`obj) {
             if isinstance(value, `str) {
-                nv = fn(value);
+                nv = rewrite(value);
                 if nv != value {
                     if new_list is None {
                         new_list = `list(`obj);

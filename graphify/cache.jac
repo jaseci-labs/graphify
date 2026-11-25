@@ -19,6 +19,8 @@ import tempfile;
 
 import time;
 
+import typing;
+
 import warnings;
 
 import from collections.abc { Callable, Iterable }

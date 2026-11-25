@@ -181,7 +181,7 @@ impl _suppress_ambiguous_python_imports(
     }
 
     kept_edges: list[dict] = [];
-    for `edge in edges {
+    for `edge in typing.cast(object, edges) {
         if not isinstance(`edge, `dict) {
             kept_edges.append(`edge);
             continue;
@@ -348,7 +348,7 @@ impl _repoint_python_package_imports(paths, all_nodes, all_edges, `root) {
     if not alias_map {
         return;
     }
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if isinstance(e, `dict)
             and e.get("relation") in ("imports", "imports_from")
             and effective_suffix(`str(e.get("source_file", ""))).lower() in (".py", ".pyi")
@@ -421,7 +421,7 @@ impl _repoint_python_sibling_imports(paths, all_nodes, all_edges, `root) {
         return;
     }
 
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if not (
             isinstance(e, `dict)
             and e.get("relation") in ("imports", "imports_from")
@@ -470,7 +470,7 @@ impl _repoint_python_sys_path_imports(per_file, all_nodes, all_edges, `root) {
 
     node_ids: any = {n.get("id") for n in all_nodes if isinstance(n, `dict)};
     file_node_by_path: dict[Path, str] = {};
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         if not isinstance(n, `dict) {
             continue;
         }
@@ -559,7 +559,7 @@ impl _repoint_python_sys_path_imports(per_file, all_nodes, all_edges, `root) {
             continue;
         }
 
-        for e in all_edges {
+        for e in typing.cast(object, all_edges) {
             if not (
                 isinstance(e, `dict)
                 and e.get("relation") in ("imports", "imports_from")
@@ -3131,8 +3131,7 @@ impl _stamp_cpp_condition_provenance(nodes: list[dict], edges: list[dict]) {
     ranges: dict[str, list[tuple[int, int, int, int]]];
     branch: any;
     ranges = {};
-    `node: any;
-    for `node in nodes {
+    for `node in typing.cast(object, nodes) {
         metadata: any = `node.get("metadata");
         coverage: any = metadata.get("cpp_conditional_recovery")
             if isinstance(metadata, `dict)
@@ -3194,10 +3193,10 @@ impl _stamp_cpp_condition_provenance(nodes: list[dict], edges: list[dict]) {
         }
     }
 
-    for `edge in edges {
+    for `edge in typing.cast(object, edges) {
         stamp(`edge, "source_file", "source_location");
     }
-    for `node in nodes {
+    for `node in typing.cast(object, nodes) {
         metadata = `node.get("metadata");
         if isinstance(metadata, `dict) {
             for `entry in metadata.get(UNRESOLVED_CALLS_KEY) or () {
@@ -3857,8 +3856,7 @@ impl extract_swift(path: Path) -> dict {
 
 impl _canonicalize_csharp_namespace_nodes(all_nodes: list[dict], all_edges: list[dict]) {
     by_label: dict[str, list[dict]] = {};
-    `node: any;
-    for `node in all_nodes {
+    for `node in typing.cast(object, all_nodes) {
         if `node.get("type") != "namespace" {
             continue;
         }
@@ -3898,7 +3896,7 @@ impl _canonicalize_csharp_namespace_nodes(all_nodes: list[dict], all_edges: list
     }
 
     if remap {
-        for `edge in all_edges {
+        for `edge in typing.cast(object, all_edges) {
             if `edge.get("source") in remap {
                 `edge["source"] = remap[`str(`edge["source"])];
             }
@@ -3982,16 +3980,14 @@ impl _rewire_unique_stub_nodes(nodes: list[dict], edges: list[dict], `root: Path
         return crate;
     }
     workspace_crates = set[any]();
-    `node: any;
-    for `node in nodes {
+    for `node in typing.cast(object, nodes) {
         sf: any = `str(`node.get("source_file", ""));
         if sf.endswith(".rs") and (crate := crate_of(sf)) {
             workspace_crates.add(crate);
         }
     }
     reexports = {};
-    `edge: any;
-    for `edge in edges {
+    for `edge in typing.cast(object, edges) {
         info: any = `edge.get("_rust_pub_use");
         owner: any = crate_of(`str(`edge.get("source_file", "")));
         if not isinstance(info, `dict) or owner is None {
@@ -4053,7 +4049,7 @@ impl _rewire_unique_stub_nodes(nodes: list[dict], edges: list[dict], `root: Path
     func_by_label: dict[str, list[dict]] = {};
     stubs: list[dict] = [];
 
-    for `node in nodes {
+    for `node in typing.cast(object, nodes) {
         key: any = _node_label_key(`node);
         if not key {
             continue;
@@ -4080,7 +4076,7 @@ impl _rewire_unique_stub_nodes(nodes: list[dict], edges: list[dict], `root: Path
     stub_families: dict[str, set] = {};
     supertype_stub_ids: set[str] = set[any]();
     _SUPERTYPE_RELATIONS = {"inherits", "implements", "extends"};
-    for `edge in edges {
+    for `edge in typing.cast(object, edges) {
         rel: any = `edge.get("relation");
         for endpoint in ("source", "target") {
             nid: any = `edge.get(endpoint);
@@ -4212,7 +4208,7 @@ impl _rewire_unique_stub_nodes(nodes: list[dict], edges: list[dict], `root: Path
             and not _scoped_by_a_use(by_id.get(stub_id, {}))
     } - {`edge.get("target") for `edge in edges if `edge.get("_rust_use_name")};
 
-    for `edge in edges {
+    for `edge in typing.cast(object, edges) {
         is_csharp_scoped_edge: any = _is_dotnet_source_file(`str(`edge.get("source_file", "")))
             and `edge.get("relation") in csharp_scoped_relations;
         source: any = `edge.get("source");
@@ -4287,7 +4283,7 @@ impl _merge_swift_extensions(per_file: list[dict], all_nodes: list[dict], all_ed
     contained: any = {e.get("target") for e in all_edges if e.get("relation") == "contains"};
 
     label_to_canonical: dict[str, list[str]] = {};
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         if n.get("id") in extension_nids {
             continue;
         }
@@ -4330,7 +4326,7 @@ impl _merge_swift_extensions(per_file: list[dict], all_nodes: list[dict], all_ed
 
     rewritten: list[dict] = [];
     seen_keys: set[tuple] = set[any]();
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         src0: any;
         tgt0: any;
         (src0, tgt0) = (e.get("source"), e.get("target"));
@@ -4371,7 +4367,6 @@ impl _merge_csharp_partial_class_nodes(
     dir_assembly: dict[Path, str];
     members: any;
     groups: dict[tuple[str, str], list[dict]] = {};
-    n: any;
     for n in all_nodes {
         if not _is_cs_file(`str(n.get("source_file", ""))) {
             continue;
@@ -4511,7 +4506,7 @@ impl _merge_csharp_partial_class_nodes(
 
     rewritten: list[dict] = [];
     seen_keys: set[tuple] = set[any]();
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         src0: any;
         tgt0: any;
         (src0, tgt0) = (e.get("source"), e.get("target"));
@@ -4555,8 +4550,7 @@ impl _drop_shadowed_csharp_partial_bases(all_nodes: list[dict], all_edges: list[
     real_bases: dict[str, set[str]];
     nodes_by_id = {`str(n.get("id", "")): n for n in all_nodes};
     aliases_by_file = {};
-    e: any;
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         md: any = e.get("metadata");
         if not isinstance(md, `dict) or md.get("using_kind") != "alias" {
             continue;
@@ -4577,7 +4571,7 @@ impl _drop_shadowed_csharp_partial_bases(all_nodes: list[dict], all_edges: list[
     }
 
     real_bases = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") not in ("inherits", "implements") {
             continue;
         }
@@ -4700,7 +4694,7 @@ impl _resolve_swift_member_calls(
     type_ids: any = {nid for definitions in type_def_nids.values() for nid in definitions};
     lexical_parents = {};
     nested_types = {};
-    for `edge in all_edges {
+    for `edge in typing.cast(object, all_edges) {
         parent: any;
         child: any;
         (parent, child) = (`edge.get("source"), `edge.get("target"));
@@ -4749,7 +4743,7 @@ impl _resolve_swift_member_calls(
     }
     method_index = {};
     exact_methods = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") != "method" {
             continue;
         }
@@ -4784,7 +4778,7 @@ impl _resolve_swift_member_calls(
     }
     if factory_by_file {
         return_targets_by_method: dict[str, set[str]] = {};
-        for e in all_edges {
+        for e in typing.cast(object, all_edges) {
             if e.get("relation") == "references"
                 and e.get("context") == "return_type"
                 and (e.get("metadata") or {}).get("swift_plain_return")
@@ -4964,8 +4958,7 @@ impl _resolve_python_member_calls(
     class_def_nids: dict[str, list[str]] = {};
     method_index = {};
     owner_of: dict[str, str] = {};
-    e: any;
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") != "method" {
             continue;
         }
@@ -5013,7 +5006,7 @@ impl _resolve_python_member_calls(
     contains_children: dict[str, dict[str, list[str]]] = {};
     contains_exact: dict[tuple[str, str], list[str]] = {};
     file_of_node = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") == "contains" {
             (src, tgt) = (e.get("source"), e.get("target"));
             tnode = node_by_id.get(tgt);
@@ -5028,7 +5021,7 @@ impl _resolve_python_member_calls(
     imported_by_filenode = {};
     import_alias_by_filenode: dict[str, dict[str, str]] = {};
     external_plain_imports: dict[str, dict[str, list[str]]] = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") in ("imports", "imports_from") {
             imported_by_filenode.setdefault(e.get("source"), set[any]()).add(e.get("target"));
             alias: any = e.get("local_alias");
@@ -5071,7 +5064,7 @@ impl _resolve_python_member_calls(
         if e.get("relation") in ("calls", "indirect_call")
     };
     method_class = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         (src, tgt) = (e.get("source"), e.get("target"));
         if e.get("relation") == "method" and isinstance(src, `str) and isinstance(tgt, `str) {
             method_class[tgt] = src;
@@ -5082,7 +5075,7 @@ impl _resolve_python_member_calls(
         fixture_locations.update(result.get("_python_fixture_files") or {});
     }
     fixtures_by_name = {};
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         if n.get("_py_fixture") and n.get("source_file") {
             where: any = fixture_locations.get(n["id"])
                 or `str(n["source_file"]).replace("\\", "/");
@@ -5411,7 +5404,7 @@ impl _resolve_python_member_calls(
     }
     return_classes: dict[str, set[str]] = {};
     class_ids: any = {nid for group in class_def_nids.values() for nid in group};
-    for `edge in all_edges {
+    for `edge in typing.cast(object, all_edges) {
         if `edge.get("relation") == "references" and `edge.get("context") == "return_type" {
             if not node_by_id.get(`edge["source"], {}).get("_py_return_type") {
                 continue;
@@ -5460,7 +5453,6 @@ impl _resolve_typescript_member_calls(
         }
     }
     ts_fields_by_id = {};
-    n: any;
     for n in all_nodes {
         for (`static, attr) in ((False, "_ts_fields"), (True, "_ts_static_fields")) {
             for (fname, ftype) in (n.get(attr) or {}).items() {
@@ -5477,7 +5469,7 @@ impl _resolve_typescript_member_calls(
     contained: any = {e.get("target") for e in all_edges if e.get("relation") == "contains"};
     type_def_nids: dict[str, list[str]] = {};
     node_by_id = {};
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         node_by_id[n.get("id")] = n;
         if _lang_family(n.get("source_file")) == "jsts"
             and n.get("id") in contained
@@ -5491,7 +5483,7 @@ impl _resolve_typescript_member_calls(
     method_exact: dict[tuple[str, str], str] = {};
     method_key_ambiguous: set[tuple[str, str]] = set[any]();
     class_of_method: dict[str, str] = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") != "method" {
             continue;
         }
@@ -5514,12 +5506,12 @@ impl _resolve_typescript_member_calls(
         }
     }
     file_of_node = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") == "contains" {
             file_of_node[e.get("target")] = e.get("source");
         }
     }
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") == "method" {
             owner_file: any = file_of_node.get(e.get("source"));
             if owner_file is not None {
@@ -5528,19 +5520,19 @@ impl _resolve_typescript_member_calls(
         }
     }
     imported_by_filenode: dict[str, set[str]] = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") in ("imports", "imports_from") {
             imported_by_filenode.setdefault(e.get("source"), set[any]()).add(e.get("target"));
         }
     }
     bases = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") == "inherits" {
             bases.setdefault(`str(e.get("source")), []).append(`str(e.get("target")));
         }
     }
     field_classes_by_key = {};
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         if (n.get("_ts_fields") or n.get("_ts_static_fields"))
             and n["id"] not in field_classes_by_key.get(_key(n.get("label", "")), [])
         {
@@ -5720,7 +5712,7 @@ impl _attach_cpp_out_of_line_methods(
         }
     }
     visible_members: dict[str, set[str]] = {};
-    for `node in nodes {
+    for `node in typing.cast(object, nodes) {
         label = `str(`node.get("label", ""));
         sf = `str(`node.get("source_file", ""));
         if `node["id"] in already_owned
@@ -5808,8 +5800,7 @@ impl _resolve_cpp_member_calls(per_file: list[dict], all_nodes: list[dict], all_
 
     type_def_nids: dict[str, list[str]] = {};
     node_by_id = {};
-    n: any;
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         node_by_id[n.get("id")] = n;
         if n.get("source_file") and n.get("id") in contained and _is_type_like_definition(n) {
             type_def_nids.setdefault(_key(n.get("label", "")), []).append(n["id"]);
@@ -5819,7 +5810,7 @@ impl _resolve_cpp_member_calls(per_file: list[dict], all_nodes: list[dict], all_
     enclosing_type = {};
     rel: any;
     for rel in ("defines", "method") {
-        for e in all_edges {
+        for e in typing.cast(object, all_edges) {
             if e.get("relation") != rel {
                 continue;
             }
@@ -5835,7 +5826,7 @@ impl _resolve_cpp_member_calls(per_file: list[dict], all_nodes: list[dict], all_
         }
     }
     qualified_method_nids: dict[str, list[str]] = {};
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         label: any = `str(n.get("label", ""));
         if n.get("source_file") and label.endswith("()") and "::" in label {
             qualified_method_nids.setdefault(label, []).append(n["id"]);
@@ -5845,7 +5836,7 @@ impl _resolve_cpp_member_calls(per_file: list[dict], all_nodes: list[dict], all_
     type_lookup = CppTypeLookup(all_nodes, all_edges);
     for rel in ("defines", "method") {
         grouped: dict[tuple[str, str], set[str]] = {};
-        for e in all_edges {
+        for e in typing.cast(object, all_edges) {
             target_node: any = node_by_id.get(e.get("target", ""), {});
             label = target_node.get("label", "");
             if e.get("relation") == rel and label.endswith("()") {
@@ -6158,7 +6149,7 @@ impl _resolve_csharp_member_calls(
 
     type_def_nids = {};
     node_by_id = {};
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         node_by_id[n.get("id")] = n;
         if n.get("source_file") and n.get("id") in contained and _is_type_like_definition(n) {
             type_def_nids.setdefault(_key(n.get("label", "")), []).append(n["id"]);
@@ -6168,7 +6159,7 @@ impl _resolve_csharp_member_calls(
     method_index = {};
     method_peers: dict[tuple[str, str], list[dict]] = {};
     enclosing_type = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") == "defines" and e.get("context") == "field" {
             owner: any;
             member: any;
@@ -6207,7 +6198,7 @@ impl _resolve_csharp_member_calls(
     }
     bases_of = {};
     unresolved_base = set[any]();
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") != "inherits" {
             continue;
         }
@@ -6507,7 +6498,7 @@ impl _resolve_csharp_extension_calls(
     ext_by_name: dict[str, list[dict]] = {};
     method_owner: dict[str, str] = {};
     method_index = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") != "method" {
             continue;
         }
@@ -6548,7 +6539,7 @@ impl _resolve_csharp_extension_calls(
         if mid not in ext_method_ids
     };
     supers = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") not in ("inherits", "implements") {
             continue;
         }
@@ -6797,7 +6788,7 @@ impl _bind_member_field_tables(
 ) -> dict[str, dict[str, str]] {
     result: any;
     by_label: dict[str, list[dict]] = {};
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         if n.get("label") and n.get("source_file") {
             by_label.setdefault(`str(n["label"]), []).append(n);
         }
@@ -6877,7 +6868,7 @@ impl _resolve_php_member_calls(per_file: list[dict], all_nodes: list[dict], all_
     node_by_id: any = {`node.get("id"): `node for `node in all_nodes};
 
     type_def_nids: dict[str, list[str]] = {};
-    for `node in all_nodes {
+    for `node in typing.cast(object, all_nodes) {
         if _lang_family(`node.get("source_file")) == "php"
             and `node.get("id") in contained
             and _is_type_like_definition(`node)
@@ -6888,7 +6879,7 @@ impl _resolve_php_member_calls(per_file: list[dict], all_nodes: list[dict], all_
 
     method_index = {};
     enclosing_type: dict[str, str] = {};
-    for `edge in all_edges {
+    for `edge in typing.cast(object, all_edges) {
         if `edge.get("relation") != "method" {
             continue;
         }
@@ -6905,7 +6896,7 @@ impl _resolve_php_member_calls(per_file: list[dict], all_nodes: list[dict], all_
 
     inherits_bases = {};
     used_traits = {};
-    for `edge in all_edges {
+    for `edge in typing.cast(object, all_edges) {
         if `edge.get("relation") == "inherits" {
             inherits_bases.setdefault(`edge["source"], []).append(`edge["target"]);
         } elif `edge.get("relation") == "mixes_in" {
@@ -7084,7 +7075,7 @@ impl _resolve_java_member_calls(
     node_by_id = {`node.get("id"): `node for `node in all_nodes};
 
     type_def_nids = {};
-    for `node in all_nodes {
+    for `node in typing.cast(object, all_nodes) {
         if `node.get("source_file")
             and `node.get("id") in contained
             and _is_type_like_definition(`node)
@@ -7095,7 +7086,7 @@ impl _resolve_java_member_calls(
 
     method_index = {};
     enclosing_type = {};
-    for `edge in all_edges {
+    for `edge in typing.cast(object, all_edges) {
         if `edge.get("relation") != "method" {
             continue;
         }
@@ -7143,7 +7134,7 @@ impl _resolve_java_member_calls(
     existing_pairs = {(`edge.get("source"), `edge.get("target")) for `edge in all_edges};
     inherits_bases = {};
     supertypes = {};
-    for `edge in all_edges {
+    for `edge in typing.cast(object, all_edges) {
         if `edge.get("relation") == "inherits" {
             inherits_bases.setdefault(`edge["source"], []).append(`edge["target"]);
         }
@@ -7154,7 +7145,7 @@ impl _resolve_java_member_calls(
     class_fields = _bind_member_field_tables(per_file, all_nodes, lang="java");
     static_fields = _bind_member_field_tables(per_file, all_nodes, lang="java_static");
     qualified_types = {};
-    for `node in all_nodes {
+    for `node in typing.cast(object, all_nodes) {
         identity: any = `node.get("_java_type");
         if not isinstance(identity, `dict) or `node.get("id") not in contained {
             continue;
@@ -7610,7 +7601,7 @@ impl _resolve_objc_member_calls(
 
     type_def_nids: dict[str, list[str]] = {};
     node_by_id = {};
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         node_by_id[n.get("id")] = n;
         if n.get("source_file")
             and n.get("id") in contained
@@ -7623,7 +7614,7 @@ impl _resolve_objc_member_calls(
 
     method_index = {};
     enclosing_type: dict[str, str] = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") != "method" {
             continue;
         }
@@ -7644,7 +7635,7 @@ impl _resolve_objc_member_calls(
 
     existing_pairs: any = {(e.get("source"), e.get("target")) for e in all_edges};
     _objc_bases = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") == "inherits" {
             _objc_bases.setdefault(e["source"], []).append(e["target"]);
         }
@@ -8063,7 +8054,7 @@ impl _resolve_c_include_edges(
         return score;
     }
 
-    for e in edges {
+    for e in typing.cast(object, edges) {
         if e.get("relation") != "imports" {
             continue;
         }
@@ -8175,8 +8166,7 @@ impl _resolve_csharp_constructor_calls(
     node_by_id: any = {n.get("id"): n for n in all_nodes};
     ctors_of = {};
     owner_of: dict[str, str] = {};
-    e: any;
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") != "method" {
             continue;
         }
@@ -8212,7 +8202,7 @@ impl _resolve_csharp_constructor_calls(
     }
     built: dict[str, dict[str, dict[str, str]]] = {};
     callers: any = {rc.get("caller_nid") for rc in records if rc.get("csharp_ctor_site")};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") != "calls" or e.get("source") not in callers {
             continue;
         }
@@ -8227,7 +8217,7 @@ impl _resolve_csharp_constructor_calls(
 
     bases_of: dict[str, set[str]] = {};
     unresolved_base: set[str] = set[any]();
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         derived: any = e.get("source");
         if e.get("relation") != "inherits"
             or not isinstance(derived, `str)
@@ -8375,7 +8365,7 @@ impl _resolve_kotlin_qualified_calls(
     node_by_id: dict[str, dict] = {n.get("id"): n for n in all_nodes};
     contains_by_source: dict[str, list[str]] = {};
     methods_by_type: dict[str, list[str]] = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         rel: any = e.get("relation");
         if rel == "contains" {
             contains_by_source.setdefault(e.get("source"), []).append(e.get("target"));
@@ -8484,7 +8474,7 @@ impl _resolve_rust_self_member_calls(
     node_by_id = {n.get("id"): n for n in all_nodes};
     nids_by_label: dict[str, list[str]] = {};
     nids_by_rust_impl_key: dict[str, list[str]] = {};
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         if `str(n.get("source_file") or "").endswith(".rs") {
             nids_by_label.setdefault(n.get("label", ""), []).append(n.get("id"));
             impl_key: any = n.get("_rust_impl_key");
@@ -8505,7 +8495,7 @@ impl _resolve_rust_self_member_calls(
         );
     }
     method_index: dict[tuple[str, str], set[str]] = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") != "method" {
             continue;
         }
@@ -8633,7 +8623,7 @@ impl _resolve_go_member_calls(per_file: list[dict], all_nodes: list[dict], all_e
     }
 
     method_index: dict[tuple[str, str], list[str]] = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") != "method" {
             continue;
         }
@@ -8728,7 +8718,7 @@ impl _resolve_elixir_import_targets(
 ) {
     node_by_id: dict[str, dict] = {};
     module_nids_by_bare_id: dict[str, list[str]] = {};
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         node_by_id[n["id"]] = n;
         if not n.get("_elixir_module") {
             continue;
@@ -8744,7 +8734,7 @@ impl _resolve_elixir_import_targets(
     }
 
     node_ids: any = `set(node_by_id);
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") != "imports"
             or e.get("context") != "import"
             or not `str(e.get("source_file") or "").endswith((".ex", ".exs"))
@@ -8786,14 +8776,14 @@ impl _resolve_elixir_qualified_calls(
 
     module_nids: dict[str, list[str]] = {};
     labels: dict[str, str] = {};
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         labels[n["id"]] = `str(n.get("label") or "");
         if n.get("_elixir_module") and n.get("source_file") {
             module_nids.setdefault(labels[n["id"]], []).append(n["id"]);
         }
     }
     defs: dict[tuple[str, str], str] = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") == "method" {
             name: any = labels.get(e.get("target", ""), "");
             if name.endswith("()") {
@@ -8838,7 +8828,7 @@ impl _jvm_scope_index(
     owner_of: dict[str, str] = {};
     bases_of: dict[str, list[str]] = {};
     enclosing_of: dict[str, str] = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         rel: any = e.get("relation");
         if rel == "method" {
             owner_of[e["target"]] = e["source"];
@@ -8917,13 +8907,13 @@ impl _resolve_kotlin_member_calls(
 
     node_by_id = {n.get("id"): n for n in all_nodes};
     methods_by_type: dict[str, list[str]] = {};
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         if e.get("relation") == "method" {
             methods_by_type.setdefault(e.get("source"), []).append(e.get("target"));
         }
     }
     types_by_name: dict[str, list[str]] = {};
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         if not n.get("_callable_class") {
             continue;
         }
@@ -10897,8 +10887,7 @@ impl extract(
         if n.get("_cpp_class_kind") in {"forward", "definition"}
     };
     member_files: dict[str, set[str]] = {};
-    `node: any;
-    for `node in all_nodes {
+    for `node in typing.cast(object, all_nodes) {
         if `node.get("_cpp_member_records") {
             member_files.setdefault(`node.get("_cpp_qualified", ""), set[any]()).add(
                 _cpp_source_key(`node.get("source_file", ""), `root)
@@ -11020,7 +11009,7 @@ impl extract(
             _remap_seen.add(_resolved(_p));
         } except (OSError, RuntimeError) {}
     }
-    for _e in all_edges {
+    for _e in typing.cast(object, all_edges) {
         _tf: any = _e.get("target_file");
         if not _tf {
             continue;
@@ -11129,7 +11118,7 @@ impl extract(
     }
     contested = set[any]();
     held = {};
-    for _n in all_nodes {
+    for _n in typing.cast(object, all_nodes) {
         _sf: any;
         (_k, _sf) = (_n.get("id"), _n.get("source_file"));
         if _k in id_remap and _k in id_owner and _sf and _resolved(_sf) not in id_owner[_k] {
@@ -11160,13 +11149,13 @@ impl extract(
     }
 
     if id_remap {
-        for n in all_nodes {
+        for n in typing.cast(object, all_nodes) {
             _new: any = _remapped(n.get("id"), n.get("source_file"));
             if _new is not None {
                 n["id"] = _new;
             }
         }
-        for e in all_edges {
+        for e in typing.cast(object, all_edges) {
             _sf = e.get("source_file");
             _new = _remapped(e.get("source"), _sf);
             if _new is not None {
@@ -11217,7 +11206,7 @@ impl extract(
     if prefix_remap {
         sym_remap: dict[str, str] = {};
         edge_alias_candidates: dict[str, set[str]] = {};
-        for n in all_nodes {
+        for n in typing.cast(object, all_nodes) {
             sf = n.get("source_file");
             if not sf {
                 continue;
@@ -11263,12 +11252,12 @@ impl extract(
             }
         }
         if sym_remap {
-            for n in all_nodes {
+            for n in typing.cast(object, all_nodes) {
                 if n.get("id") in sym_remap {
                     n["id"] = sym_remap[n["id"]];
                 }
             }
-            for e in all_edges {
+            for e in typing.cast(object, all_edges) {
                 if e.get("source") in sym_remap {
                     e["source"] = sym_remap[e["source"]];
                 }
@@ -11311,7 +11300,7 @@ impl extract(
             edge_key_counts: any = Counter(_edge_key(`edge) for `edge in all_edges);
             owned_node_ids: any = {`node.get("id") for `node in all_nodes};
             deduped_edges: list[dict] = [];
-            for `edge in all_edges {
+            for `edge in typing.cast(object, all_edges) {
                 if `edge.get("relation") == "re_exports" {
                     candidates = edge_alias_candidates.get(`edge.get("target", ""), set[any]());
                     if len(candidates) == 1 and `edge.get("target") not in owned_node_ids {
@@ -11379,7 +11368,7 @@ impl extract(
             }
         }
 
-        for e in all_edges {
+        for e in typing.cast(object, all_edges) {
             if e.get("relation") == "re_exports" {
                 _learn(e);
             }
@@ -11574,7 +11563,7 @@ impl extract(
         if not isinstance(nodes, `list) {
             return False;
         }
-        for n in nodes {
+        for n in typing.cast(object, nodes) {
             if not isinstance(n, `dict) {
                 continue;
             }
@@ -11680,7 +11669,7 @@ impl extract(
     file_to_module_imports: dict[str, set[str]] = {};
     existing_pairs: set[tuple] = set[any]();
     call_like_pairs: set[tuple] = set[any]();
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         rel = e.get("relation");
         existing_pairs.add((e["source"], e["target"]));
         if rel in ("calls", "indirect_call") {
@@ -11737,7 +11726,7 @@ impl extract(
     );
     _member_nids: set = set[any]();
     _method_nids: set = set[any]();
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         rel = e.get("relation");
         if rel in ("case_of", "defines") {
             _member_nids.add(e.get("target"));
@@ -12123,7 +12112,7 @@ impl extract(
     if go_pkg_files {
         go_pkg_sink_ids: any = {_make_id("go", "pkg", ip): ip for ip in go_pkg_files};
         rewritten_edges: list[dict] = [];
-        for e in all_edges {
+        for e in typing.cast(object, all_edges) {
             import_path = go_pkg_sink_ids.get(e.get("target", ""))
                 if e.get("relation") == "imports_from"
                 else None;
@@ -12158,12 +12147,12 @@ impl extract(
     }
     del all_raw_calls, per_file;
     all_edges[:] = [e for e in all_edges if not e.pop("_rust_use_group", False)];
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         e.pop("_rust_use_binding", None);
         e.pop("_rust_use_name", None);
         e.pop("_rust_pub_use", None);
     }
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         n.pop("_rust_use_roots", None);
     }
     ext_id_remap = {};
@@ -12284,12 +12273,12 @@ impl extract(
             return nid;
         }
 
-        for n in all_nodes {
+        for n in typing.cast(object, all_nodes) {
             if n.get("id") {
                 n["id"] = _canon(n["id"]);
             }
         }
-        for e in all_edges {
+        for e in typing.cast(object, all_edges) {
             if e.get("source") {
                 e["source"] = _canon(e["source"]);
             }
@@ -12298,17 +12287,17 @@ impl extract(
             }
         }
     }
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         n.pop("origin_file", None);
     }
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         e.pop("local_alias", None);
         e.pop("_python_plain_import", None);
     }
-    for n in all_nodes {
+    for n in typing.cast(object, all_nodes) {
         n["_origin"] = "ast";
     }
-    for e in all_edges {
+    for e in typing.cast(object, all_edges) {
         e["_origin"] = "ast";
     }
     for _item in (*all_nodes, *all_edges) {

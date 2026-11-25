@@ -1241,9 +1241,6 @@ graph import {
         _resolves_under_root,
         _shebang_interpreter,
     }
-    graphify.ids --> graphify.mcp_ingest { make_id }
-    graphify.security --> graphify.mcp_ingest { sanitize_label }
-    graphify.extractors.base --> graphify.mcp_ingest { _file_stem }
     graphify.build --> graphify.ruby_resolution { _is_file_node_label }
     graphify.ids --> graphify.build { _file_stem, make_id, normalize_id }
     graphify.paths --> graphify.build { GRAPHIFY_OUT, default_graph_json, is_absolute_any_platform }
@@ -1310,10 +1307,6 @@ graph import {
     graphify.detect --> graphify.llm { extract_pdf_text }
     graphify.build --> graphify.llm { _coerce_hyperedge_member_refs }
     graphify.cache --> graphify.llm { save_semantic_cache }
-    graphify.extractors.base --> graphify.markdown_resolution {
-        _LANGUAGE_BUILTIN_GLOBALS,
-        active_scan_root,
-    }
     graphify.extractors.base --> graphify.extractors.engine {
         _LANGUAGE_BUILTIN_GLOBALS,
         _file_stem,
@@ -1329,20 +1322,6 @@ graph import {
     }
     graphify.extractors.resolution --> graphify.extractors.engine { _resolve_js_import_target }
     graphify.security --> graphify.extractors.engine { sanitize_metadata }
-    graphify.extractors.base --> graphify.extractors.apex {
-        _file_stem,
-        _make_id,
-        _read_source_text,
-    }
-    graphify.extractors.base --> graphify.extractors.bash {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-        active_scan_root,
-    }
-    graphify.security --> graphify.extractors.bash { sanitize_metadata }
-    graphify.extractors.base --> graphify.extractors.cobol { _make_id, _read_source_text }
     graphify.extractors.base --> graphify.extractors.dart {
         _file_stem,
         _make_id,
@@ -1350,13 +1329,6 @@ graph import {
     }
     graphify.extractors.engine --> graphify.extractors.dart { _underscore_salted_nid }
     graphify.ids --> graphify.extractors.dart { normalize_id }
-    graphify.extractors.base --> graphify.extractors.dm {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_source_text,
-        _read_text,
-    }
     graphify.extractors.base --> graphify.extractors.elixir {
         _LANGUAGE_BUILTIN_GLOBALS,
         _file_stem,
@@ -1365,18 +1337,6 @@ graph import {
     }
     graphify.extractors.engine --> graphify.extractors.elixir { _underscore_salted_nid }
     graphify.ids --> graphify.extractors.elixir { normalize_id }
-    graphify.extractors.base --> graphify.extractors.erlang {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-    }
-    graphify.extractors.base --> graphify.extractors.fortran {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-    }
     graphify.ids --> graphify.extractors.go { DeclIdRegistry }
     graphify.extractors.base --> graphify.extractors.go {
         _LANGUAGE_BUILTIN_GLOBALS,
@@ -1396,68 +1356,6 @@ graph import {
         _resolve_js_module_path,
     }
     graphify.ids --> graphify.extractors.json_config { normalize_id }
-    graphify.extractors.base --> graphify.extractors.yaml_config { _file_stem, _make_id }
-    graphify.ids --> graphify.extractors.yaml_config { normalize_id }
-    graphify.extractors.base --> graphify.extractors.commonlisp {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-    }
-    graphify.security --> graphify.extractors.commonlisp { redact_secrets }
-    graphify.detect --> graphify.extractors.markdown {
-        CODE_EXTENSIONS,
-        DOC_EXTENSIONS,
-        _SKIP_DIRS,
-        classify_file,
-        ignored_predicate,
-    }
-    graphify.extractors.base --> graphify.extractors.markdown {
-        _file_stem,
-        _make_id,
-        _read_source_text,
-        active_scan_root,
-    }
-    graphify.security --> graphify.extractors.markdown { sanitize_metadata }
-    graphify.extractors.base --> graphify.extractors.ocaml {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-    }
-    graphify.rcfile --> graphify.extractors.ocaml { effective_suffix }
-    graphify.extractors.base --> graphify.extractors.pascal_forms {
-        _file_stem,
-        _make_id,
-        _read_source_text,
-    }
-    graphify.extractors.base --> graphify.extractors.powershell {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-    }
-    graphify.extractors.base --> graphify.extractors.r {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-    }
-    graphify.extractors.base --> graphify.extractors.razor {
-        _file_stem,
-        _make_id,
-        _read_source_text,
-    }
-    graphify.security --> graphify.extractors.razor { sanitize_metadata }
-    graphify.extractors.base --> graphify.extractors.robot { _file_stem, _make_id }
-    graphify.rcfile --> graphify.extractors.robot { effective_suffix }
-    graphify.ids --> graphify.extractors.rust { DeclIdRegistry }
-    graphify.extractors.base --> graphify.extractors.rust {
-        _LANGUAGE_BUILTIN_GLOBALS,
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-    }
     graphify.extractors.base --> graphify.extractors.solidity {
         _file_stem,
         _make_id,
@@ -1465,34 +1363,6 @@ graph import {
         _read_text,
     }
     graphify.extractors.engine --> graphify.extractors.solidity { _underscore_salted_nid }
-    graphify.extractors.base --> graphify.extractors.sql {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-    }
-    graphify.extractors.base --> graphify.extractors.verilog {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-    }
-    graphify.extractors.base --> graphify.extractors.vbnet {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-    }
-    graphify.extractors.base --> graphify.extractors.zig {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-    }
-    graphify.extractors.base --> graphify.symbol_resolution { _file_stem, _read_source_text }
-    graphify.ids --> graphify.symbol_resolution { make_id }
-    graphify.paths --> graphify.symbol_resolution { disambiguate_ambiguous_candidates }
-    graphify.security --> graphify.symbol_resolution { sanitize_metadata }
-    graphify.rcfile --> graphify.symbol_resolution { effective_suffix }
     graphify.extractors.base --> graphify.extractors.pascal {
         _file_stem,
         _make_id,
@@ -3902,8 +3772,10 @@ graph import {
     graphify.cache --> tests.test_zero_node_no_cache { load_cached }
     tools.skillgen.gen --> tools.skillgen.__main__ { main }
     graphify.ids ++> graphify.manifest_ingest { make_id }
-    graphify.security ++> graphify.paths { check_graph_file_size_cap }
-    graphify.paths ++> graphify.security { GRAPHIFY_OUT, GRAPHIFY_OUT_NAME }
+    graphify.paths ++> graphify.security {
+        GRAPHIFY_OUT as _PATHS_OUT,
+        GRAPHIFY_OUT_NAME as _PATHS_OUT_NAME,
+    }
     graphify.paths ++> graphify.cluster { write_json_atomic }
     graphify.paths ++> graphify.transcribe { out_path as _out_path }
     graphify.security ++> graphify.transcribe { validate_url }
@@ -3920,13 +3792,12 @@ graph import {
     graphify.paths ++> graphify.wiki { stem_filename_budget, write_text_atomic_if_changed }
     graphify.security ++> graphify.scip_ingest { sanitize_metadata }
     graphify.paths ++> graphify.cache {
-        GRAPHIFY_OUT as _GRAPHIFY_OUT,
+        GRAPHIFY_OUT as _PATHS_OUT,
         os_long_path as _os_long_path,
         stash_preread_bytes as _stash_preread_bytes,
         os_replace_with_fallback as _os_replace_with_fallback,
     }
     graphify.ids ++> graphify.cache { normalize_id }
-    graphify.detect ++> graphify.cache { IMAGE_EXTENSIONS }
     graphify.google_workspace ++> graphify.detect {
         GOOGLE_WORKSPACE_EXTENSIONS,
         convert_google_workspace_file,
@@ -3946,14 +3817,18 @@ graph import {
     }
     graphify.manifest_ingest ++> graphify.detect { is_package_manifest_path }
     graphify.cache as _cache ++> graphify.detect;
-    graphify.detect ++> graphify.rcfile { CODE_EXTENSIONS, DOC_EXTENSIONS }
     graphify.ids ++> graphify.extractors.base { make_id }
+    include graphify.ids ++> graphify.extractors.base { _file_stem }
     graphify.paths ++> graphify.extractors.base { take_preread_bytes as _take_preread_bytes }
     graphify.extractors.base ++> graphify.file_slice { _read_source_text }
     graphify.detect ++> graphify.file_slice { extract_pdf_text }
     graphify.detect ++> graphify.cargo_introspect { _is_noise_dir }
     graphify.rcfile ++> graphify.interface_dispatch { effective_suffix }
-    graphify.interface_dispatch ++> graphify.csharp_dispatch { resolve_interface_dispatch }
+    graphify.interface_dispatch ++> graphify.csharp_dispatch {
+        DISPATCH_RELATION,
+        method_label as _method_label,
+        resolve_interface_dispatch,
+    }
     graphify.extractors.base ++> graphify.extractors.blade { _make_id, _read_source_text }
     graphify.extractors.base ++> graphify.extractors.csharp { _make_id }
     graphify.rcfile ++> graphify.extractors.csharp { effective_suffix }
@@ -3980,7 +3855,7 @@ graph import {
     graphify.rcfile ++> graphify.hooks { load_graphifyrc }
     graphify.paths ++> graphify.hooks { GRAPHIFY_OUT }
     graphify.paths ++> graphify.install {
-        GRAPHIFY_OUT as _GRAPHIFY_OUT,
+        GRAPHIFY_OUT as _PATHS_OUT,
         os_replace_with_fallback as _os_replace_with_fallback,
         write_text_atomic as _write_text_atomic,
     }
@@ -3990,4 +3865,138 @@ graph import {
         load_manifest,
         detect_incremental,
     }
+    graphify.extractors.base ++> graphify.extractors.apex {
+        _file_stem,
+        _make_id,
+        _read_source_text,
+    }
+    graphify.extractors.base ++> graphify.extractors.bash {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+        active_scan_root,
+    }
+    graphify.security ++> graphify.extractors.bash { sanitize_metadata }
+    graphify.extractors.base ++> graphify.extractors.cobol { _make_id, _read_source_text }
+    graphify.extractors.base ++> graphify.extractors.commonlisp {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+    }
+    graphify.security ++> graphify.extractors.commonlisp { redact_secrets }
+    graphify.extractors.base ++> graphify.extractors.dm {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_source_text,
+        _read_text,
+    }
+    graphify.extractors.base ++> graphify.extractors.erlang {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+    }
+    graphify.extractors.base ++> graphify.extractors.fortran {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+    }
+    graphify.detect ++> graphify.extractors.markdown {
+        CODE_EXTENSIONS,
+        DOC_EXTENSIONS,
+        classify_file,
+        _SKIP_DIRS,
+        ignored_predicate,
+    }
+    graphify.extractors.base ++> graphify.extractors.markdown {
+        _file_stem,
+        _make_id,
+        _read_source_text,
+        active_scan_root as _active_scan_root,
+    }
+    graphify.security ++> graphify.extractors.markdown { sanitize_metadata }
+    graphify.extractors.base ++> graphify.extractors.ocaml {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+    }
+    graphify.rcfile ++> graphify.extractors.ocaml { effective_suffix }
+    graphify.extractors.base ++> graphify.extractors.pascal_forms {
+        _file_stem,
+        _make_id,
+        _read_source_text,
+    }
+    graphify.extractors.base ++> graphify.extractors.powershell {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+    }
+    graphify.extractors.base ++> graphify.extractors.r {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+    }
+    graphify.extractors.base ++> graphify.extractors.razor {
+        _file_stem,
+        _make_id,
+        _read_source_text,
+    }
+    graphify.security ++> graphify.extractors.razor { sanitize_metadata }
+    graphify.ids ++> graphify.extractors.rust { DeclIdRegistry }
+    graphify.extractors.base ++> graphify.extractors.rust {
+        _LANGUAGE_BUILTIN_GLOBALS,
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+    }
+    graphify.extractors.base ++> graphify.extractors.sql {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+    }
+    graphify.extractors.base ++> graphify.extractors.vbnet {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+    }
+    graphify.extractors.base ++> graphify.extractors.verilog {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+    }
+    graphify.extractors.base ++> graphify.extractors.zig {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+    }
+    graphify.extractors.base ++> graphify.markdown_resolution {
+        _LANGUAGE_BUILTIN_GLOBALS,
+        active_scan_root as _active_scan_root,
+    }
+    graphify.ids ++> graphify.mcp_ingest { make_id as _shared_make_id }
+    graphify.security ++> graphify.mcp_ingest { sanitize_label }
+    graphify.extractors.base ++> graphify.mcp_ingest { _file_stem }
+    graphify.extractors.base ++> graphify.symbol_resolution {
+        _read_source_text,
+        _file_stem as _bash_file_stem,
+    }
+    graphify.ids ++> graphify.symbol_resolution { make_id as _shared_make_id }
+    graphify.paths ++> graphify.symbol_resolution { disambiguate_ambiguous_candidates }
+    graphify.security ++> graphify.symbol_resolution { sanitize_metadata }
+    graphify.rcfile ++> graphify.symbol_resolution { effective_suffix }
+    graphify.extractors.base ++> graphify.extractors.robot { _file_stem, _make_id }
+    graphify.rcfile ++> graphify.extractors.robot { effective_suffix }
+    graphify.extractors.base ++> graphify.extractors.yaml_config { _file_stem, _make_id }
+    graphify.ids ++> graphify.extractors.yaml_config { normalize_id }
+    graphify --> tests.conftest;
 }

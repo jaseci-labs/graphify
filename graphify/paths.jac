@@ -14,9 +14,10 @@ once at import time, matching the previous per-module constants — set
 flow) and every reader honours it.
 """
 
+import importlib;
+
 import operator;
 
-import from jaclang.comptime { target }
 
 import from __future__ { annotations }
 

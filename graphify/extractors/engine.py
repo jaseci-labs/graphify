@@ -4356,8 +4356,8 @@ def _cpp_receiver_chain(node, source: bytes) -> list[list[str]]:
             node = node.named_children[0]
         elif node.type == "field_expression":
             field = node.child_by_field_name("field")
-            operator = node.child_by_field_name("operator")
-            if (field is None or operator is None
+            operator_node = node.child_by_field_name("operator")
+            if (field is None or operator_node is None
                     or (field.type != "field_identifier" and (
                         members or field.type not in {"template_method", "dependent_name"}))):
                 return []
@@ -4365,7 +4365,7 @@ def _cpp_receiver_chain(node, source: bytes) -> list[list[str]]:
             if not name:
                 return []
             members.append(name)
-            operators.append(_read_text(operator, source))
+            operators.append(_read_text(operator_node, source))
             node = node.child_by_field_name("argument")
         elif node.type in {"identifier", "this"}:
             members.append(_read_text(node, source))

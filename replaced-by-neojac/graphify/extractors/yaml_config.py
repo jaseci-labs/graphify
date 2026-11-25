@@ -15,6 +15,7 @@ key:value data bundle) is skipped so it does not mint up to 500 orphan nodes
 
 from __future__ import annotations
 
+import types
 from pathlib import Path
 from typing import Any
 
@@ -62,9 +63,7 @@ def _permissive_loader() -> Any:
     if _permissive_loader_cls is None:
         import yaml  # type: ignore
 
-        class _PermissiveSafeLoader(yaml.SafeLoader):
-            pass
-
+        _PermissiveSafeLoader = types.new_class("_PermissiveSafeLoader", (yaml.SafeLoader,))
         _PermissiveSafeLoader.add_multi_constructor("!", _construct_permissive)
         _permissive_loader_cls = _PermissiveSafeLoader
     return _permissive_loader_cls

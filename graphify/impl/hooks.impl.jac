@@ -48,7 +48,7 @@ impl _git_root(path: Path) -> Path | None {
 }
 
 impl _reject_windows_path(value: str, source: str) -> None {
-    comptime if target().os == "windows" {
+    if os.name == "nt" {
         return;
     }
     if _WINDOWS_DRIVE_RE.match(value) or "\\" in value {

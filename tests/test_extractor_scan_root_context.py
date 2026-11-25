@@ -2,7 +2,7 @@
 back into graphify.extract — MIGRATION.md invariant #4 (#3666)."""
 from __future__ import annotations
 
-import ast
+import re
 from pathlib import Path
 
 from graphify.extractors import base as base_mod
@@ -10,19 +10,12 @@ from graphify.extractors import markdown as markdown_mod
 
 
 def _imports_graphify_extract(module) -> bool:
-    """True if the module's source imports graphify.extract anywhere — a
-    top-level or a function-local `import graphify.extract` / `from
-    graphify.extract import ...`."""
-    source = Path(module.__file__).read_text(encoding="utf-8")
-    for node in ast.walk(ast.parse(source)):
-        if isinstance(node, ast.Import):
-            if any(a.name == "graphify.extract" or a.name.startswith("graphify.extract.")
-                   for a in node.names):
-                return True
-        elif isinstance(node, ast.ImportFrom):
-            if node.module == "graphify.extract" or (node.module or "").startswith("graphify.extract."):
-                return True
-    return False
+    """True if the module imports graphify.extract anywhere. The project's
+    archwire.jac declares every import between its modules, a function-local
+    one included, as a wire from the provider to the consumer."""
+    wires = (Path(__file__).resolve().parents[1] / "archwire.jac").read_text(encoding="utf-8")
+    wire = rf"^\s*(?:include )?graphify\.extract(?:\.\w+)*(?: as \w+)? (?:\+\+>|-->) {re.escape(module.__name__)}\b"
+    return re.search(wire, wires, re.MULTILINE) is not None
 
 
 def test_markdown_extractor_does_not_import_graphify_extract():

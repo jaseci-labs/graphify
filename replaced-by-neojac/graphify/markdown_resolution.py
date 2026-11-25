@@ -311,7 +311,7 @@ def resolve_markdown_mentions(
 
     def _resolve_chain(file_labels: dict[str, list[str]], names: list[str]) -> str | None:
         candidates = list(file_labels.get(names[-1], []))
-        for depth, owner_name in enumerate(reversed(names[:-1]), start=1):
+        for depth, owner_name in enumerate(reversed(names[:-1]), 1):
             owners = set(file_labels.get(owner_name, []))
             narrowed = []
             for c in candidates:

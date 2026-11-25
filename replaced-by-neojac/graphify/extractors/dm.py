@@ -391,7 +391,7 @@ def extract_dmm(path: Path) -> dict:
     depth = 0
     in_string = False
     escape = False
-    for line_idx, line in enumerate(dict_text.splitlines(), start=1):
+    for line_idx, line in enumerate(dict_text.splitlines(), 1):
         for ch in line:
             if escape:
                 escape = False
@@ -459,7 +459,7 @@ def extract_dmf(path: Path) -> dict:
     current_elem_nid: str | None = None
     current_elem_name: str | None = None
 
-    for line_idx, line in enumerate(text.splitlines(), start=1):
+    for line_idx, line in enumerate(text.splitlines(), 1):
         m = _DMF_WINDOW_RE.match(line)
         if m:
             name = m.group(1)

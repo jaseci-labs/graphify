@@ -139,7 +139,7 @@ def _resolve_ollama_seed() -> int | None:
     return int(normalized)
 
 
-BACKENDS: dict[str, dict] = {
+BACKENDS: dict[str, dict[str, Any]] = {
     "claude": {
         # ANTHROPIC_BASE_URL points the backend at any Anthropic-compatible
         # server (LiteLLM proxy, gateways, ...); ANTHROPIC_MODEL overrides the

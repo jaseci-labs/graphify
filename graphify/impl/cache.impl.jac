@@ -1465,7 +1465,8 @@ impl mark_semantic_cache_partial(
 impl drop_unreported_chunk_sources(out_dir: Path, `root: Path) -> tuple[list[str], int] {
     d: any;
     gone: any;
-    import from graphify.detect { IMAGE_EXTENSIONS }
+    # Loaded here, by name: detect imports this module.
+    IMAGE_EXTENSIONS: any = importlib.import_module("graphify.detect").IMAGE_EXTENSIONS;
 
     (out_dir, `root) = (Path(out_dir), Path(`root));
     dispatched_file: any = out_dir / ".graphify_uncached.txt";

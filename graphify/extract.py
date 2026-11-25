@@ -13,7 +13,7 @@ from bisect import bisect_right
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path, PurePath
-from typing import Any, Callable
+from typing import Any, Callable, List, Tuple
 
 from .cache import load_cached, save_cached
 from .cargo_introspect import package_name
@@ -2152,7 +2152,7 @@ def _extract_python_rationale(path: Path, result: dict) -> None:
 
     # Rationale comments (# NOTE:, # IMPORTANT:, etc.)
     source_text = source.decode("utf-8", errors="replace")
-    for lineno, line_text in enumerate(source_text.splitlines(), start=1):
+    for lineno, line_text in enumerate(source_text.splitlines(), 1):
         stripped = line_text.strip()
         if any(stripped.startswith(p) for p in _RATIONALE_PREFIXES):
             _add_rationale(stripped, lineno, file_nid)
@@ -2218,7 +2218,7 @@ def _ts_type_argument_ranges(root: Any, *, call_only: bool) -> list[tuple[int, i
 # Sorted type-argument ranges prepared for lookup: (starts, spans, prefix_max_end).
 # See _ts_build_range_index. A real alias, not a string: quoting the right-hand
 # side would make this a `str` value, which type checkers reject as a type.
-_TsRangeIndex = tuple[list[int], list[tuple[int, int]], list[int]]
+_TsRangeIndex = Tuple[List[int], List[Tuple[int, int]], List[int]]
 
 
 def _ts_ranges_containing(
@@ -2810,7 +2810,7 @@ def _extract_js_rationale(path: Path, result: dict) -> None:
             "weight": 1.0,
         })
 
-    for lineno, line_text in enumerate(source_text.splitlines(), start=1):
+    for lineno, line_text in enumerate(source_text.splitlines(), 1):
         stripped = line_text.strip()
         if any(stripped.startswith(p) for p in _JS_RATIONALE_PREFIXES):
             _add_rationale(stripped.lstrip("/* "), lineno)
@@ -3422,7 +3422,7 @@ def _extract_spock_fallback(path: Path, ts_result: dict) -> dict:
     if file_nid not in seen_ids:
         _add_node(file_nid, path.name, 1)
 
-    for lineno, line_text in enumerate(lines_text, start=1):
+    for lineno, line_text in enumerate(lines_text, 1):
         cm = class_re.match(line_text)
         if cm:
             class_name = cm.group(1)
@@ -3674,7 +3674,7 @@ def _normalize_cpp_export_macros(source: bytes) -> bytes:
         idx = start - 1
         while idx >= 0 and source[idx] in b" \t\r\n":
             idx -= 1
-        if idx >= 0 and source[idx] == ord(b"("):
+        if idx >= 0 and source[idx] == 0x28:  # "("
             return m.group(0)
 
         # Check for brace initialization like `var{1}`
@@ -3693,7 +3693,7 @@ def _normalize_cpp_export_macros(source: bytes) -> bytes:
         blanked_macro = bytearray(macro_text)
         for i in range(len(blanked_macro)):
             if blanked_macro[i] not in b"\r\n":
-                blanked_macro[i] = ord(b" ")
+                blanked_macro[i] = 0x20  # space
 
         return m.group(1) + bytes(blanked_macro) + m.group(3) + m.group(4)
 
@@ -3887,7 +3887,7 @@ def _recover_cpp_conditional_initializers(path: Path, source: bytes, original: d
                     coverage["reason"] = "malformed conditional expression"
                     return annotate(original)
     merged: dict | None = None
-    seen: dict[str, dict[str, int]] = {key: {} for key in ("nodes", "edges", "raw_calls")}
+    seen: dict[str, dict[str, int]] = {key: dict() for key in ("nodes", "edges", "raw_calls")}
     node_ids: dict[str, dict] = {}
     for view_index, choice in enumerate(choices):
         view = bytearray(source)
@@ -6670,7 +6670,7 @@ def _resolve_typescript_member_calls(
                 # its base classes': the file table would hand it another class's
                 # field or a local that merely shares the name.
                 hit = _field_type(owner_nid, str(receiver), bool(rc.get("ts_static_this")))
-                type_name, declaring_nid = hit if hit else (None, None)
+                type_name, declaring_nid = hit or (None, None)
             else:
                 type_name = type_table_by_file.get(rc.get("source_file", ""), {}).get(receiver)
         if not type_name:
@@ -6947,7 +6947,7 @@ def _resolve_cpp_member_calls(
             source = owner_node.get("source_file", source)
             position = owner_node.get("_cpp_field_positions", {}).get(root_name, position)
         type_nid = ""
-        for index, (member, operator) in enumerate(chain):
+        for index, (member, access_op) in enumerate(chain):
             if index:
                 field_owner = type_lookup.member_owner(type_nid, member, "field")
                 if not isinstance(field_owner, str):
@@ -6957,7 +6957,7 @@ def _resolve_cpp_member_calls(
                 scope = owner_node.get("_cpp_qualified", "")
                 source = owner_node.get("source_file", source)
                 position = owner_node.get("_cpp_field_positions", {}).get(member, 0)
-            type_nid = type_lookup.resolve(name, scope, source, position, operator,
+            type_nid = type_lookup.resolve(name, scope, source, position, access_op,
                                           use_source=use_source, use_position=use_position)
             if type_nid is None:
                 return None
@@ -11088,7 +11088,7 @@ def _xaml_pascal_name(name: str) -> str | None:
 
 _XAML_TOOLKIT_FIELD_RE = re.compile(r"\b(?P<name>_?m?_?[A-Za-z_]\w*)\s*(?:=.*)?;")
 _XAML_TOOLKIT_METHOD_RE = re.compile(r"\b(?P<name>[A-Za-z_]\w*)\s*\(")
-_XAML_CSHARP_CLASS_CACHE: dict[str, dict[str, list[dict]]] = {}
+_XAML_CSHARP_CLASS_CACHE: dict[str, dict[str, list[dict[str, Any]]]] = {}
 
 
 def _xaml_communitytoolkit_members(vm_node: dict) -> tuple[dict[str, dict], list[dict]]:

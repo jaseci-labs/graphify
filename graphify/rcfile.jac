@@ -32,6 +32,8 @@ typos from silently disabling classification.
 
 import from __future__ { annotations }
 
+import importlib;
+
 import sys;
 
 import threading;

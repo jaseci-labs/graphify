@@ -294,7 +294,7 @@ impl CppTypeLookup.resolve(
     scope: str,
     source: str,
     position: int,
-    operator: str,
+    access_op: str,
     *,
     use_source: str | None = None,
     use_position: int | None = None,
@@ -305,7 +305,7 @@ impl CppTypeLookup.resolve(
     }
     target: any = self._expand(name, scope, source, position, set[any](), completion=completion);
     shape: any = target[1].rstrip("&") if target else "";
-    if target and (operator == "." and not shape or operator == "->" and shape in {"*", "smart"}) {
+    if target and (access_op == "." and not shape or access_op == "->" and shape in {"*", "smart"}) {
         return target[0];
     }
     return None;

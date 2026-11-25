@@ -123,7 +123,7 @@ def _mask_strings(code: str) -> str:
 def _starts_inside_string(code: str, offset: int) -> bool:
     """Whether *offset* lies inside a COBOL quoted literal."""
     for match in re.finditer(r"'(?:''|[^'])*'|\"(?:\"\"|[^\"])*\"", code):
-        if match.start() <= offset < match.end():
+        if match.start() <= offset and offset < match.end():
             return True
     return False
 

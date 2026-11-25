@@ -573,6 +573,14 @@ def extract_powershell_manifest(path: Path) -> dict:
             module_name_strings: list[str] = []
             inside_hash_entries: set[int] = set()  # byte offsets of handled strings
 
+            def _collect_string_nodes(n):
+                """Return all string_literal nodes in subtree."""
+                if n.type == "string_literal":
+                    yield n
+                    return
+                for child in n.children:
+                    yield from _collect_string_nodes(child)
+
             def find_modulename_entries(n) -> None:
                 if n.type == "hash_entry":
                     sub_key = next((c for c in n.children if c.type == "key_expression"), None)
@@ -591,14 +599,6 @@ def extract_powershell_manifest(path: Path) -> dict:
                     return  # don't recurse further into this hash_entry
                 for child in n.children:
                     find_modulename_entries(child)
-
-            def _collect_string_nodes(n):
-                """Return all string_literal nodes in subtree."""
-                if n.type == "string_literal":
-                    yield n
-                    return
-                for child in n.children:
-                    yield from _collect_string_nodes(child)
 
             find_modulename_entries(value_node)
 

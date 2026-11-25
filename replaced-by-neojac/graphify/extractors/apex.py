@@ -91,7 +91,7 @@ def extract_apex(path: Path) -> dict:
     current_class_nid: str | None = None
     pending_annotations: list[str] = []
 
-    for lineno, line_text in enumerate(lines, start=1):
+    for lineno, line_text in enumerate(lines, 1):
         stripped = line_text.strip()
 
         if stripped.startswith("@"):

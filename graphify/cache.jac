@@ -1,5 +1,7 @@
 import builtins;
 
+import importlib;
+
 import operator;
 import from __future__ { annotations }
 
@@ -24,6 +26,9 @@ import from collections.abc { Callable, Iterable }
 import from pathlib { Path }
 
 import from typing { Any }
+
+# This module's own copy, as a `from` import would bind it.
+glob _GRAPHIFY_OUT: any = _PATHS_OUT;
 
 glob _EXTRACTOR_VERSION: any;
 

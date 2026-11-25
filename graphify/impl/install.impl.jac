@@ -690,7 +690,7 @@ impl _print_banner -> None {
         return;
     }
     try {
-        comptime if target_().os == "windows" {
+        if sys.platform == "win32" {
             import ctypes;
             ctypes.windll.kernel32.SetConsoleMode(ctypes.windll.kernel32.GetStdHandle(-11), 7);
         }

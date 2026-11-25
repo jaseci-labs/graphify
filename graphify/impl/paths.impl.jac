@@ -27,7 +27,7 @@ impl take_preread_bytes(path: "str | Path") -> "bytes | None" {
 }
 
 impl os_long_path(path: "str | Path") -> str {
-    comptime if target().os != "windows" {
+    if sys.platform != "win32" {
         return `str(path);
     }
     s: any = `str(path);
@@ -121,7 +121,7 @@ impl _atomic_replace(path: "str | Path", write_fn) -> None {
         try {
             os.chmod(tmp, mode);
         } except OSError {}
-        comptime if target().os == "windows" {
+        if os.name == "nt" {
             if real.is_file() and not os.access(real, os.W_OK) {
                 raise PermissionError(errno.EACCES, "destination is read-only", `str(real));
             }
@@ -362,7 +362,7 @@ impl _component_name_max(directory: "str | Path") -> int | None {
 }
 
 impl stem_filename_budget(output_dir: "str | Path", *, reserve: int = 0, limit: int = 200) -> int {
-    comptime if target().os != "windows" {
+    if os.name != "nt" {
         name_max: any = _component_name_max(output_dir);
         if name_max is None {
             return limit;
@@ -445,8 +445,8 @@ impl load_node_link_graph(path_or_data) -> any {
     owned: any = not isinstance(data, `dict);
     if owned {
         p: any = Path(data);
-        import from graphify.security { check_graph_file_size_cap }
-        check_graph_file_size_cap(p);
+        # Loaded here, by name: security imports this module.
+        importlib.import_module("graphify.security").check_graph_file_size_cap(p);
         data = read_graph_json(p);
     }
     if isinstance(data, `dict) and "links" not in data and "edges" in data {

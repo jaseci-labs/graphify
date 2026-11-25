@@ -24,6 +24,11 @@ import ipaddress;
 
 import socket;
 
+# This module's own copy, as a `from` import would bind it.
+glob GRAPHIFY_OUT: any = _PATHS_OUT;
+
+glob GRAPHIFY_OUT_NAME: any = _PATHS_OUT_NAME;
+
 glob _ALLOWED_SCHEMES: any = {"http", "https"};
 
 glob _MAX_FETCH_BYTES: any = 52428800;

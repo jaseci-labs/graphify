@@ -7,6 +7,31 @@ from typing import Any
 import pytest
 
 
+def _lay_built_package() -> None:
+    """Put the built ``graphify`` package where a checkout holds its source.
+
+    ``neojac test`` runs this suite in a laid copy of the repository that has no
+    ``graphify/`` directory: the package is the build's, elsewhere on Python's
+    path. Tests that read the package's files by their repository path, or point
+    a child process's PYTHONPATH at the repository root, find it through these
+    links.
+    """
+    import graphify
+
+    built = Path(graphify.__file__).resolve().parent
+    repo = Path(__file__).resolve().parent.parent
+    if (repo / "graphify").exists():
+        return
+    for entry in [built, *built.parent.glob("_jac_*.py")]:
+        try:
+            (repo / entry.name).symlink_to(entry)
+        except FileExistsError:  # another xdist worker got there first
+            pass
+
+
+_lay_built_package()
+
+
 @pytest.fixture(scope="session")
 def _can_symlink() -> bool:
     """Whether this machine can create symlinks at all (#2642).

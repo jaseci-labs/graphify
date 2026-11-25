@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, FrozenSet, Optional, Tuple
 
 from tree_sitter import Node
 
@@ -131,9 +131,9 @@ def _collision_groups(declared: list[tuple[str, str]]) -> dict[str, set[str]]:
 
 # A type's written text is read in the contract it was written in (its name
 # and the structs/enums/value types it declares), see extract_solidity.qualify.
-TypeContext = tuple[str | None, frozenset[str]]
+TypeContext = Tuple[Optional[str], FrozenSet[str]]
 # Variable name -> (normalized type text, context); None when ambiguous.
-VariableTypes = dict[str, tuple[str, TypeContext] | None]
+VariableTypes = Dict[str, Optional[Tuple[str, TypeContext]]]
 
 _ELEMENTARY_ALIASES = {"uint": "uint256", "int": "int256", "byte": "bytes1"}
 _MAPPING_VALUE_NAME = re.compile(r"(.*\S) ([A-Za-z_$][A-Za-z0-9_$]*)")

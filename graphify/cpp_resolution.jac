@@ -65,7 +65,7 @@ obj CppTypeLookup {
         scope: str,
         source: str,
         position: int,
-        operator: str,
+        access_op: str,
         *,
         use_source: str | None = None,
         use_position: int | None = None,

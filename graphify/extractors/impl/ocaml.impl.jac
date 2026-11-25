@@ -41,7 +41,7 @@ impl extract_ocaml(path: Path) -> dict {
     local_modules = set[any]();
     call_sites = [];
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -61,7 +61,7 @@ impl extract_ocaml(path: Path) -> dict {
         line: int,
         confidence: str = "EXTRACTED",
         weight: float = 1.0,
-    ) -> None {
+    ) {
         edges.append({
             "source": src,
             "target": tgt,
@@ -75,13 +75,6 @@ impl extract_ocaml(path: Path) -> dict {
 
     file_nid = _make_id(`str(path));
     add_node(file_nid, path.name, 1);
-
-    """Mint a SOURCELESS stub for a cross-file reference target (an `open`ed
-        module or a call to a name not defined in this file). The corpus-level
-        rewire collapses it onto the unique real definition of that name;
-        external names (Stdlib, Core, ...) dangle and are pruned. A *sourced*
-        stub here would bake this file's path into the id and block the rewire
-        (the #1402 phantom-duplicate bug)."""
     def ref_stub(name: str) -> str {
         nid: any = _make_id(name);
         if nid not in seen_ids {
@@ -101,11 +94,6 @@ impl extract_ocaml(path: Path) -> dict {
     def line_of(`node) -> int {
         return `node.start_point[0] + 1;
     }
-
-    """Locate the `object ... end` body of a class binding. It is the
-        `object_expression` in an implementation and the `class_body_type` in an
-        interface; a parametric class (`class c x = object ... end`) nests it a
-        level deeper, so search descendants rather than direct children."""
     def _find_object_body(binding) -> any {
         stack: any = `list(binding.children);
         while stack {
@@ -126,11 +114,6 @@ impl extract_ocaml(path: Path) -> dict {
         }
         return None;
     }
-
-    """Final component of a *_path node: `Geo.area` -> `area`,
-        `Stdlib.List` -> `List`. The qualifier is nested under a child
-        `module_path`, so the final name is always a *direct* child of the path
-        node -- a deep search would wrongly return the module qualifier."""
     def last_name(path_node) -> str | None {
         found: str | None = None;
         for n in path_node.children {
@@ -140,11 +123,6 @@ impl extract_ocaml(path: Path) -> dict {
         }
         return found;
     }
-
-    """Leftmost (outermost) module segment qualifying a *_path node:
-        `Reg_spec.create` -> `Reg_spec`, `Stdlib.List.map` -> `Stdlib`. Returns
-        None when the path is unqualified (`create`), which has no child
-        module_path."""
     def path_root_module(path_node) -> str | None {
         mp: any = next((c for c in path_node.children if c.type == "module_path"), None);
         if mp is None {
@@ -162,7 +140,7 @@ impl extract_ocaml(path: Path) -> dict {
         return _read_text(mn, source) if mn is not None else None;
     }
 
-    def register_def(name: str, nid: str) -> None {
+    def register_def(name: str, nid: str) {
         if name in ambiguous {
             return;
         }
@@ -174,7 +152,7 @@ impl extract_ocaml(path: Path) -> dict {
         local_defs[name] = nid;
     }
 
-    def emit_type(binding, container_nid: str) -> None {
+    def emit_type(binding, container_nid: str) {
         type_name: any = named_child_text(binding, "type_constructor");
         if not type_name {
             return;
@@ -203,7 +181,7 @@ impl extract_ocaml(path: Path) -> dict {
         }
     }
 
-    def walk(`node, container_nid: str, enclosing_value: str) -> None {
+    def walk(`node, container_nid: str, enclosing_value: str) {
         t: any = `node.type;
 
         if t == "open_module" {

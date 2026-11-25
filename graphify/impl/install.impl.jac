@@ -25,7 +25,7 @@ impl _try_skill_lock(fh) -> bool {
     return True;
 }
 
-impl _release_skill_lock(fh) -> None {
+impl _release_skill_lock(fh) {
     with contextlib.suppress(OSError) {
         if fcntl is not None {
             fcntl.flock(fh.fileno(), fcntl.LOCK_UN);
@@ -77,7 +77,7 @@ impl _skill_lock(skill_dir: Path, *, `wait: bool = True) -> Generator[any, any, 
     }
 }
 
-impl _write_version_stamp(skill_dst: Path, version: str) -> None {
+impl _write_version_stamp(skill_dst: Path, version: str) {
     version_file: any = skill_dst.parent / ".graphify_version";
     fd: any;
     tmp_name: any;
@@ -213,7 +213,7 @@ impl _packaged_skill_refs_dir(platform_name: str) -> Path | None {
     return bundle_dir / "references";
 }
 
-impl _install_skill_references(skill_dst: Path, refs_src: Path) -> None {
+impl _install_skill_references(skill_dst: Path, refs_src: Path) {
     refs_dst: any = skill_dst.parent / "references";
     legacy_staged: any = skill_dst.parent / "references.tmp";
     if not legacy_staged.is_symlink() and legacy_staged.is_dir() {
@@ -387,9 +387,7 @@ impl _skill_registration_sections(content: str) -> "list[list[str]]" {
     return sections;
 }
 
-impl _remove_skill_registration(
-    target: Path, prefix: str, *, only_graphify_written: bool = False
-) -> None {
+impl _remove_skill_registration(target: Path, prefix: str, *, only_graphify_written: bool = False) {
     try {
         if not target.exists() {
             return;
@@ -444,7 +442,7 @@ impl _remove_skill_registration(
     }
 }
 
-impl _remove_claude_skill_registration(project_dir: Path) -> None {
+impl _remove_claude_skill_registration(project_dir: Path) {
     _remove_skill_registration(project_dir / ".claude" / "CLAUDE.md", "  CLAUDE.md        ->  ");
     for name in _CLAUDE_AGENTS_MD_FILES {
         _remove_skill_registration(
@@ -466,7 +464,7 @@ impl _codebuddy_global_registration -> Path {
     return Path.home() / ".codebuddy" / "CODEBUDDY.md";
 }
 
-impl _print_project_git_add_hint(paths: list[Path]) -> None {
+impl _print_project_git_add_hint(paths: list[Path]) {
     unique: list[str] = [];
     for path in paths {
         text: any = path.as_posix().rstrip("/");
@@ -570,7 +568,7 @@ impl _shown_path(path: Path) -> str {
     return `str(path);
 }
 
-impl _register_always_on_block(target: Path, prefix: str, registration: str) -> None {
+impl _register_always_on_block(target: Path, prefix: str, registration: str) {
     try {
         existed: any = target.exists();
         content: any;
@@ -678,14 +676,14 @@ impl _read_keep_newline(path: Path) -> "tuple[str, str]" {
     return (raw.replace("\r\n", "\n").replace("\r", "\n"), newline);
 }
 
-impl _write_keep_newline(path: Path, text: str, newline: str = "\n") -> None {
+impl _write_keep_newline(path: Path, text: str, newline: str = "\n") {
     if newline != "\n" {
         text = text.replace("\n", newline);
     }
     path.write_text(text, encoding="utf-8", newline="");
 }
 
-impl _print_banner -> None {
+impl _print_banner {
     if not sys.stdout.isatty() {
         return;
     }
@@ -703,9 +701,7 @@ impl _print_banner -> None {
     } except Exception {}
 }
 
-impl install(
-    platform: str = "claude", *, project: bool = False, project_dir: Path | None = None
-) -> None {
+impl install(platform: str = "claude", *, project: bool = False, project_dir: Path | None = None) {
     _print_banner();
     platform = _canonical_platform(platform);
     if platform == "gemini" {
@@ -797,7 +793,7 @@ impl install(
     print();
 }
 
-impl _print_install_usage -> None {
+impl _print_install_usage {
     platforms: any = ", ".join([*_PLATFORM_CONFIG, "gemini", "cursor"]);
     print("Usage: graphify install [--project] [--strict] [--platform P|P]");
     print(f"Platforms: {platforms}");
@@ -817,7 +813,7 @@ impl _gemini_hook(project: bool = False) -> dict {
     };
 }
 
-impl _warn_shadowing_agents_skill -> None {
+impl _warn_shadowing_agents_skill {
     shadow: any = _platform_skill_destination("agents");
     if shadow.exists() {
         print(f"  note: Gemini CLI loads {shadow} ahead of this install. If an older");
@@ -826,7 +822,7 @@ impl _warn_shadowing_agents_skill -> None {
     }
 }
 
-impl gemini_install(project_dir: Path | None = None, *, project: bool = False) -> None {
+impl gemini_install(project_dir: Path | None = None, *, project: bool = False) {
     project_dir = project_dir or Path(".");
     skill_dst: any = _copy_skill_file("gemini", project=project, project_dir=project_dir);
     if not project {
@@ -889,7 +885,7 @@ impl _read_settings_for_merge(settings_path: Path) -> dict {
     return settings;
 }
 
-impl _write_settings_with_backup(settings_path: Path, settings: dict) -> None {
+impl _write_settings_with_backup(settings_path: Path, settings: dict) {
     output: any = json.dumps(settings, indent=2);
     if settings_path.exists() {
         if settings_path.read_text(encoding="utf-8") == output {
@@ -901,7 +897,7 @@ impl _write_settings_with_backup(settings_path: Path, settings: dict) -> None {
     settings_path.write_text(output, encoding="utf-8");
 }
 
-impl _install_gemini_hook(project_dir: Path, project: bool = False) -> None {
+impl _install_gemini_hook(project_dir: Path, project: bool = False) {
     settings_path: any = project_dir / ".gemini" / "settings.json";
     settings_path.parent.mkdir(parents=True, exist_ok=True);
     settings: any = _read_settings_for_merge(settings_path);
@@ -919,7 +915,7 @@ impl _install_gemini_hook(project_dir: Path, project: bool = False) -> None {
     print("  .gemini/settings.json  ->  BeforeTool hook registered");
 }
 
-impl _uninstall_gemini_hook(project_dir: Path) -> None {
+impl _uninstall_gemini_hook(project_dir: Path) {
     settings_path: any = project_dir / ".gemini" / "settings.json";
     if not settings_path.exists() {
         return;
@@ -944,7 +940,7 @@ impl _uninstall_gemini_hook(project_dir: Path) -> None {
 
 impl gemini_uninstall(
     project_dir: Path | None = None, *, project: bool = False, remove_user_skill: bool | None = None
-) -> None {
+) {
     explicit_dir: any = project_dir is not None;
     project_dir = project_dir or Path(".");
     if remove_user_skill is None {
@@ -984,7 +980,7 @@ impl _vscode_skill_destination -> Path {
     return Path.home() / ".copilot" / "skills" / "graphify" / "SKILL.md";
 }
 
-impl vscode_install(project_dir: Path | None = None) -> None {
+impl vscode_install(project_dir: Path | None = None) {
     skill_src: any = Path(__file__).parent / "skill-vscode.md";
     refs_bundle: any = "vscode";
     if not skill_src.exists() {
@@ -1066,7 +1062,7 @@ impl vscode_install(project_dir: Path | None = None) -> None {
     print("Note: for GitHub Copilot CLI (terminal), use: graphify copilot install");
 }
 
-impl vscode_uninstall(project_dir: Path | None = None) -> None {
+impl vscode_uninstall(project_dir: Path | None = None) {
     skill_dst: any = _vscode_skill_destination();
     with _skill_lock(skill_dst.parent) {
         if skill_dst.exists() {
@@ -1110,7 +1106,7 @@ impl vscode_uninstall(project_dir: Path | None = None) -> None {
     }
 }
 
-impl _kiro_install(project_dir: Path) -> None {
+impl _kiro_install(project_dir: Path) {
     project_dir = project_dir or Path(".");
     _copy_skill_file("kiro", project=True, project_dir=project_dir);
     steering_dir: any = project_dir / ".kiro" / "steering";
@@ -1131,7 +1127,7 @@ impl _kiro_install(project_dir: Path) -> None {
     print("Use /graphify to build or update the graph.");
 }
 
-impl _kiro_uninstall(project_dir: Path) -> None {
+impl _kiro_uninstall(project_dir: Path) {
     project_dir = project_dir or Path(".");
     removed: any = [];
     skill_dst: any = _platform_skill_destination("kiro", project=True, project_dir=project_dir);
@@ -1148,7 +1144,7 @@ impl _kiro_uninstall(project_dir: Path) -> None {
     print("Removed: " + (", ".join(removed) if removed else "nothing to remove"));
 }
 
-impl _antigravity_finalize(skill_dst: Path, project_dir: Path) -> None {
+impl _antigravity_finalize(skill_dst: Path, project_dir: Path) {
     if skill_dst.exists() {
         content: any = skill_dst.read_text(encoding="utf-8");
         if not content.startswith("---\n") {
@@ -1186,7 +1182,7 @@ impl _antigravity_finalize(skill_dst: Path, project_dir: Path) -> None {
     }
 }
 
-impl _antigravity_install(project_dir: Path) -> None {
+impl _antigravity_install(project_dir: Path) {
     install(platform="antigravity");
     _antigravity_finalize(_platform_skill_destination("antigravity"), project_dir);
 
@@ -1205,7 +1201,7 @@ impl _antigravity_install(project_dir: Path) -> None {
     print("  }");
 }
 
-impl _antigravity_uninstall(project_dir: Path, *, project: bool = False) -> None {
+impl _antigravity_uninstall(project_dir: Path, *, project: bool = False) {
     rules_path: any = project_dir / _ANTIGRAVITY_RULES_PATH;
     if rules_path.exists() {
         rules_path.unlink();
@@ -1244,7 +1240,7 @@ impl _antigravity_uninstall(project_dir: Path, *, project: bool = False) -> None
     }
 }
 
-impl _cursor_install(project_dir: Path) -> None {
+impl _cursor_install(project_dir: Path) {
     rule_path: any = (project_dir or Path(".")) / _CURSOR_RULE_PATH;
     rule_path.parent.mkdir(parents=True, exist_ok=True);
     if rule_path.exists() and rule_path.read_text(encoding="utf-8") == _CURSOR_RULE {
@@ -1259,7 +1255,7 @@ impl _cursor_install(project_dir: Path) -> None {
     print("Run /graphify . first to build the graph if you haven't already.");
 }
 
-impl _cursor_uninstall(project_dir: Path) -> None {
+impl _cursor_uninstall(project_dir: Path) {
     rule_path: any = (project_dir or Path(".")) / _CURSOR_RULE_PATH;
     if not rule_path.exists() {
         print("No graphify Cursor rule found - nothing to do");
@@ -1269,7 +1265,7 @@ impl _cursor_uninstall(project_dir: Path) -> None {
     print(f"graphify Cursor rule removed from {rule_path.resolve()}");
 }
 
-impl _devin_rules_install(project_dir: Path) -> None {
+impl _devin_rules_install(project_dir: Path) {
     rules_path: any = (project_dir or Path(".")) / _DEVIN_RULES_PATH;
     rules_path.parent.mkdir(parents=True, exist_ok=True);
     if rules_path.exists() and rules_path.read_text(encoding="utf-8") == _DEVIN_RULES {
@@ -1281,7 +1277,7 @@ impl _devin_rules_install(project_dir: Path) -> None {
     print(f"  rules {action}  ->  {rules_path}");
 }
 
-impl _devin_rules_uninstall(project_dir: Path) -> None {
+impl _devin_rules_uninstall(project_dir: Path) {
     rules_path: any = (project_dir or Path(".")) / _DEVIN_RULES_PATH;
     if not rules_path.exists() {
         return;
@@ -1408,7 +1404,7 @@ impl _kilo_config_write_path(project_dir: Path) -> Path {
     return kilo_dir / _KILO_CONFIG_JSON_PATH.name;
 }
 
-impl _install_kilo_plugin(project_dir: Path) -> None {
+impl _install_kilo_plugin(project_dir: Path) {
     config_file: any = _kilo_config_path(project_dir);
     config: any = _read_json_like_for_merge(config_file);
 
@@ -1436,7 +1432,7 @@ impl _install_kilo_plugin(project_dir: Path) -> None {
     }
 }
 
-impl _uninstall_kilo_plugin(project_dir: Path) -> None {
+impl _uninstall_kilo_plugin(project_dir: Path) {
     plugin_file: any = project_dir / _KILO_PLUGIN_PATH;
     if plugin_file.exists() {
         plugin_file.unlink();
@@ -1523,7 +1519,7 @@ impl _drop_opencode_config_entry(opencode_dir: Path) -> bool {
     return changed;
 }
 
-impl _install_opencode_plugin(opencode_dir: Path) -> None {
+impl _install_opencode_plugin(opencode_dir: Path) {
     plugin_file: any = opencode_dir / _OPENCODE_PLUGIN_PATH.relative_to(".opencode");
     _write_text_atomic(plugin_file, _OPENCODE_PLUGIN_JS);
     print(f"  {plugin_file}  ->  tool.execute.before hook written");
@@ -1533,7 +1529,7 @@ impl _install_opencode_plugin(opencode_dir: Path) -> None {
     }
 }
 
-impl _uninstall_opencode_plugin(opencode_dir: Path) -> None {
+impl _uninstall_opencode_plugin(opencode_dir: Path) {
     plugin_file: any = opencode_dir / _OPENCODE_PLUGIN_PATH.relative_to(".opencode");
     if plugin_file.exists() {
         plugin_file.unlink();
@@ -1564,7 +1560,7 @@ impl _resolve_graphify_exe(project: bool = False) -> str {
     return (found or "graphify").replace("\\", "/");
 }
 
-impl _install_codex_hook(project_dir: Path, project: bool = False) -> None {
+impl _install_codex_hook(project_dir: Path, project: bool = False) {
     hooks_path: any = project_dir / ".codex" / "hooks.json";
     hooks_path.parent.mkdir(parents=True, exist_ok=True);
 
@@ -1601,7 +1597,7 @@ impl _install_codex_hook(project_dir: Path, project: bool = False) -> None {
     );
 }
 
-impl _uninstall_codex_hook(project_dir: Path) -> None {
+impl _uninstall_codex_hook(project_dir: Path) {
     hooks_path: any = project_dir / ".codex" / "hooks.json";
     if not hooks_path.exists() {
         return;
@@ -1624,7 +1620,7 @@ impl _uninstall_codex_hook(project_dir: Path) -> None {
     print(f"  .codex/hooks.json  ->  PreToolUse hook removed");
 }
 
-impl _agents_install(project_dir: Path, platform: str, project: bool = False) -> None {
+impl _agents_install(project_dir: Path, platform: str, project: bool = False) {
     target: any = (project_dir or Path(".")) / "AGENTS.md";
 
     if target.exists() {
@@ -1664,7 +1660,7 @@ impl _agents_install(project_dir: Path, platform: str, project: bool = False) ->
     }
 }
 
-impl _amp_legacy_cleanup -> None {
+impl _amp_legacy_cleanup {
     legacy: any = Path.home() / ".amp" / "skills" / "graphify";
     if legacy.exists() {
         shutil.rmtree(legacy, ignore_errors=True);
@@ -1674,13 +1670,13 @@ impl _amp_legacy_cleanup -> None {
     }
 }
 
-impl _amp_install(project_dir: Path | None = None) -> None {
+impl _amp_install(project_dir: Path | None = None) {
     _amp_legacy_cleanup();
     _copy_skill_file("amp");
     _agents_install(project_dir or Path("."), "amp");
 }
 
-impl _amp_uninstall(project_dir: Path | None = None) -> None {
+impl _amp_uninstall(project_dir: Path | None = None) {
     removed: any = _remove_skill_file("amp");
     if removed {
         print("skill removed");
@@ -1688,12 +1684,12 @@ impl _amp_uninstall(project_dir: Path | None = None) -> None {
     _agents_uninstall(project_dir or Path("."), platform="amp");
 }
 
-impl _agents_platform_install(project_dir: Path | None = None) -> None {
+impl _agents_platform_install(project_dir: Path | None = None) {
     _copy_skill_file("agents");
     _agents_install(project_dir or Path("."), "agents");
 }
 
-impl _agents_platform_uninstall(project_dir: Path | None = None) -> None {
+impl _agents_platform_uninstall(project_dir: Path | None = None) {
     removed: any = _remove_skill_file("agents");
     if removed {
         print("skill removed");
@@ -1701,9 +1697,7 @@ impl _agents_platform_uninstall(project_dir: Path | None = None) -> None {
     _agents_uninstall(project_dir or Path("."), platform="agents");
 }
 
-impl _project_install(
-    platform_name: str, project_dir: Path | None = None, strict: bool = False
-) -> None {
+impl _project_install(platform_name: str, project_dir: Path | None = None, strict: bool = False) {
     project_dir = project_dir or Path(".");
     platform_name = _canonical_platform(platform_name);
     if platform_name in ("claude", "windows") {
@@ -1752,7 +1746,7 @@ impl _project_install(
     }
 }
 
-impl _project_uninstall(platform_name: str, project_dir: Path | None = None) -> None {
+impl _project_uninstall(platform_name: str, project_dir: Path | None = None) {
     project_dir = project_dir or Path(".");
     platform_name = _canonical_platform(platform_name);
     if platform_name in ("claude", "windows") {
@@ -1792,7 +1786,7 @@ impl _project_uninstall(platform_name: str, project_dir: Path | None = None) -> 
     }
 }
 
-impl _project_uninstall_all(project_dir: Path | None = None) -> None {
+impl _project_uninstall_all(project_dir: Path | None = None) {
     project_dir = project_dir or Path(".");
     print("Uninstalling project-scoped graphify files...\n");
     platform_name: any;
@@ -1805,7 +1799,7 @@ impl _project_uninstall_all(project_dir: Path | None = None) -> None {
     print("\nDone.");
 }
 
-impl _agents_uninstall(project_dir: Path, platform: str = "") -> None {
+impl _agents_uninstall(project_dir: Path, platform: str = "") {
     target: any = (project_dir or Path(".")) / "AGENTS.md";
 
     if not target.exists() {
@@ -1883,12 +1877,12 @@ impl _kilo_uninstall_global -> list[str] {
     return removed;
 }
 
-impl _kilo_install(project_dir: Path) -> None {
+impl _kilo_install(project_dir: Path) {
     install(platform="kilo");
     _agents_install(project_dir or Path("."), "kilo");
 }
 
-impl _kilo_uninstall(project_dir: Path) -> None {
+impl _kilo_uninstall(project_dir: Path) {
     _agents_uninstall(project_dir or Path("."), platform="kilo");
     removed: any = _kilo_uninstall_global();
     print("; ".join(removed) if removed else "nothing to remove");
@@ -1954,7 +1948,7 @@ impl claude_install(
     return target;
 }
 
-impl _install_claude_hook(project_dir: Path, strict: bool = False, project: bool = False) -> None {
+impl _install_claude_hook(project_dir: Path, strict: bool = False, project: bool = False) {
     settings_path: any = project_dir / ".claude" / "settings.json";
     settings_path.parent.mkdir(parents=True, exist_ok=True);
 
@@ -1988,14 +1982,14 @@ impl _install_claude_hook(project_dir: Path, strict: bool = False, project: bool
     );
 }
 
-impl _uninstall_claude_hook(project_dir: Path) -> None {
+impl _uninstall_claude_hook(project_dir: Path) {
     claude_dir: any = project_dir / ".claude";
     for name in ("settings.json", "settings.local.json") {
         _strip_graphify_hook(claude_dir / name);
     }
 }
 
-impl _strip_graphify_hook(settings_path: Path) -> None {
+impl _strip_graphify_hook(settings_path: Path) {
     if not settings_path.exists() {
         return;
     }
@@ -2046,7 +2040,7 @@ impl _unsafe_purge_reason(out: Path, project_dir: Path) -> str | None {
     return None;
 }
 
-impl uninstall_all(project_dir: Path | None = None, purge: bool = False) -> None {
+impl uninstall_all(project_dir: Path | None = None, purge: bool = False) {
     pd: any = project_dir or Path(".");
     out: any = pd / _GRAPHIFY_OUT;
     if purge {
@@ -2100,7 +2094,7 @@ impl uninstall_all(project_dir: Path | None = None, purge: bool = False) -> None
 
 impl claude_uninstall(
     project_dir: Path | None = None, *, project: bool = False, remove_user_skill: bool | None = None
-) -> None {
+) {
     explicit_dir: any = project_dir is not None;
     project_dir = project_dir or Path(".");
     if remove_user_skill is None {
@@ -2180,7 +2174,7 @@ impl _strip_graphify_md_section(target: Path) -> bool {
     return True;
 }
 
-impl codebuddy_install(project_dir: Path | None = None) -> None {
+impl codebuddy_install(project_dir: Path | None = None) {
     _copy_skill_file("codebuddy", project=`bool(project_dir), project_dir=project_dir);
     target: any = (project_dir or Path(".")) / "CODEBUDDY.md";
 
@@ -2209,7 +2203,7 @@ impl codebuddy_install(project_dir: Path | None = None) -> None {
     print("codebase questions and rebuild it after code changes.");
 }
 
-impl _install_codebuddy_hook(project_dir: Path) -> None {
+impl _install_codebuddy_hook(project_dir: Path) {
     settings_path: any = project_dir / ".codebuddy" / "settings.json";
     settings_path.parent.mkdir(parents=True, exist_ok=True);
 
@@ -2230,7 +2224,7 @@ impl _install_codebuddy_hook(project_dir: Path) -> None {
     print(f"  .codebuddy/settings.json  ->  PreToolUse hooks registered");
 }
 
-impl _uninstall_codebuddy_hook(project_dir: Path) -> None {
+impl _uninstall_codebuddy_hook(project_dir: Path) {
     settings_path: any = project_dir / ".codebuddy" / "settings.json";
     if not settings_path.exists() {
         return;
@@ -2255,7 +2249,7 @@ impl _uninstall_codebuddy_hook(project_dir: Path) -> None {
 
 impl codebuddy_uninstall(
     project_dir: Path | None = None, *, project: bool = False, remove_user_skill: bool | None = None
-) -> None {
+) {
     explicit_dir: any = project_dir is not None;
     project_dir = project_dir or Path(".");
     if remove_user_skill is None {

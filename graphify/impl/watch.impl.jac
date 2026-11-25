@@ -1,4 +1,4 @@
-impl _queue_pending(out_dir: Path, changed_paths: list[Path]) -> None {
+impl _queue_pending(out_dir: Path, changed_paths: list[Path]) {
     if not changed_paths {
         return;
     }
@@ -37,7 +37,7 @@ impl _drain_pending(out_dir: Path) -> list[Path] {
     return out;
 }
 
-impl _queue_pending_full(out_dir: Path) -> None {
+impl _queue_pending_full(out_dir: Path) {
     out_dir.mkdir(parents=True, exist_ok=True);
     (out_dir / _PENDING_FULL_FILENAME).touch();
 }
@@ -51,7 +51,7 @@ impl _drain_pending_full(out_dir: Path) -> bool {
     return True;
 }
 
-impl _queue_pending_incremental(out_dir: Path) -> None {
+impl _queue_pending_incremental(out_dir: Path) {
     out_dir.mkdir(parents=True, exist_ok=True);
     (out_dir / _PENDING_INCREMENTAL_FILENAME).touch();
 }
@@ -71,7 +71,7 @@ impl _write_build_config(
     excludes: "list[str] | None",
     gitignore: bool | None = None,
     code_only: bool | None = None,
-) -> None {
+) {
     if not excludes and gitignore is None and code_only is None {
         return;
     }
@@ -296,7 +296,7 @@ impl _rebuild_lock(out_dir: Path, *, blocking: bool = False) -> Generator[any, a
     }
 }
 
-impl _apply_resource_limits -> None {
+impl _apply_resource_limits {
     try {
         os.nice(10);
     } except (OSError, AttributeError) {}
@@ -383,7 +383,7 @@ impl _changed_path_candidates(raw: Path, *, change_root: Path, watch_root: Path)
     return candidates;
 }
 
-impl _relativize_source_files(payload: dict, `root: Path, *, scope: Path | None = None) -> None {
+impl _relativize_source_files(payload: dict, `root: Path, *, scope: Path | None = None) {
     for bucket in ("nodes", "edges", "hyperedges") {
         for item in payload.get(bucket, []) {
             for key in _PORTABLE_PATH_KEYS {
@@ -409,7 +409,7 @@ impl _relativize_source_files(payload: dict, `root: Path, *, scope: Path | None 
     }
 }
 
-impl _rebase_relative_source_files(payload: dict, source_root: Path, target_root: Path) -> None {
+impl _rebase_relative_source_files(payload: dict, source_root: Path, target_root: Path) {
     if source_root == target_root {
         return;
     }
@@ -597,7 +597,7 @@ impl _StoredSourcePaths.is_evicted(item: dict, identities: set[str]) -> bool {
     return self.identity(item.get("source_file")) in identities;
 }
 
-impl _StoredSourcePaths.rebase_preserved(item: dict) -> None {
+impl _StoredSourcePaths.rebase_preserved(item: dict) {
     source_file: any = item.get("source_file");
     if not isinstance(source_file, `str) {
         rebased: any = self._rebased_uncached(source_file);
@@ -669,10 +669,16 @@ impl _reconcile_markdown_links(
     desired_reps_by_file_pair: any;
     _is_ast_tier: any = importlib.import_module("graphify.build")._is_ast_tier;
     _file_node_id: any = importlib.import_module("graphify.extract")._file_node_id;
-    _safe_extract_with_xaml_root: any = importlib.import_module("graphify.extract")._safe_extract_with_xaml_root;
+    _safe_extract_with_xaml_root: any = importlib.import_module(
+        "graphify.extract"
+    )._safe_extract_with_xaml_root;
     _make_id: any = importlib.import_module("graphify.extractors.base")._make_id;
-    extract_markdown: any = importlib.import_module("graphify.extractors.markdown").extract_markdown;
-    MARKDOWN_MENTION_SUFFIXES: any = importlib.import_module("graphify.markdown_resolution").MARKDOWN_MENTION_SUFFIXES;
+    extract_markdown: any = importlib.import_module(
+        "graphify.extractors.markdown"
+    ).extract_markdown;
+    MARKDOWN_MENTION_SUFFIXES: any = importlib.import_module(
+        "graphify.markdown_resolution"
+    ).MARKDOWN_MENTION_SUFFIXES;
     _is_file_node: any = importlib.import_module("graphify.markdown_resolution")._is_file_node;
 
     all_nodes: any = result.get("nodes", []) + preserved_nodes;
@@ -800,8 +806,6 @@ impl _reconcile_markdown_links(
             and operator.eq(target.get("file_type"), "code")
             and not _is_file_node(target);
     }
-
-    """A page -> source-file link citation minted by markdown resolution (#4804)."""
     def _is_code_file_citation(`edge: dict) -> bool {
         if `edge.get("relation") != "references" or `edge.get("target_file") {
             return False;
@@ -1061,12 +1065,6 @@ impl _reconcile_existing_graph(
             return identity in _unscanned_refs;
         }
         _ignored_cache = {};
-
-        """True when a live ignore rule matches this alive, corpus-absent source.
-
-            .graphifyignore/--exclude matches evict on every rebuild;
-            .gitignore-driven matches only on a full rebuild (see docstring).
-            """
         def _ignored_now(identity: str) -> bool {
             ignored: any = _ignored_cache.get(identity);
             if ignored is None {
@@ -1195,7 +1193,9 @@ impl _reconcile_existing_graph(
                 f"[graphify watch] fail-closed: kept {excluded_alive_nodes} node(s) from {len(excluded_alive_files)} file(s) that left the scan corpus but still exist on disk and match no current ignore rule (filters changed?). Add them to .graphifyignore if the exclusion is intentional.",
             );
         }
-        _has_independent_semantic_evidence: any = importlib.import_module("graphify.build")._has_independent_semantic_evidence;
+        _has_independent_semantic_evidence: any = importlib.import_module(
+            "graphify.build"
+        )._has_independent_semantic_evidence;
         import from hashlib { sha256 }
         old_nodes_by_id: any = {
             n["id"]: n
@@ -1379,7 +1379,9 @@ impl _reconcile_existing_graph(
             source_paths.rebase_preserved(item);
         }
 
-        _namespace_reference_stub_collisions: any = importlib.import_module("graphify.dedup")._namespace_reference_stub_collisions;
+        _namespace_reference_stub_collisions: any = importlib.import_module(
+            "graphify.dedup"
+        )._namespace_reference_stub_collisions;
         merged_hyperedges: any = result.get("hyperedges", []) + preserved_hyperedges;
         merged_nodes: any;
         merged_edges: any;
@@ -1643,7 +1645,9 @@ impl _check_shrink(
     }
     existing_nodes: any = existing_data.get("nodes", []);
     new_nodes: any = new_data.get("nodes", []);
-    _lost_saved_semantic_nodes: any = importlib.import_module("graphify.build")._lost_saved_semantic_nodes;
+    _lost_saved_semantic_nodes: any = importlib.import_module(
+        "graphify.build"
+    )._lost_saved_semantic_nodes;
     missing: any = _lost_saved_semantic_nodes(existing_nodes, new_nodes, deleted_sources);
     if missing {
         if tmp is not None {
@@ -1662,7 +1666,9 @@ impl _check_shrink(
         }
         return False;
     }
-    _has_independent_semantic_evidence: any = importlib.import_module("graphify.build")._has_independent_semantic_evidence;
+    _has_independent_semantic_evidence: any = importlib.import_module(
+        "graphify.build"
+    )._has_independent_semantic_evidence;
     _is_ast_tier: any = importlib.import_module("graphify.build")._is_ast_tier;
     new_by_id: any = {
         `node.get("id"): `node
@@ -1782,7 +1788,9 @@ impl _stabilize_rebuild_cwd(watch_path: Path) -> bool {
 
 impl _inputs_unchanged(detected: dict, manifest_path: Path, `root: Path) -> bool {
     current: any;
-    classify_manifest_files: any = importlib.import_module("graphify.detect").classify_manifest_files;
+    classify_manifest_files: any = importlib.import_module(
+        "graphify.detect"
+    ).classify_manifest_files;
     load_manifest: any = importlib.import_module("graphify.detect").load_manifest;
     nfc: any = importlib.import_module("graphify.paths").nfc;
 
@@ -1900,7 +1908,7 @@ impl _graph_json_is_complete(path: Path) -> bool {
         and operator.eq(tail[-1:], b"}");
 }
 
-impl _write_build_state(out: Path, state: dict, *, full_clean: bool) -> None {
+impl _write_build_state(out: Path, state: dict, *, full_clean: bool) {
     `graph: any = out / "graph.json";
     try {
         st: any = `graph.stat();
@@ -1965,7 +1973,7 @@ impl _reconcile_graph_html(out: Path, graph_data: dict) -> str | None {
     _viz_node_limit: any = importlib.import_module("graphify.exporters.html")._viz_node_limit;
     stale_marker = out / _HTML_STALE_MARKER;
 
-    def clear_stale_marker -> None {
+    def clear_stale_marker {
         try {
             stale_marker.unlink(missing_ok=True);
         } except OSError as exc {
@@ -2173,8 +2181,12 @@ impl _rebuild_code(
     try {
         extract: any = importlib.import_module("graphify.extract").extract;
         _get_extractor: any = importlib.import_module("graphify.extract")._get_extractor;
-        classify_manifest_deletions: any = importlib.import_module("graphify.detect").classify_manifest_deletions;
-        classify_manifest_files: any = importlib.import_module("graphify.detect").classify_manifest_files;
+        classify_manifest_deletions: any = importlib.import_module(
+            "graphify.detect"
+        ).classify_manifest_deletions;
+        classify_manifest_files: any = importlib.import_module(
+            "graphify.detect"
+        ).classify_manifest_files;
         detect: any = importlib.import_module("graphify.detect").detect;
         is_resolution_input: any = importlib.import_module("graphify.detect").is_resolution_input;
         load_manifest: any = importlib.import_module("graphify.detect").load_manifest;
@@ -2182,14 +2194,20 @@ impl _rebuild_code(
         _is_ast_tier: any = importlib.import_module("graphify.build")._is_ast_tier;
         _norm_source_file: any = importlib.import_module("graphify.build")._norm_source_file;
         cluster: any = importlib.import_module("graphify.cluster").cluster;
-        remap_communities_to_previous: any = importlib.import_module("graphify.cluster").remap_communities_to_previous;
+        remap_communities_to_previous: any = importlib.import_module(
+            "graphify.cluster"
+        ).remap_communities_to_previous;
         score_all: any = importlib.import_module("graphify.cluster").score_all;
         god_nodes: any = importlib.import_module("graphify.analyze").god_nodes;
-        surprising_connections: any = importlib.import_module("graphify.analyze").surprising_connections;
+        surprising_connections: any = importlib.import_module(
+            "graphify.analyze"
+        ).surprising_connections;
         suggest_questions: any = importlib.import_module("graphify.analyze").suggest_questions;
         generate: any = importlib.import_module("graphify.report").generate;
         to_json: any = importlib.import_module("graphify.export").to_json;
-        check_graph_file_size_cap: any = importlib.import_module("graphify.security").check_graph_file_size_cap;
+        check_graph_file_size_cap: any = importlib.import_module(
+            "graphify.security"
+        ).check_graph_file_size_cap;
         _persisted_excludes: any = _read_build_excludes(out);
         _gitignore_enabled: any = _read_build_gitignore(out);
         _code_only: any = _read_build_code_only(out);
@@ -2350,7 +2368,7 @@ impl _rebuild_code(
         }
         deleted_paths = set[any]();
         deleted_source_identities = set[any]();
-        def _add_deleted_source(path: Path) -> None {
+        def _add_deleted_source(path: Path) {
             deleted_source_identities.add(Path(os.path.abspath(path)).as_posix());
             for `root in (project_root, watch_root) {
                 deleted_paths.add(_norm_source_file(`str(path), `str(`root)) or `str(path));
@@ -2402,7 +2420,9 @@ impl _rebuild_code(
                     _add_deleted_source(deleted_in_root);
                 }
             }
-            refresh_terraform_paths: any = importlib.import_module("graphify.extractors.terraform").refresh_terraform_paths;
+            refresh_terraform_paths: any = importlib.import_module(
+                "graphify.extractors.terraform"
+            ).refresh_terraform_paths;
             wanted = refresh_terraform_paths(wanted, code_files, changed_paths);
             if ignore_rules_changed {
                 wanted = [p for p in code_files if p not in semantic_doc_files];
@@ -2427,7 +2447,9 @@ impl _rebuild_code(
                     watch_root=watch_root,
                     normalize_source=_norm_source_file,
                 );
-                _cpp_reconciliation_paths: any = importlib.import_module("graphify.extractors.resolution")._cpp_reconciliation_paths;
+                _cpp_reconciliation_paths: any = importlib.import_module(
+                    "graphify.extractors.resolution"
+                )._cpp_reconciliation_paths;
                 extract_targets = _cpp_reconciliation_paths(
                     extract_targets,
                     ctx_graph.get("nodes", []),
@@ -2606,17 +2628,6 @@ impl _rebuild_code(
             };
         _rebase_relative_source_files(result, watch_root, project_root);
         _failed_ast_sources = `set(result.get("failed_sources") or []);
-
-        """detected["files"] minus this run's failed AST sources (#2543).
-
-            Only the STAMPED set shrinks; scan_corpus at the save sites stays
-            the raw detect output so #1908 pruning is unaffected.
-
-            The JS/TS resolution inputs detect() skips by name are stamped under
-            their own bucket so the no-change gate can compare their content on
-            the next run (#4740). They are not extract targets and stay out of
-            scan_corpus, so nothing else sees them.
-            """
         def _ast_manifest_files -> dict[str, list[str]] {
             failed_res: any;
             if not _failed_ast_sources {
@@ -2651,16 +2662,7 @@ impl _rebuild_code(
             }
             return stamped;
         }
-
-        """Record what the NEXT run has to match to skip (#4740).
-
-            Only ever called once a rebuild has finished writing its outputs, so
-            the stamp describes a graph that is on disk and current. A rebuild
-            that fails before this point leaves the previous stamp in place, and
-            the gate compares against the outputs too, so it cannot vouch for a
-            graph that was half written.
-            """
-        def _stamp_build_state -> None {
+        def _stamp_build_state {
             _write_build_state(out, _build_state_now, full_clean=changed_paths is None);
         }
         try {
@@ -2709,14 +2711,22 @@ impl _rebuild_code(
         if no_cluster {
             _dedupe_edges: any = importlib.import_module("graphify.build").dedupe_edges;
             _dedupe_nodes: any = importlib.import_module("graphify.build").dedupe_nodes;
-            _disamb_labels: any = importlib.import_module("graphify.build").disambiguate_file_labels_in_nodes;
-            _finalize_raw_graph_endpoints: any = importlib.import_module("graphify.build").finalize_raw_graph_endpoints;
-            _qualify_cs_methods: any = importlib.import_module("graphify.build").qualify_csharp_method_labels_in_nodes;
+            _disamb_labels: any = importlib.import_module(
+                "graphify.build"
+            ).disambiguate_file_labels_in_nodes;
+            _finalize_raw_graph_endpoints: any = importlib.import_module(
+                "graphify.build"
+            ).finalize_raw_graph_endpoints;
+            _qualify_cs_methods: any = importlib.import_module(
+                "graphify.build"
+            ).qualify_csharp_method_labels_in_nodes;
             _has_parallel_links: any = importlib.import_module("graphify.build").has_parallel_links;
             raw_nodes: any = _dedupe_nodes(result.get("nodes", []));
             _disamb_labels(raw_nodes);
             _qualify_cs_methods(raw_nodes, result.get("edges", []));
-            _RUN_ONLY_KEYS: any = importlib.import_module("graphify.extract").RUN_ONLY_EXTRACTION_KEYS;
+            _RUN_ONLY_KEYS: any = importlib.import_module(
+                "graphify.extract"
+            ).RUN_ONLY_EXTRACTION_KEYS;
             _directed: any = `bool((existing_graph_data or {}).get("directed", False));
             raw_links: any = _dedupe_edges(result.get("edges", []));
             candidate_graph_data: any = {
@@ -2918,7 +2928,9 @@ impl _rebuild_code(
                 }
             }
         } except Exception {}
-        community_member_sigs: any = importlib.import_module("graphify.cluster").community_member_sigs;
+        community_member_sigs: any = importlib.import_module(
+            "graphify.cluster"
+        ).community_member_sigs;
         label_still_applies: any = importlib.import_module("graphify.cluster").label_still_applies;
         cur_sigs: any = community_member_sigs(communities);
         saved_sigs: dict[int, str] = {};
@@ -2966,7 +2978,9 @@ impl _rebuild_code(
             if cid not in labels
         };
         if missing {
-            label_communities_by_hub: any = importlib.import_module("graphify.cluster").label_communities_by_hub;
+            label_communities_by_hub: any = importlib.import_module(
+                "graphify.cluster"
+            ).label_communities_by_hub;
             labels.update(label_communities_by_hub(G, missing));
             pending_cids.update(missing);
         }
@@ -3063,7 +3077,9 @@ impl _rebuild_code(
             ) {
                 return False;
             }
-            _HTML_STALE_MARKER: any = importlib.import_module("graphify.exporters.html")._HTML_STALE_MARKER;
+            _HTML_STALE_MARKER: any = importlib.import_module(
+                "graphify.exporters.html"
+            )._HTML_STALE_MARKER;
             (out / _HTML_STALE_MARKER).touch();
             _backup: any = importlib.import_module("graphify.export").backup_if_protected;
             _backup(out);
@@ -3100,7 +3116,9 @@ impl _rebuild_code(
         callflow_files: any = `list(out.glob("*-callflow.html"));
         if callflow_files and not keep_graph {
             try {
-                write_callflow_html: any = importlib.import_module("graphify.callflow_html").write_callflow_html;
+                write_callflow_html: any = importlib.import_module(
+                    "graphify.callflow_html"
+                ).write_callflow_html;
                 for cf in callflow_files {
                     write_callflow_html(
                         graph=out / "graph.json",
@@ -3144,7 +3162,7 @@ impl check_update(watch_path: Path) -> bool {
     return True;
 }
 
-impl _notify_only(watch_path: Path) -> None {
+impl _notify_only(watch_path: Path) {
     flag: any = watch_path / _GRAPHIFY_OUT / "needs_update";
     flag.parent.mkdir(parents=True, exist_ok=True);
     flag.write_text("1", encoding="utf-8");
@@ -3237,7 +3255,7 @@ impl _rebuild_timeout -> Generator[any, any, any] {
     }
 }
 
-impl watch(watch_path: Path, debounce: float = 3.0) -> None {
+impl watch(watch_path: Path, debounce: float = 3.0) {
     last_trigger: float;
     pending: bool;
     changed: set[Path];
@@ -3364,7 +3382,7 @@ impl watch(watch_path: Path, debounce: float = 3.0) -> None {
         }
     }
 
-    def schedule_one(path: Path) -> None {
+    def schedule_one(path: Path) {
         path = path.resolve();
         if path in watched or not under_root(path) {
             return;
@@ -3398,7 +3416,7 @@ impl watch(watch_path: Path, debounce: float = 3.0) -> None {
         }
     }
 
-    def remove_tree(path: Path) -> None {
+    def remove_tree(path: Path) {
         watch: any;
         path = path.resolve();
         prefix: any = `str(path) + os.sep;
@@ -3410,7 +3428,7 @@ impl watch(watch_path: Path, debounce: float = 3.0) -> None {
         }
     }
 
-    def add_tree(path: Path, *, emit_existing: bool) -> None {
+    def add_tree(path: Path, *, emit_existing: bool) {
         path = path.resolve();
         stack: any = [path];
         while stack {

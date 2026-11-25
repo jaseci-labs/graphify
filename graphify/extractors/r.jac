@@ -1,7 +1,4 @@
-"""Structural extraction for R source files."""
-
 import from __future__ { annotations }
-
 import from pathlib { Path }
 
 import from typing { Any }
@@ -32,10 +29,6 @@ with entry {
 }
 
 def _unquote(value: str) -> str;
-
-"""Resolve calls only through an explicit source relationship."""
-def resolve_r_sourced_calls(
-    per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]
-) -> None;
+def resolve_r_sourced_calls(per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]);
 
 def extract_r(path: Path) -> dict;

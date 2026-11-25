@@ -1,6 +1,6 @@
 impl resolve_vbnet_partial_calls(
     per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+) {
     methods: dict[tuple[str, str, int], list[str]] = {};
     for `node in all_nodes {
         metadata: any = `node.get("metadata");
@@ -206,7 +206,7 @@ impl extract_vbnet(path: Path) -> dict {
         return nid;
     }
 
-    def add_edge(source_id: str, target_id: str, relation: str, `node: Node) -> None {
+    def add_edge(source_id: str, target_id: str, relation: str, `node: Node) {
         key: any = (source_id, target_id, relation);
         if not source_id or not target_id or source_id == target_id or key in seen_edges {
             return;
@@ -273,7 +273,7 @@ impl extract_vbnet(path: Path) -> dict {
         return member_id;
     }
 
-    def process_type(block: Node, parent_id: str, namespace: str) -> None {
+    def process_type(block: Node, parent_id: str, namespace: str) {
         kind: any = _TYPE_BLOCKS[block.type];
         name_node: any = block.child_by_field_name("name");
         if name_node is None {
@@ -426,7 +426,7 @@ impl extract_vbnet(path: Path) -> dict {
         }
     }
 
-    def scan(`node: Node, parent_id: str, namespace: str) -> None {
+    def scan(`node: Node, parent_id: str, namespace: str) {
         if `node.type == "imports_statement" {
             return;
         }

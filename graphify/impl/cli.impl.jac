@@ -21,7 +21,7 @@ impl _nudge_for_out(nudge: str) -> str {
     return json.dumps(d, ensure_ascii=False, separators=(",", ":")) + "\n";
 }
 
-impl _print_cloud_cta(out_dir: "Path", node_count: int = 0) -> None {
+impl _print_cloud_cta(out_dir: "Path", node_count: int = 0) {
     if os.environ.get("GRAPHIFY_NO_TIPS") or os.environ.get("GRAPHIFY_NO_CTA") {
         return;
     }
@@ -162,7 +162,9 @@ impl _graph_hint(terms: "list[str]", rel_file: "str | None") -> tuple[str, list[
             return label in lowered or `any(len(term) >= 5 and term in label for term in lowered);
         }
         ranked: any = sorted(
-            ((0 if key(n) in lowered else 1, len(key(n)), n) for n in nodes if mentions_a_term(key(n))),
+            ((0 if key(n) in lowered else 1, len(key(n)), n)
+            for n in nodes
+            if mentions_a_term(key(n))),
             key=lambda (r) -> any { (r[0], r[1]) },
         );
         picked = [n for (_, _, n) in ranked[:_HINT_MAX_NODES]];
@@ -716,9 +718,7 @@ impl _zero_node_stamped_semantic_sources(
     return healed;
 }
 
-impl _record_extract_cost(
-    graphify_out: Path, input_tokens: int, output_tokens: int, files: int
-) -> None {
+impl _record_extract_cost(graphify_out: Path, input_tokens: int, output_tokens: int, files: int) {
     cost: any;
     import from datetime { datetime, timezone }
     write_json_atomic: any = importlib.import_module("graphify.paths").write_json_atomic;
@@ -815,7 +815,7 @@ impl _StageTimer.init(enabled: bool) {
     self._last = self.start;
 }
 
-impl _StageTimer.mark(stage: str) -> None {
+impl _StageTimer.mark(stage: str) {
     now: any = self._now();
     if self.enabled {
         print(f"[graphify timing] {stage}: {now - self._last:.1f}s", file=sys.stderr);
@@ -823,7 +823,7 @@ impl _StageTimer.mark(stage: str) -> None {
     self._last = now;
 }
 
-impl _StageTimer.total -> None {
+impl _StageTimer.total {
     if self.enabled {
         print(f"[graphify timing] total: {self._now() - self.start:.1f}s", file=sys.stderr);
     }
@@ -841,8 +841,10 @@ impl _StageTimer.__hash__ -> int {
     return id(self);
 }
 
-impl _enforce_graph_size_cap_or_exit(gp: Path) -> None {
-    check_graph_file_size_cap: any = importlib.import_module("graphify.security").check_graph_file_size_cap;
+impl _enforce_graph_size_cap_or_exit(gp: Path) {
+    check_graph_file_size_cap: any = importlib.import_module(
+        "graphify.security"
+    ).check_graph_file_size_cap;
     try {
         check_graph_file_size_cap(gp);
     } except ValueError as exc {
@@ -881,7 +883,7 @@ impl _hook_strict_enabled(flag: bool) -> bool {
     return flag;
 }
 
-impl _touch_query_stamp(graph_path: "Path") -> None {
+impl _touch_query_stamp(graph_path: "Path") {
     try {
         write_text_atomic: any = importlib.import_module("graphify.paths").write_text_atomic;
         stamp: any = Path(graph_path).parent / "cache" / "last_query_stamp";
@@ -945,7 +947,7 @@ impl _nudge_allowed(payload: dict) -> bool {
     }
 }
 
-impl _gc_hook_session_markers(d: "Path") -> None {
+impl _gc_hook_session_markers(d: "Path") {
     try {
         cutoff: any = time.time() - 86400;
         for `entry in os.scandir(d) {
@@ -958,7 +960,7 @@ impl _gc_hook_session_markers(d: "Path") -> None {
     } except OSError {}
 }
 
-impl _reset_hook_session(session_id: str) -> None {
+impl _reset_hook_session(session_id: str) {
     out_path: any = importlib.import_module("graphify.paths").out_path;
     key: any = re.sub("[^A-Za-z0-9_-]", "_", `str(session_id or ""))[:64];
     if not key {
@@ -1271,7 +1273,7 @@ impl _search_is_outside_project(tool_input: dict) -> bool {
     }
 }
 
-impl _run_hook_guard(kind: str, strict: bool = False) -> None {
+impl _run_hook_guard(kind: str, strict: bool = False) {
     `root: any;
     out_dirs: list[Path];
     out_path: any = importlib.import_module("graphify.paths").out_path;
@@ -1672,12 +1674,12 @@ impl _clone_repo(url: str, branch: str | None = None, out_dir: Path | None = Non
     return dest;
 }
 
-impl _reenter_main -> None {
+impl _reenter_main {
     main: any = importlib.import_module("graphify.__main__").main;
     main();
 }
 
-impl dispatch_command(cmd: str) -> None {
+impl dispatch_command(cmd: str) {
     G: any;
     u: any;
     v: any;
@@ -1691,7 +1693,9 @@ impl dispatch_command(cmd: str) -> None {
     _ctx_root: any;
     _chunk_stats: any;
     if cmd == "provider" {
-        _custom_providers_path: any = importlib.import_module("graphify.llm")._custom_providers_path;
+        _custom_providers_path: any = importlib.import_module(
+            "graphify.llm"
+        )._custom_providers_path;
         BACKENDS: any = importlib.import_module("graphify.llm").BACKENDS;
         import json as _json;
         subcmd: any = sys.argv[2] if len(sys.argv) > 2 else "";
@@ -1836,7 +1840,9 @@ impl dispatch_command(cmd: str) -> None {
                 );
                 sys.exit(1);
             }
-            provider_base_url_ok: any = importlib.import_module("graphify.llm").provider_base_url_ok;
+            provider_base_url_ok: any = importlib.import_module(
+                "graphify.llm"
+            ).provider_base_url_ok;
             if not provider_base_url_ok(base_url, name) {
                 print(
                     f"Error: refusing to add provider with unsafe base_url {base_url!r}.",
@@ -1915,7 +1921,9 @@ impl dispatch_command(cmd: str) -> None {
             return;
         }
         _QUERY_NO_MATCH: any = importlib.import_module("graphify.serve")._QUERY_NO_MATCH;
-        _is_ambiguity_refusal: any = importlib.import_module("graphify.serve")._is_ambiguity_refusal;
+        _is_ambiguity_refusal: any = importlib.import_module(
+            "graphify.serve"
+        )._is_ambiguity_refusal;
         _query_graph_text: any = importlib.import_module("graphify.serve")._query_graph_text;
         sanitize_label: any = importlib.import_module("graphify.security").sanitize_label;
         import from networkx.readwrite { json_graph }
@@ -2016,7 +2024,9 @@ impl dispatch_command(cmd: str) -> None {
             import json as _json;
             import networkx as _nx;
 
-            consumed_graph_rows: any = importlib.import_module("graphify.paths").consumed_graph_rows;
+            consumed_graph_rows: any = importlib.import_module(
+                "graphify.paths"
+            ).consumed_graph_rows;
             read_graph_json: any = importlib.import_module("graphify.paths").read_graph_json;
             _raw: any = read_graph_json(gp);
             if "links" not in _raw and "edges" in _raw {
@@ -2024,7 +2034,9 @@ impl dispatch_command(cmd: str) -> None {
             }
             try {
                 _legacy: any = importlib.import_module("graphify.build").graph_has_legacy_ids;
-                _legacy_prefix: any = importlib.import_module("graphify.build").legacy_id_source_prefix;
+                _legacy_prefix: any = importlib.import_module(
+                    "graphify.build"
+                ).legacy_id_source_prefix;
                 _legacy_ids: any = _legacy(_raw.get("nodes", []), source_prefix=_legacy_prefix(gp));
             } except Exception {
                 _legacy_ids = False;
@@ -2113,10 +2125,14 @@ impl dispatch_command(cmd: str) -> None {
             );
             sys.exit(1);
         }
-        DEFAULT_AFFECTED_RELATIONS: any = importlib.import_module("graphify.affected").DEFAULT_AFFECTED_RELATIONS;
+        DEFAULT_AFFECTED_RELATIONS: any = importlib.import_module(
+            "graphify.affected"
+        ).DEFAULT_AFFECTED_RELATIONS;
         format_affected: any = importlib.import_module("graphify.affected").format_affected;
         load_graph: any = importlib.import_module("graphify.affected").load_graph;
-        resolve_seed_outcome: any = importlib.import_module("graphify.affected").resolve_seed_outcome;
+        resolve_seed_outcome: any = importlib.import_module(
+            "graphify.affected"
+        ).resolve_seed_outcome;
         query: any = sys.argv[2];
         graph_path = _default_graph_path();
         depth = 2;
@@ -2178,7 +2194,9 @@ impl dispatch_command(cmd: str) -> None {
         (seed, rivals) = resolve_seed_outcome(`graph, query, graph_root) as any;
         if seed is None {
             if rivals {
-                _ambiguity_message: any = importlib.import_module("graphify.serve")._ambiguity_message;
+                _ambiguity_message: any = importlib.import_module(
+                    "graphify.serve"
+                )._ambiguity_message;
 
                 print(_ambiguity_message(`graph, query, rivals), file=sys.stderr);
                 sys.exit(EXIT_AMBIGUOUS);
@@ -2407,8 +2425,12 @@ impl dispatch_command(cmd: str) -> None {
             sys.exit(1);
         }
         _confidence_tag: any = importlib.import_module("graphify.serve")._confidence_tag;
-        _is_ambiguity_refusal: any = importlib.import_module("graphify.serve")._is_ambiguity_refusal;
-        _resolve_path_endpoint: any = importlib.import_module("graphify.serve")._resolve_path_endpoint;
+        _is_ambiguity_refusal: any = importlib.import_module(
+            "graphify.serve"
+        )._is_ambiguity_refusal;
+        _resolve_path_endpoint: any = importlib.import_module(
+            "graphify.serve"
+        )._resolve_path_endpoint;
         import from networkx.readwrite { json_graph }
         import from networkx { NetworkXNoPath, NodeNotFound }
         import networkx as _nx;
@@ -2496,7 +2518,9 @@ impl dispatch_command(cmd: str) -> None {
                 }
             }
         }
-        _weakest_shortest_path: any = importlib.import_module("graphify.serve")._weakest_shortest_path;
+        _weakest_shortest_path: any = importlib.import_module(
+            "graphify.serve"
+        )._weakest_shortest_path;
         try {
             if undirected {
                 _und: any = _nx.Graph();
@@ -2543,7 +2567,9 @@ impl dispatch_command(cmd: str) -> None {
         hop_datas: list[list[dict]] = [];
         edge_datas: any = importlib.import_module("graphify.build").edge_datas;
         edge_evidence: any = importlib.import_module("graphify.build").edge_evidence;
-        _path_confidence_line: any = importlib.import_module("graphify.serve")._path_confidence_line;
+        _path_confidence_line: any = importlib.import_module(
+            "graphify.serve"
+        )._path_confidence_line;
         for i in range(len(path_nodes) - 1) {
             (u, v) = (path_nodes[i], path_nodes[i + 1]);
             fwd: any;
@@ -2618,7 +2644,9 @@ impl dispatch_command(cmd: str) -> None {
             return;
         }
         _confidence_tag: any = importlib.import_module("graphify.serve")._confidence_tag;
-        _is_ambiguity_refusal: any = importlib.import_module("graphify.serve")._is_ambiguity_refusal;
+        _is_ambiguity_refusal: any = importlib.import_module(
+            "graphify.serve"
+        )._is_ambiguity_refusal;
         _resolve_single_node: any = importlib.import_module("graphify.serve")._resolve_single_node;
 
         label: any = sys.argv[2];
@@ -2761,11 +2789,15 @@ impl dispatch_command(cmd: str) -> None {
             print(_section_usage);
             return;
         }
-        _is_ambiguity_refusal: any = importlib.import_module("graphify.serve")._is_ambiguity_refusal;
+        _is_ambiguity_refusal: any = importlib.import_module(
+            "graphify.serve"
+        )._is_ambiguity_refusal;
         DEFAULT_MAX_CHARS: any = importlib.import_module("graphify.sections").DEFAULT_MAX_CHARS;
         format_section: any = importlib.import_module("graphify.sections").format_section;
         read_section: any = importlib.import_module("graphify.sections").read_section;
-        resolve_section_query: any = importlib.import_module("graphify.sections").resolve_section_query;
+        resolve_section_query: any = importlib.import_module(
+            "graphify.sections"
+        ).resolve_section_query;
         section_root: any = importlib.import_module("graphify.sections").section_root;
 
         label = sys.argv[2];
@@ -2883,8 +2915,12 @@ impl dispatch_command(cmd: str) -> None {
         }
 
         diagnose_file: any = importlib.import_module("graphify.diagnostics").diagnose_file;
-        format_diagnostic_json: any = importlib.import_module("graphify.diagnostics").format_diagnostic_json;
-        format_diagnostic_report: any = importlib.import_module("graphify.diagnostics").format_diagnostic_report;
+        format_diagnostic_json: any = importlib.import_module(
+            "graphify.diagnostics"
+        ).format_diagnostic_json;
+        format_diagnostic_report: any = importlib.import_module(
+            "graphify.diagnostics"
+        ).format_diagnostic_report;
 
         try {
             summary: any = diagnose_file(
@@ -3050,9 +3086,13 @@ impl dispatch_command(cmd: str) -> None {
         build_from_json: any = importlib.import_module("graphify.build").build_from_json;
         cluster: any = importlib.import_module("graphify.cluster").cluster;
         score_all: any = importlib.import_module("graphify.cluster").score_all;
-        remap_communities_to_previous: any = importlib.import_module("graphify.cluster").remap_communities_to_previous;
+        remap_communities_to_previous: any = importlib.import_module(
+            "graphify.cluster"
+        ).remap_communities_to_previous;
         god_nodes: any = importlib.import_module("graphify.analyze").god_nodes;
-        surprising_connections: any = importlib.import_module("graphify.analyze").surprising_connections;
+        surprising_connections: any = importlib.import_module(
+            "graphify.analyze"
+        ).surprising_connections;
         suggest_questions: any = importlib.import_module("graphify.analyze").suggest_questions;
         generate: any = importlib.import_module("graphify.report").generate;
         to_json: any = importlib.import_module("graphify.export").to_json;
@@ -3060,7 +3100,9 @@ impl dispatch_command(cmd: str) -> None {
 
         stages: any = _StageTimer(co_timing);
         print("Loading existing graph...");
-        check_graph_file_size_cap: any = importlib.import_module("graphify.security").check_graph_file_size_cap;
+        check_graph_file_size_cap: any = importlib.import_module(
+            "graphify.security"
+        ).check_graph_file_size_cap;
         try {
             check_graph_file_size_cap(graph_json);
         } except ValueError {
@@ -3142,9 +3184,15 @@ impl dispatch_command(cmd: str) -> None {
                     file=sys.stderr,
                 );
             }
-            community_member_sigs: any = importlib.import_module("graphify.cluster").community_member_sigs;
-            label_communities_by_hub: any = importlib.import_module("graphify.cluster").label_communities_by_hub;
-            label_still_applies: any = importlib.import_module("graphify.cluster").label_still_applies;
+            community_member_sigs: any = importlib.import_module(
+                "graphify.cluster"
+            ).community_member_sigs;
+            label_communities_by_hub: any = importlib.import_module(
+                "graphify.cluster"
+            ).label_communities_by_hub;
+            label_still_applies: any = importlib.import_module(
+                "graphify.cluster"
+            ).label_still_applies;
             sig_path: any = labels_path.parent / (labels_path.name + ".sig");
             saved_sigs: dict[int, str] = {};
             if sig_path.exists() {
@@ -3206,8 +3254,12 @@ impl dispatch_command(cmd: str) -> None {
             labels = {cid: f"Community {cid}" for cid in communities};
             placeholder_only = True;
         } else {
-            label_communities_by_hub: any = importlib.import_module("graphify.cluster").label_communities_by_hub;
-            generate_community_labels: any = importlib.import_module("graphify.llm").generate_community_labels;
+            label_communities_by_hub: any = importlib.import_module(
+                "graphify.cluster"
+            ).label_communities_by_hub;
+            generate_community_labels: any = importlib.import_module(
+                "graphify.llm"
+            ).generate_community_labels;
             print("Labeling communities...");
             hub_labels = label_communities_by_hub(G, communities);
             label_communities_input: any = communities;
@@ -3246,11 +3298,13 @@ impl dispatch_command(cmd: str) -> None {
             _commit = _gh(cwd=watch_path);
         }
         _backup: any = importlib.import_module("graphify.export").backup_if_protected;
-        _HTML_STALE_MARKER: any = importlib.import_module("graphify.exporters.html")._HTML_STALE_MARKER;
+        _HTML_STALE_MARKER: any = importlib.import_module(
+            "graphify.exporters.html"
+        )._HTML_STALE_MARKER;
         _backup(out);
         html_stale_marker = out / _HTML_STALE_MARKER;
 
-        def _clear_html_stale_marker -> None {
+        def _clear_html_stale_marker {
             try {
                 html_stale_marker.unlink(missing_ok=True);
             } except OSError as exc {
@@ -3315,7 +3369,9 @@ impl dispatch_command(cmd: str) -> None {
             write_json_atomic(
                 labels_path, {`str(k): v for (k, v) in labels.items()}, ensure_ascii=False
             );
-            community_member_sigs: any = importlib.import_module("graphify.cluster").community_member_sigs;
+            community_member_sigs: any = importlib.import_module(
+                "graphify.cluster"
+            ).community_member_sigs;
             write_text_atomic(
                 labels_path.parent / (labels_path.name + ".sig"),
                 json.dumps({`str(k): v for (k, v) in community_member_sigs(communities).items()}),
@@ -3336,7 +3392,9 @@ impl dispatch_command(cmd: str) -> None {
             html_written: any = False;
             skip_reason: str | None = None;
             try {
-                _viz_node_limit: any = importlib.import_module("graphify.exporters.html")._viz_node_limit;
+                _viz_node_limit: any = importlib.import_module(
+                    "graphify.exporters.html"
+                )._viz_node_limit;
                 viz_limit: any = _viz_node_limit();
                 if viz_limit <= 0 {
                     html_target.unlink(missing_ok=True);
@@ -3464,7 +3522,9 @@ impl dispatch_command(cmd: str) -> None {
     } elif cmd == "tree" {
         import from typing { Optional as _Opt }
         write_tree_html: any = importlib.import_module("graphify.tree_html").write_tree_html;
-        DEFAULT_MAX_CHILDREN: any = importlib.import_module("graphify.tree_html").DEFAULT_MAX_CHILDREN;
+        DEFAULT_MAX_CHILDREN: any = importlib.import_module(
+            "graphify.tree_html"
+        ).DEFAULT_MAX_CHILDREN;
         graph_path = Path(_GRAPHIFY_OUT) / "graph.json";
         output_path: "_Opt[Path]" = None;
         `root: "_Opt[str]" = None;
@@ -3729,12 +3789,16 @@ impl dispatch_command(cmd: str) -> None {
             }
             merged = _nx.compose(merged, prefixed);
         }
-        _link_shared: any = importlib.import_module("graphify.cross_repo_types").link_shared_type_declarations;
+        _link_shared: any = importlib.import_module(
+            "graphify.cross_repo_types"
+        ).link_shared_type_declarations;
         shared_links: any = _link_shared(merged);
         if shared_links {
             print(f"  linked {shared_links} type declaration(s) shared across repos");
         }
-        _link_calls: any = importlib.import_module("graphify.cross_repo_calls").link_cross_repo_member_calls;
+        _link_calls: any = importlib.import_module(
+            "graphify.cross_repo_calls"
+        ).link_cross_repo_member_calls;
         call_links: any = _link_calls(merged);
         if call_links {
             print(f"  resolved {call_links} member call(s) across repos");
@@ -3992,7 +4056,9 @@ impl dispatch_command(cmd: str) -> None {
         }
 
         if subcmd == "callflow-html" {
-            _write_callflow_html: any = importlib.import_module("graphify.callflow_html").write_callflow_html;
+            _write_callflow_html: any = importlib.import_module(
+                "graphify.callflow_html"
+            ).write_callflow_html;
             out = _write_callflow_html(
                 graph=graph_path,
                 report=report_path,
@@ -4012,7 +4078,9 @@ impl dispatch_command(cmd: str) -> None {
 
         import from networkx.readwrite { json_graph as _jg }
         build_from_json: any = importlib.import_module("graphify.build").build_from_json;
-        check_graph_file_size_cap: any = importlib.import_module("graphify.security").check_graph_file_size_cap;
+        check_graph_file_size_cap: any = importlib.import_module(
+            "graphify.security"
+        ).check_graph_file_size_cap;
         _over_cap: any = False;
         try {
             check_graph_file_size_cap(graph_path);
@@ -4262,7 +4330,9 @@ impl dispatch_command(cmd: str) -> None {
                 sys.exit(1);
             }
             if not tag {
-                distinct_repo_tags: any = importlib.import_module("graphify.build").distinct_repo_tags;
+                distinct_repo_tags: any = importlib.import_module(
+                    "graphify.build"
+                ).distinct_repo_tags;
                 tag = distinct_repo_tags([source.absolute()])[0];
             }
             try {
@@ -4793,11 +4863,19 @@ impl dispatch_command(cmd: str) -> None {
         }
         stages.mark("detect");
         BACKENDS: any = importlib.import_module("graphify.llm").BACKENDS;
-        _detect_backend_with_source: any = importlib.import_module("graphify.llm").detect_backend_with_source;
-        _backend_disabled_by_env: any = importlib.import_module("graphify.llm").backend_disabled_by_env;
+        _detect_backend_with_source: any = importlib.import_module(
+            "graphify.llm"
+        ).detect_backend_with_source;
+        _backend_disabled_by_env: any = importlib.import_module(
+            "graphify.llm"
+        ).backend_disabled_by_env;
         _estimate_cost: any = importlib.import_module("graphify.llm").estimate_cost;
-        _extract_corpus_parallel: any = importlib.import_module("graphify.llm").extract_corpus_parallel;
-        _format_backend_env_keys: any = importlib.import_module("graphify.llm")._format_backend_env_keys;
+        _extract_corpus_parallel: any = importlib.import_module(
+            "graphify.llm"
+        ).extract_corpus_parallel;
+        _format_backend_env_keys: any = importlib.import_module(
+            "graphify.llm"
+        )._format_backend_env_keys;
         _get_backend_api_key: any = importlib.import_module("graphify.llm")._get_backend_api_key;
         needs_llm: any = `bool(semantic_files) or dedup_llm;
         backend_source: any = None;
@@ -4855,7 +4933,9 @@ impl dispatch_command(cmd: str) -> None {
                 sys.exit(1);
             }
             if backend == "ollama" {
-                _validate_ollama_base_url: any = importlib.import_module("graphify.llm")._validate_ollama_base_url;
+                _validate_ollama_base_url: any = importlib.import_module(
+                    "graphify.llm"
+                )._validate_ollama_base_url;
                 _oll_url: any = os.environ.get(
                     "OLLAMA_BASE_URL", BACKENDS["ollama"].get("base_url", "")
                 );
@@ -4916,7 +4996,9 @@ impl dispatch_command(cmd: str) -> None {
         }
 
         if incremental_mode {
-            refresh_terraform_paths: any = importlib.import_module("graphify.extractors.terraform").refresh_terraform_paths;
+            refresh_terraform_paths: any = importlib.import_module(
+                "graphify.extractors.terraform"
+            ).refresh_terraform_paths;
             code_files = refresh_terraform_paths(
                 code_files,
                 [Path(p) for p in files_by_type.get("code", [])],
@@ -4935,7 +5017,9 @@ impl dispatch_command(cmd: str) -> None {
                 _ctx_edges: list[dict] = [];
                 try {
                     _ctx_is_ast_tier: any = importlib.import_module("graphify.build")._is_ast_tier;
-                    check_graph_file_size_cap: any = importlib.import_module("graphify.security").check_graph_file_size_cap;
+                    check_graph_file_size_cap: any = importlib.import_module(
+                        "graphify.security"
+                    ).check_graph_file_size_cap;
                     check_graph_file_size_cap(existing_graph_path);
                     _ctx_graph: any = json.loads(existing_graph_path.read_text(encoding="utf-8"));
                     _ctx_root = Path(os.path.abspath(target));
@@ -4957,7 +5041,9 @@ impl dispatch_command(cmd: str) -> None {
                         for f in _flist
                     };
                     _ctx_live.discard(None);
-                    _cpp_reconciliation_paths: any = importlib.import_module("graphify.extractors.resolution")._cpp_reconciliation_paths;
+                    _cpp_reconciliation_paths: any = importlib.import_module(
+                        "graphify.extractors.resolution"
+                    )._cpp_reconciliation_paths;
                     code_files = _cpp_reconciliation_paths(
                         `list(code_files),
                         _ctx_graph.get("nodes", []),
@@ -5136,7 +5222,9 @@ impl dispatch_command(cmd: str) -> None {
         check_semantic_cache: any = importlib.import_module("graphify.cache").check_semantic_cache;
         _prune_semantic_cache: any = importlib.import_module("graphify.cache").prune_semantic_cache;
         _save_semantic_cache: any = importlib.import_module("graphify.cache").save_semantic_cache;
-        _scope_semantic_result: any = importlib.import_module("graphify.cache").scope_semantic_result;
+        _scope_semantic_result: any = importlib.import_module(
+            "graphify.cache"
+        ).scope_semantic_result;
         sem_result: dict = {
             "nodes": [],
             "edges": [],
@@ -5208,7 +5296,7 @@ impl dispatch_command(cmd: str) -> None {
                     corpus_kwargs["max_concurrency"] = cli_max_concurrency;
                 }
                 _chunk_stats = {"total": 0, "succeeded": 0};
-                def _progress(idx: int, total: int, _result: dict) -> None {
+                def _progress(idx: int, total: int, _result: dict) {
                     _chunk_stats["total"] = total;
                     _chunk_stats["succeeded"] += 1;
                     print(f"[graphify extract] chunk {idx + 1}/{total} done", flush=True);
@@ -5259,7 +5347,9 @@ impl dispatch_command(cmd: str) -> None {
                     );
                 }
                 _partial_sf: any = importlib.import_module("graphify.llm")._partial_source_files;
-                _strip_partial: any = importlib.import_module("graphify.llm")._strip_partial_markers;
+                _strip_partial: any = importlib.import_module(
+                    "graphify.llm"
+                )._strip_partial_markers;
                 _partial_semantic_files = `set(_partial_sf(fresh));
                 _omitted_files: any = `list(fresh.get("uncovered_files") or []);
                 if _omitted_files or _partial_semantic_files {
@@ -5329,7 +5419,9 @@ impl dispatch_command(cmd: str) -> None {
 
         pg_result: dict = {"nodes": [], "edges": []};
         if cli_postgres_dsn is not None {
-            introspect_postgres: any = importlib.import_module("graphify.pg_introspect").introspect_postgres;
+            introspect_postgres: any = importlib.import_module(
+                "graphify.pg_introspect"
+            ).introspect_postgres;
             print(f"[graphify extract] introspecting PostgreSQL schema...");
             try {
                 pg_result = introspect_postgres(cli_postgres_dsn);
@@ -5348,7 +5440,9 @@ impl dispatch_command(cmd: str) -> None {
 
         cargo_result: dict = {"nodes": [], "edges": []};
         if cli_cargo {
-            introspect_cargo: any = importlib.import_module("graphify.cargo_introspect").introspect_cargo;
+            introspect_cargo: any = importlib.import_module(
+                "graphify.cargo_introspect"
+            ).introspect_cargo;
             print("[graphify extract] introspecting Cargo workspace...");
             try {
                 cargo_result = introspect_cargo(target);
@@ -5391,7 +5485,9 @@ impl dispatch_command(cmd: str) -> None {
         analysis_path = graphify_out / ".graphify_analysis.json";
         _failed_ast_sources: any = `list(ast_result.get("failed_sources") or []);
         if _failed_ast_sources {
-            _existing_counts_by_source: any = importlib.import_module("graphify.export").existing_graph_node_counts_by_source;
+            _existing_counts_by_source: any = importlib.import_module(
+                "graphify.export"
+            ).existing_graph_node_counts_by_source;
             _shrink_malformed: any = importlib.import_module("graphify.export").MALFORMED_GRAPH;
             _existing_counts: any = _existing_counts_by_source(graph_json_path);
             if _existing_counts is _shrink_malformed {
@@ -5447,7 +5543,7 @@ impl dispatch_command(cmd: str) -> None {
             if has_path
             else None;
 
-        def _invalidate_file_manifest_for_db_graph -> None {
+        def _invalidate_file_manifest_for_db_graph {
             if has_path {
                 return;
             }
@@ -5464,7 +5560,9 @@ impl dispatch_command(cmd: str) -> None {
             _dedupe_nodes: any = importlib.import_module("graphify.build").dedupe_nodes;
             _has_parallel_links: any = importlib.import_module("graphify.build").has_parallel_links;
             _backup: any = importlib.import_module("graphify.export").backup_if_protected;
-            _existing_graph_node_count: any = importlib.import_module("graphify.export").existing_graph_node_count;
+            _existing_graph_node_count: any = importlib.import_module(
+                "graphify.export"
+            ).existing_graph_node_count;
             if incremental_mode
                 and not code_files
                 and not semantic_files
@@ -5509,7 +5607,9 @@ impl dispatch_command(cmd: str) -> None {
             }
 
             if merge_existing_graph {
-                _merge_raw_extraction: any = importlib.import_module("graphify.build").merge_raw_extraction;
+                _merge_raw_extraction: any = importlib.import_module(
+                    "graphify.build"
+                ).merge_raw_extraction;
                 _raw_prune_sources: list[str] = `list(deleted_files);
                 _src: any;
                 for _src in `list(excluded_files) + graph_stale_sources {
@@ -5554,11 +5654,17 @@ impl dispatch_command(cmd: str) -> None {
             merged["multigraph"] = _has_parallel_links(
                 merged["edges"], directed=`bool(merged.get("directed", False))
             );
-            _disamb_labels: any = importlib.import_module("graphify.build").disambiguate_file_labels_in_nodes;
+            _disamb_labels: any = importlib.import_module(
+                "graphify.build"
+            ).disambiguate_file_labels_in_nodes;
             _disamb_labels(merged["nodes"]);
-            _qualify_cs_methods: any = importlib.import_module("graphify.build").qualify_csharp_method_labels_in_nodes;
+            _qualify_cs_methods: any = importlib.import_module(
+                "graphify.build"
+            ).qualify_csharp_method_labels_in_nodes;
             _qualify_cs_methods(merged["nodes"], merged["edges"]);
-            _finalize_raw_graph_endpoints: any = importlib.import_module("graphify.build").finalize_raw_graph_endpoints;
+            _finalize_raw_graph_endpoints: any = importlib.import_module(
+                "graphify.build"
+            ).finalize_raw_graph_endpoints;
             _finalize_raw_graph_endpoints(merged);
             _node_sf: any = {n.get("id"): n.get("source_file") for n in merged["nodes"]};
             for _e in merged["edges"] {
@@ -5594,7 +5700,9 @@ impl dispatch_command(cmd: str) -> None {
             _backup(graphify_out);
             _invalidate_file_manifest_for_db_graph();
             write_json_atomic: any = importlib.import_module("graphify.paths").write_json_atomic;
-            _RUN_ONLY_KEYS: any = importlib.import_module("graphify.extract").RUN_ONLY_EXTRACTION_KEYS;
+            _RUN_ONLY_KEYS: any = importlib.import_module(
+                "graphify.extract"
+            ).RUN_ONLY_EXTRACTION_KEYS;
             write_json_atomic(
                 graph_json_path,
                 {k: v for (k, v) in merged.items() if k not in _RUN_ONLY_KEYS},
@@ -5685,7 +5793,9 @@ impl dispatch_command(cmd: str) -> None {
         score_all: any = importlib.import_module("graphify.cluster").score_all;
         to_json: any = importlib.import_module("graphify.export").to_json;
         god_nodes: any = importlib.import_module("graphify.analyze").god_nodes;
-        surprising_connections: any = importlib.import_module("graphify.analyze").surprising_connections;
+        surprising_connections: any = importlib.import_module(
+            "graphify.analyze"
+        ).surprising_connections;
         dedup_backend: any = backend if dedup_llm else None;
         if merge_existing_graph {
             _prune_sources: list[str] = `list(deleted_files);
@@ -5773,7 +5883,9 @@ impl dispatch_command(cmd: str) -> None {
         _backup: any = importlib.import_module("graphify.export").backup_if_protected;
         _backup(graphify_out);
         _invalidate_file_manifest_for_db_graph();
-        _take_shrink_accounting: any = importlib.import_module("graphify.build").take_shrink_accounting;
+        _take_shrink_accounting: any = importlib.import_module(
+            "graphify.build"
+        ).take_shrink_accounting;
         _dedup_collapsed: any;
         _pruned_nodes: any;
         (_dedup_collapsed, _pruned_nodes) = _take_shrink_accounting(G) as any;
@@ -5784,7 +5896,9 @@ impl dispatch_command(cmd: str) -> None {
             and not cli_allow_dedup_shrink
             and _dedup_collapsed > 0
         {
-            _existing_graph_node_count: any = importlib.import_module("graphify.export").existing_graph_node_count;
+            _existing_graph_node_count: any = importlib.import_module(
+                "graphify.export"
+            ).existing_graph_node_count;
             _existing_n = _existing_graph_node_count(graph_json_path);
             _new_n: any = G.number_of_nodes();
             if isinstance(_existing_n, `int) and _new_n < _existing_n - _pruned_nodes {
@@ -6006,7 +6120,9 @@ impl dispatch_command(cmd: str) -> None {
         };
         seen_ids: set[str] = set[any]();
         valid_chunks: any = 0;
-        load_validated_semantic_fragment: any = importlib.import_module("graphify.semantic_cleanup").load_validated_semantic_fragment;
+        load_validated_semantic_fragment: any = importlib.import_module(
+            "graphify.semantic_cleanup"
+        ).load_validated_semantic_fragment;
         for cf in chunk_files {
             chunk: any;
             _chunk_errs: any;

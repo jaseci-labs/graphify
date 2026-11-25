@@ -222,7 +222,7 @@ impl _c3_linearization(type_id: str, bases: dict[str, list[str]]) -> list[str] {
 
 impl resolve_solidity_inherited_calls(
     per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+) {
     node_by_id: any;
     owner: dict[str, str];
     functions: dict[str, dict[str, list[tuple[str, Any]]]];
@@ -380,10 +380,6 @@ impl resolve_solidity_inherited_calls(
     }
 
     reachable_cache = {};
-
-    """Every file ``caller_file`` imports, directly or through the files
-        it imports (`import {IERC20} from "./ERC20.sol"` re-exports a type
-        ERC20.sol itself imports)."""
     def reachable(caller_file: str) -> list[str] {
         if caller_file not in reachable_cache {
             seen: set[str] = set[any]();
@@ -400,10 +396,6 @@ impl resolve_solidity_inherited_calls(
         }
         return reachable_cache[caller_file];
     }
-
-    """The types named ``name`` that ``caller_file`` declares or imports
-        directly; with ``transitive``, when there is none, those of every
-        file it reaches through its imports."""
     def visible_types(caller_file: str, name: str, transitive: bool = False) -> list[str] {
         found: any = types_by_file.get((caller_file, name), []) + [
             type_id
@@ -428,12 +420,6 @@ impl resolve_solidity_inherited_calls(
         }
         return linear_cache[type_id];
     }
-
-    """``(type, file)`` readings of a member call's receiver, best first:
-        the type the extractor read (a local, parameter, own state variable
-        or conversion), a base contract's state variable of the receiver's
-        name, or the declared return type of the function ``g`` in
-        ``g(..).f()``. ``file`` is the file whose scope names the type."""
     def receiver_types(rc: dict) -> list[tuple[str, str]] {
         caller: any = rc.get("caller_nid");
         readings: list[tuple[str, str]] = [];
@@ -475,9 +461,6 @@ impl resolve_solidity_inherited_calls(
         }
         return readings;
     }
-
-    """``recv.name()`` bound through the receiver's contract/interface
-        type, the first reading of it that names a visible type."""
     def typed_member(rc: dict, name: str) -> str | None {
         for (type_name, scope_file) in receiver_types(rc) {
             scope: any = visible_types(scope_file, type_name, transitive=True);
@@ -503,9 +486,6 @@ impl resolve_solidity_inherited_calls(
             for nid in free_functions.get((reached, name), [])
         ];
     }
-
-    """The functions named ``name`` that ``directive`` attaches, read in
-        ``scope_file``; ``None`` when its library is ambiguous."""
     def attached_functions(directive: dict, scope_file: str, name: str) -> list[str] | None {
         if "library" in directive {
             libraries: any = visible_types(scope_file, `str(directive["library"]), transitive=True);
@@ -542,9 +522,6 @@ impl resolve_solidity_inherited_calls(
         }
         return attached;
     }
-
-    """``recv.name()`` bound to the one function a ``using`` directive in
-        scope attaches to the receiver's type, if there is exactly one."""
     def using_member(rc: dict, name: str) -> str | None {
         arity: any;
         type_name: any;
@@ -634,7 +611,7 @@ impl resolve_solidity_inherited_calls(
 
 impl resolve_solidity_type_references(
     _per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+) {
     `node: any;
     node_by_id: any = {`node.get("id"): `node for `node in all_nodes};
     file_id_by_source: any = {
@@ -780,7 +757,7 @@ impl extract_solidity(path: Path) -> dict {
         *,
         context: str | None = None,
         target_file: str | None = None,
-    ) -> None {
+    ) {
         key: any = (source_id, target_id, relation);
         if not source_id or not target_id or source_id == target_id or key in seen_edges {
             return;
@@ -812,20 +789,11 @@ impl extract_solidity(path: Path) -> dict {
         add_node(nid, name, `node, kind="external_type", source_backed=False);
         return nid;
     }
-
-    """Park ``Qualifier.member(..)`` for resolve_solidity_inherited_calls,
-        which binds it through a type the file declares or imports."""
-    def qualified_call(
-        caller_id: str, qualifier: str, member: str, arity: int, `node: Node
-    ) -> None {
+    def qualified_call(caller_id: str, qualifier: str, member: str, arity: int, `node: Node) {
         call: any = _inherited_call(caller_id, member, arity, "qualified", source_file, `node);
         call["qualifier"] = import_aliases.get(qualifier, qualifier);
         raw_calls.append(call);
     }
-
-    """Park ``recv.member(..)`` for resolve_solidity_inherited_calls, with
-        the receiver's declared type and/or, for ``g(..).member()``, the call
-        whose result it is (typed there from ``g``'s return type)."""
     def member_call(
         caller_id: str,
         member: str,
@@ -833,7 +801,7 @@ impl extract_solidity(path: Path) -> dict {
         `node: Node,
         receiver: str | None,
         receiver_call: tuple[str, int] | None,
-    ) -> None {
+    ) {
         call: any = _inherited_call(caller_id, member, arity, "member", source_file, `node);
         if receiver {
             call["receiver_type"] = receiver;
@@ -843,9 +811,6 @@ impl extract_solidity(path: Path) -> dict {
         }
         raw_calls.append(call);
     }
-
-    """``("Lib", "f")`` for ``Lib.f``; ``None`` for ``a.b.f``, ``x[i].f``,
-        ``f().g``, ``super.f`` or ``this.f``."""
     def split_qualified(written: str) -> tuple[str, str] | None {
         qualifier: any;
         _: any;
@@ -962,10 +927,6 @@ impl extract_solidity(path: Path) -> dict {
             }
         }
     }
-
-    """``text`` as written in ``context``, with its leading type name
-        qualified (``Trace208`` in library Checkpoints -> ``Checkpoints.Trace208``)
-        and an import alias replaced by the name it imports."""
     def qualify(text: str, context: TypeContext) -> str {
         `match: any = _IDENTIFIER.match(text);
         if `match is None {
@@ -982,13 +943,6 @@ impl extract_solidity(path: Path) -> dict {
         }
         return import_aliases.get(head, head) + rest;
     }
-
-    """The ``using A for T;`` / ``using A for *;`` / ``using {f, L.g} for
-        T [global];`` directives directly in ``scope`` (a contract body or the
-        file), for the resolver: ``{"for": T or "*", "library": A}`` or
-        ``{"for": T, "functions": [..]}``, plus ``"global": True``. ``T`` is
-        qualified like a receiver type so the two compare equal. An operator
-        binding (`using {eq as ==} for T`) attaches no member and is skipped."""
     def using_directives(scope: Node, context: TypeContext) -> list[dict[str, Any]] {
         directives: list[dict[str, Any]] = [];
         for directive in scope.named_children {
@@ -1032,9 +986,6 @@ impl extract_solidity(path: Path) -> dict {
         }
         return directives;
     }
-
-    """``{"first_param_type": T}`` for a library or free function, the
-        type a ``using`` directive attaches it to (``x.f()`` passes ``x``)."""
     def first_parameter_type(callable_node: Node, context: TypeContext) -> dict[str, Any] {
         first: any = next(
             (child for child in callable_node.named_children if child.type == "parameter"), None
@@ -1047,11 +998,6 @@ impl extract_solidity(path: Path) -> dict {
             "first_param_type": qualify(_normalize_type(_read_text(type_node, source)), context),
         };
     }
-
-    """Parameter, return and local variable types visible in a function
-        or modifier, over ``inherited`` (the contract's state variables). A
-        name declared twice with different types (sibling blocks) is
-        ambiguous and maps to ``None``."""
     def declared_types(
         callable_node: Node, context: TypeContext, inherited: VariableTypes
     ) -> VariableTypes {
@@ -1085,12 +1031,6 @@ impl extract_solidity(path: Path) -> dict {
         }
         return `node;
     }
-
-    """The qualified declared type of the receiver of the member call
-        ``callee``: a typed variable, an element of a typed mapping/array, a
-        field of a struct declared in this file, a conversion (`IERC20(a)`,
-        `uint256(x)`) or a builtin. ``None`` (fail closed) for anything else,
-        including `super`, `this` and a type name (`Lib.f()`)."""
     def typed_receiver(
         callee: Node, scope: VariableTypes, context: TypeContext, local_functions: set[str]
     ) -> str | None {
@@ -1104,9 +1044,6 @@ impl extract_solidity(path: Path) -> dict {
         );
         return qualify(*typed) if typed is not None else None;
     }
-
-    """``(declared type, (g, arity))`` of a member call's receiver, either
-        part ``None`` when unknown; ``None`` when both are."""
     def member_receiver(
         callee: Node, scope: VariableTypes, context: TypeContext, local_functions: set[str]
     ) -> tuple[str | None, tuple[str, int] | None] | None {
@@ -1114,10 +1051,6 @@ impl extract_solidity(path: Path) -> dict {
         result_of: any = call_receiver(callee, scope);
         return (typed, result_of) if typed or result_of else None;
     }
-
-    """``(g, arity)`` when the receiver of the member call ``callee`` is
-        the result of a bare call ``g(..)``, which the resolver types from
-        ``g``'s declared return type."""
     def call_receiver(callee: Node, scope: VariableTypes) -> tuple[str, int] | None {
         member: any = _member_callee(callee);
         `obj: any = member.child_by_field_name("object") if member is not None else None;

@@ -17,7 +17,7 @@ impl _objc_is_category(`node) -> bool {
     return `any(operator.eq(c.type, "(") for c in `node.children);
 }
 
-impl _objc_local_var_types(body_node, source: bytes, table: dict[str, str]) -> None {
+impl _objc_local_var_types(body_node, source: bytes, table: dict[str, str]) {
     stack: any = [body_node];
     while stack {
         n: any = stack.pop();
@@ -106,7 +106,7 @@ impl extract_objc(path: Path) -> dict {
     objc_type_table: dict[str, str] = {};
     objc_field_types = {};
 
-    def add_node(nid: str, label: str, line: int, markers: tuple[str, ...] = ()) -> None {
+    def add_node(nid: str, label: str, line: int, markers: tuple[str, ...] = ()) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             `node: any = {
@@ -132,7 +132,7 @@ impl extract_objc(path: Path) -> dict {
         weight: float = 1.0,
         context: str | None = None,
         metadata: dict | None = None,
-    ) -> None {
+    ) {
         `edge: any = {
             "source": src,
             "target": tgt,
@@ -162,12 +162,6 @@ impl extract_objc(path: Path) -> dict {
         n: any = `node.child_by_field_name(field);
         return _read(n) if n else None;
     }
-
-    """Yield every type_identifier under a property's type node, descending
-        through generic_specifier/type_name so NSArray<Product *> yields both
-        NSArray and the element type Product (the generic case was invisible
-        because the type was wrapped in a generic_specifier, not a bare
-        type_identifier child) (#1475)."""
     def _type_identifiers(`node) -> Generator[any, any, any] {
         if `node.type == "type_identifier" {
             yield `node;
@@ -197,16 +191,6 @@ impl extract_objc(path: Path) -> dict {
         }
         return nid;
     }
-
-    """``(field, TypeName)`` from a property/ivar ``struct_declaration``, else None.
-
-        Precision gates (#1556): the type must be a BARE capitalized
-        ``type_identifier`` DIRECTLY under the struct_declaration — a
-        ``generic_specifier`` (``NSArray<Bar *>``) or ``typedefed_specifier``
-        (``id<P>``) wraps its type_identifier, so both are naturally excluded and
-        never type a receiver — and there must be exactly one ``struct_declarator``
-        whose name unwraps via the C++ declarator unwrapper (identical grammar).
-        """
     def _field_decl_entry(sd) -> tuple[str, str] | None {
         type_ids: any = [s for s in sd.children if s.type == "type_identifier"];
         declarators: any = [s for s in sd.children if s.type == "struct_declarator"];
@@ -228,7 +212,7 @@ impl extract_objc(path: Path) -> dict {
         return (field, type_name);
     }
 
-    def _record_field_type(cls_nid: str, field: str, type_name: str) -> None {
+    def _record_field_type(cls_nid: str, field: str, type_name: str) {
         table: any = objc_field_types.setdefault(cls_nid, {});
         if field in table {
             if table[field] != type_name {
@@ -238,12 +222,7 @@ impl extract_objc(path: Path) -> dict {
             table[field] = type_name;
         }
     }
-
-    """Record field types from an ``instance_variables`` block (``{ Bar *_b; }``)
-        under an @interface or @implementation. No nodes/edges are emitted here;
-        the table only feeds receiver typing in the cross-file resolver (#1556).
-        """
-    def _collect_instance_variables(ivars_node, cls_nid: str) -> None {
+    def _collect_instance_variables(ivars_node, cls_nid: str) {
         for iv in ivars_node.children {
             if iv.type != "instance_variable" {
                 continue;
@@ -258,16 +237,9 @@ impl extract_objc(path: Path) -> dict {
             }
         }
     }
-
-    """Emit a C-style enum type node plus a node + `case_of` edge per
-        enumerator, mirroring how every other language with enums models them
-        (Java #1719, C++ #3939, Swift). Objective-C is an object-oriented
-        extractor that already emits @interface/@protocol types, but plain
-        `enum`/`typedef enum` definitions were dropped entirely.
-        """
     def _emit_enum(
         enum_spec, name: str, line: int, mapped_members: list[tuple[str, int]] | None = None
-    ) -> None {
+    ) {
         enum_nid: any = _make_id(stem, name);
         add_node(enum_nid, name, line);
         add_edge(file_nid, enum_nid, "contains", line);
@@ -295,14 +267,6 @@ impl extract_objc(path: Path) -> dict {
             add_edge(enum_nid, member_nid, "case_of", m_line);
         }
     }
-
-    """Validate selected typedef macros without changing the original parse tree.
-
-        The Objective-C grammar does not expose these bodies as enum_specifiers.
-        Its macro header still has structural fields and tokens; use those to
-        select a declaration, then parse only its unchanged brace-delimited body
-        as a standalone enum. Every member must map back to the same source bytes.
-        """
     def _macro_enum_members -> list[tuple[str, int, list[tuple[str, int]]]] {
         opening: any;
         closing: any;
@@ -399,12 +363,14 @@ impl extract_objc(path: Path) -> dict {
             underlying_type = outer_types[0];
             if `any(token.is_missing for token in tokens)
                 or `any(
-                    opening.end_byte <= token.start_byte and token.start_byte < comma.start_byte
+                    opening.end_byte <= token.start_byte
+                        and token.start_byte < comma.start_byte
                         and not (
                             underlying_type.start_byte <= token.start_byte
                             and token.end_byte <= underlying_type.end_byte
                         )
-                        or comma.end_byte <= token.start_byte and token.start_byte < closing.start_byte
+                        or comma.end_byte <= token.start_byte
+                            and token.start_byte < closing.start_byte
                             and not (
                                 names[0].start_byte <= token.start_byte
                                 and token.end_byte <= names[0].end_byte
@@ -493,7 +459,8 @@ impl extract_objc(path: Path) -> dict {
                     and not `any(
                         operator.eq(token.type, ",")
                             and (
-                                previous_member_end <= token.start_byte and token.start_byte < member.start_byte
+                                previous_member_end <= token.start_byte
+                                and token.start_byte < member.start_byte
                             )
                         for token in body.children,
                     )
@@ -536,7 +503,7 @@ impl extract_objc(path: Path) -> dict {
     macro_enums: any = _macro_enum_members();
     method_name_groups = {};
 
-    def _scan_method_groups(`node, container_nid: str | None = None) -> None {
+    def _scan_method_groups(`node, container_nid: str | None = None) {
         t: any = `node.type;
         if t == "class_interface" {
             identifiers: any = [c for c in `node.children if c.type == "identifier"];
@@ -583,7 +550,7 @@ impl extract_objc(path: Path) -> dict {
 
     _scan_method_groups(`root);
 
-    def walk(`node, parent_nid: str | None = None) -> None {
+    def walk(`node, parent_nid: str | None = None) {
         t: any = `node.type;
         line: any = `node.start_point[0] + 1;
 
@@ -859,7 +826,7 @@ impl extract_objc(path: Path) -> dict {
         (caller_nid, body_node, container_nid) = item__;
         sibling_nids = class_method_nids.get(container_nid, set[any]());
 
-        def walk_calls(n) -> None {
+        def walk_calls(n) {
             child: any;
             if n.type == "message_expression" {
                 meth: any = n.child_by_field_name("method");

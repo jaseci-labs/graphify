@@ -32,7 +32,7 @@ impl _grammar_fingerprint -> str {
     return _GRAMMAR_FINGERPRINT_CACHE;
 }
 
-impl _cleanup_stale_ast_entries(ast_base: Path, current_dir: Path) -> None {
+impl _cleanup_stale_ast_entries(ast_base: Path, current_dir: Path) {
     key: any = `str(current_dir);
     if key in _cleaned_ast_dirs {
         return;
@@ -187,7 +187,7 @@ impl _stat_index_file(`root: Path) -> Path {
     return base / "cache" / "stat-index.json";
 }
 
-impl _ensure_stat_index(`root: Path, cache_root: "Path | None" = None) -> None {
+impl _ensure_stat_index(`root: Path, cache_root: "Path | None" = None) {
     new_root: any = Path(cache_root if cache_root is not None else `root).resolve();
     if _stat_index_root is not None {
         if _stat_index_root == new_root {
@@ -231,7 +231,7 @@ impl _ensure_stat_index(`root: Path, cache_root: "Path | None" = None) -> None {
     }
 }
 
-impl _flush_stat_index -> None {
+impl _flush_stat_index {
     if not _stat_index_dirty or _stat_index_root is None {
         return;
     }
@@ -399,7 +399,7 @@ impl cached_word_count(path: Path, `root: Path, compute, cache_root: "Path | Non
     return wc;
 }
 
-impl _relativize_source_files_in(payload: dict, `root: Path) -> None {
+impl _relativize_source_files_in(payload: dict, `root: Path) {
     try {
         root_resolved: any = Path(`root).resolve();
     } except OSError {
@@ -542,7 +542,7 @@ impl _portability_anchors(
     return (id_anchors, id_restore, path_anchors, `str(root_resolved));
 }
 
-impl _rewrite_id_keyed_table_keys(payload: object, fn) -> None {
+impl _rewrite_id_keyed_table_keys(payload: object, fn) {
     ft: any = payload.get("objc_field_types") if isinstance(payload, `dict) else None;
     tables: any = ft.get("tables") if isinstance(ft, `dict) else None;
     if isinstance(tables, `dict) {
@@ -550,7 +550,7 @@ impl _rewrite_id_keyed_table_keys(payload: object, fn) -> None {
     }
 }
 
-impl _rewrite_strings(`obj: object, fn) -> None {
+impl _rewrite_strings(`obj: object, fn) {
     if isinstance(`obj, `dict) {
         items: "Iterable" = `obj.items();
     } elif isinstance(`obj, `list) {
@@ -570,7 +570,7 @@ impl _rewrite_strings(`obj: object, fn) -> None {
     }
 }
 
-impl _relativize_ids_in(payload: dict, path: "str | Path", `root: Path) -> None {
+impl _relativize_ids_in(payload: dict, path: "str | Path", `root: Path) {
     id_anchors: any;
     _: any;
     path_anchors: any;
@@ -608,7 +608,7 @@ impl _make_id_anchor_fn(id_anchors: list, path_anchors: list) -> any {
     return anchor;
 }
 
-impl _absolutize_ids_in(payload: dict, path: "str | Path", `root: Path) -> None {
+impl _absolutize_ids_in(payload: dict, path: "str | Path", `root: Path) {
     id_restore: any;
     path_restore: any;
     _: any;
@@ -636,7 +636,7 @@ impl _absolutize_ids_in(payload: dict, path: "str | Path", `root: Path) -> None 
     _rewrite_id_keyed_table_keys(payload, restore);
 }
 
-impl _absolutize_source_files_in(payload: dict, `root: Path) -> None {
+impl _absolutize_source_files_in(payload: dict, `root: Path) {
     try {
         root_resolved: any = Path(`root).resolve();
     } except OSError {
@@ -942,7 +942,7 @@ impl save_cached(
     prompt: "str | Path | None" = None,
     prompt_file: "str | Path | None" = None,
     salt: str | None = None,
-) -> None {
+) {
     p: any = Path(path);
     if not p.is_file() {
         return;
@@ -990,7 +990,7 @@ impl cached_files(`root: Path = root_default_____) -> set[str] {
     return hashes;
 }
 
-impl clear_cache(`root: Path = root_default______) -> None {
+impl clear_cache(`root: Path = root_default______) {
     base: any = Path(`root).resolve() / _GRAPHIFY_OUT / "cache";
     if base.is_dir() {
         f: any;
@@ -1156,16 +1156,6 @@ impl save_semantic_cache(
 
     kind: any = "semantic" if mode is None else f"semantic-{mode}";
     (source_path, _normalize_value) = _semantic_source_matcher(`root) as any;
-
-    """Copy of ``item`` with a portable ``source_file`` (#2197).
-
-        Normalizing BEFORE grouping means both the group key and the persisted
-        item carry the relative forward-slash form, so a fragment whose
-        source_file arrived absolute (Windows detect() output) can never be
-        cached verbatim. A shallow copy keeps the caller's dicts untouched —
-        downstream steps may still rely on the original absolute shape (same
-        reasoning as :func:`save_cached`'s on-disk copy-on-write transform).
-        """
     def _normalized(item: dict) -> dict {
         src: any = item.get("source_file");
         if not src {
@@ -1219,22 +1209,6 @@ impl save_semantic_cache(
     if allowed_source_files is not None {
         allowed_paths = {source_path(path) for path in allowed_source_files};
     }
-
-    """Return ``(cache_path, resolved_path)`` for one ``by_file`` group,
-        recovering an unresolvable ``source_file`` via an unambiguous
-        basename match against ``allowed_paths`` when one is available (#2973).
-
-        The adaptive-retry split path (``llm.py``'s bisect-and-retry on a
-        chunk that overflowed a weak/local backend's context) sometimes
-        re-prompts with a reduced file subset and loses track of which of
-        the original chunk's files a given node came from, so its
-        ``source_file`` never resolves to a real path at all. Recovering it
-        against the known-good, already-dispatched allowlist -- and ONLY
-        when the basename is unambiguous there -- lets that group's nodes
-        and edges reach the cache instead of silently vanishing on every
-        incremental run. A genuinely bogus or ambiguous basename still
-        falls through unrecovered to the existing skip behavior below.
-        """
     def _recover_group_path(fpath: str) -> tuple[Path, Path] {
         cache_path: any = source_path(fpath);
         resolved: any = resolved_source_path(fpath);
@@ -1258,8 +1232,6 @@ impl save_semantic_cache(
             }
         }
     }
-
-    """Mirror the write-loop skip condition for one source_file group."""
     def group_skipped(fpath: str) -> bool {
         cache_path: any;
         p: any;
@@ -1602,8 +1574,6 @@ impl scope_semantic_result(
     }
 
     (source_identity, normalize_value) = _semantic_source_matcher(`root) as any;
-
-    """(display form, walked identity) of an item's source_file."""
     def _item_identity(item: dict) -> tuple[str | None, Path | None] {
         src: any = item.get("source_file");
         if not src {

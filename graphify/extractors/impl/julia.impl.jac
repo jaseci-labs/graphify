@@ -32,7 +32,7 @@ impl extract_julia(path: Path) -> dict {
     seen_ids = set[any]();
     function_bodies = [];
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -53,7 +53,7 @@ impl extract_julia(path: Path) -> dict {
         confidence: str = "EXTRACTED",
         weight: float = 1.0,
         context: str | None = None,
-    ) -> None {
+    ) {
         `edge: any = {
             "source": src,
             "target": tgt,
@@ -96,12 +96,6 @@ impl extract_julia(path: Path) -> dict {
         }
         return nid;
     }
-
-    """Read a type name, unwrapping a parametric head.
-
-        A parametric declaration (`Box{T}`, `Shape{T}`) wraps the real name in a
-        `parametrized_type_expression`; a plain declaration is a bare identifier.
-        """
     def _type_name_of(`node) -> str | None {
         if `node is None {
             return None;
@@ -115,15 +109,6 @@ impl extract_julia(path: Path) -> dict {
         }
         return None;
     }
-
-    """Return (type_name, supertype_name) from a Julia `type_head`.
-
-        A bare declaration (`Foo`) exposes an `identifier`; a subtyping
-        declaration (`Foo <: Bar`) wraps both names in a `binary_expression`.
-        Either name may itself be parametric (`Box{T}`, `Sq{T} <: Shape{T}`), so
-        the operands are read through `_type_name_of`. Both the struct and
-        abstract-type paths need this, so parse it once.
-        """
     def _type_head_names(type_head) -> tuple[str | None, str | None] {
         bin_expr: any = next(
             (c for c in type_head.children if c.type == "binary_expression"), None
@@ -149,10 +134,6 @@ impl extract_julia(path: Path) -> dict {
         );
         return (_type_name_of(name_node), None);
     }
-
-    """Type-parameter names declared in a parametric head (`{T}`, `{T,U}`,
-        `{T<:Number}`). These are not real types, so they must not become phantom
-        field-type reference nodes (e.g. a struct field `value::T`)."""
     def _type_head_params(type_head) -> set[str] {
         pte: any = None;
         c: any;
@@ -188,10 +169,6 @@ impl extract_julia(path: Path) -> dict {
         }
         return params;
     }
-
-    """Return the `call_expression` at or under `node`, unwrapping any
-        `where_expression` (`f(x::T) where {T}`) and `typed_expression`
-        (`f(x)::Float64`) wrappers around the call head; otherwise None."""
     def _unwrap_call_expression(`node) -> any {
         while `node is not None and `node.type in ("where_expression", "typed_expression") {
             `node = `node.children[0] if `node.children else None;
@@ -201,12 +178,6 @@ impl extract_julia(path: Path) -> dict {
         }
         return None;
     }
-
-    """Bare type name of a functor's receiver annotation, or None.
-
-        Handles `Box`, parametric `Box{T}`, qualified `Mod.Box` and
-        `Mod.Box{T}`. Any other node yields None.
-        """
     def _functor_type_name(`node) -> str | None {
         while `node is not None {
             if `node.type == "identifier" {
@@ -222,14 +193,6 @@ impl extract_julia(path: Path) -> dict {
         }
         return None;
     }
-
-    """(bare_name, label) for the callee of a method definition.
-
-        Handles `foo`, `+`, `Base.show`, `Base.:+`, and functors `(c::Circle)(x)`.
-        The id uses the bare name so methods of one generic function share a node
-        (multiple dispatch) and in-file calls resolve to it; the label keeps the
-        qualifier so `Base.show()` extensions stay recognisable.
-        """
     def _def_name(call) -> tuple[str, str] | None {
         if call is None or not call.children {
             return None;
@@ -267,12 +230,6 @@ impl extract_julia(path: Path) -> dict {
         }
         return None;
     }
-
-    """(bare_name, label) from a Julia `signature` node, or None.
-
-        `where` clauses and `::RetType` annotations wrap the call head, so
-        unwrap those before reading the callee.
-        """
     def _func_name_from_signature(sig_node) -> tuple[str, str] | None {
         for child in sig_node.children {
             call: any = _unwrap_call_expression(child);
@@ -283,7 +240,7 @@ impl extract_julia(path: Path) -> dict {
         return None;
     }
 
-    def walk_calls(body_node, func_nid: str) -> None {
+    def walk_calls(body_node, func_nid: str) {
         if body_node is None {
             return;
         }
@@ -349,7 +306,7 @@ impl extract_julia(path: Path) -> dict {
         }
     }
 
-    def walk(`node, scope_nid: str) -> None {
+    def walk(`node, scope_nid: str) {
         line: any;
         c: any;
         t: any = `node.type;

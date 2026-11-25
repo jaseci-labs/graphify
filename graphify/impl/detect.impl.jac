@@ -267,7 +267,9 @@ impl _shebang_file_type(path: Path) -> FileType | None {
 }
 
 impl classify_file(path: Path) -> FileType | None {
-    is_package_manifest_path: any = importlib.import_module("graphify.manifest_ingest").is_package_manifest_path;
+    is_package_manifest_path: any = importlib.import_module(
+        "graphify.manifest_ingest"
+    ).is_package_manifest_path;
     if is_package_manifest_path(path) {
         return FileType.CODE;
     }
@@ -542,7 +544,7 @@ impl xlsx_extract_structure(path: Path) -> dict {
     edges = [];
     seen = {file_nid};
 
-    def _add(nid: str, label: str) -> None {
+    def _add(nid: str, label: str) {
         if nid not in seen {
             seen.add(nid);
             nodes.append({
@@ -555,7 +557,7 @@ impl xlsx_extract_structure(path: Path) -> dict {
         }
     }
 
-    def _edge(src: str, tgt: str, relation: str) -> None {
+    def _edge(src: str, tgt: str, relation: str) {
         edges.append({
             "source": src,
             "target": tgt,
@@ -1338,16 +1340,6 @@ impl _is_ignored(
     if not patterns {
         return False;
     }
-
-    """Apply last-match-wins to a single target path.
-
-        Everything derivable from ``target`` alone — its parts, its relative
-        path per anchor, the NFC name, the is_dir() stat — is computed at most
-        ONCE per call, no matter how many patterns are evaluated. The previous
-        shape rebuilt pathlib objects (``relative_to``) and re-split strings
-        per PATTERN per entry, which pinned real scans for tens of minutes
-        (see CHANGELOG).
-        """
     def _eval(target: Path) -> bool {
         target_name_nfc: str | None;
         if _cache is not None and target in _cache {
@@ -1645,7 +1637,7 @@ impl detect(
     all_files: list[Path] = [];
     walk_errors = [];
 
-    def _on_walk_error(err: OSError) -> None {
+    def _on_walk_error(err: OSError) {
         import sys as _sys;
         target: any = getattr(err, "filename", None) or "<unknown>";
         walk_errors.append(f"{target}: {err}");
@@ -2052,7 +2044,7 @@ impl save_manifest(
     clear_semantic: set[str] | list[str] | None = None,
     clear_ast: set[str] | list[str] | None = None,
     ast_empty: set[str] | list[str] | None = None,
-) -> None {
+) {
     scan_set: any;
     clear_set: any;
     clear_ast_set: any;

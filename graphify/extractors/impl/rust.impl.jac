@@ -4,7 +4,7 @@ impl _rust_collect_type_refs(
     generic: bool,
     out: list[tuple[str, str]],
     local_types: frozenset[str] = local_types_default_,
-) -> None {
+) {
     def _keep(text: str) -> bool {
         return `bool(text) and (text not in _RUST_BUILTIN_TYPES or text in local_types);
     }
@@ -302,7 +302,7 @@ impl extract_rust(path: Path) -> dict {
     impl_keys = {};
     local_types = set[any]();
 
-    def _scan_local_types(scan_node) -> None {
+    def _scan_local_types(scan_node) {
         if scan_node.type in ("struct_item", "enum_item", "trait_item", "union_item", "type_item") {
             name_node: any = scan_node.child_by_field_name("name");
             if name_node is not None {
@@ -336,7 +336,7 @@ impl extract_rust(path: Path) -> dict {
     impl_methods = {};
     node_by_id = {};
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             node_by_id[nid] = {
@@ -358,7 +358,7 @@ impl extract_rust(path: Path) -> dict {
         confidence: str = "EXTRACTED",
         weight: float = 1.0,
         context: str | None = None,
-    ) -> None {
+    ) {
         `edge: any = {
             "source": src,
             "target": tgt,
@@ -381,7 +381,7 @@ impl extract_rust(path: Path) -> dict {
     declared_type_names = {};
     impl_method_names = {};
 
-    def _scan_type_items(`node) -> None {
+    def _scan_type_items(`node) {
         t: any = `node.type;
         if t
             in (
@@ -462,7 +462,9 @@ impl extract_rust(path: Path) -> dict {
     impl_bare_names = {};
     _scan_type_items(`root);
     def only_types(item_nid: str, type_name: str) -> bool {
-        return all(is_type for (is_type, item_name) in items_by_id[item_nid] if item_name == type_name);
+        return all(
+            is_type for (is_type, item_name) in items_by_id[item_nid] if item_name == type_name
+        );
     }
     local_type_names = frozenset(
         declared
@@ -513,7 +515,7 @@ impl extract_rust(path: Path) -> dict {
         return nid;
     }
 
-    def emit_param_return_refs(func_node, func_nid: str, line: int) -> None {
+    def emit_param_return_refs(func_node, func_nid: str, line: int) {
         params: any = func_node.child_by_field_name("parameters");
         if params is not None {
             for p in params.children {
@@ -554,7 +556,7 @@ impl extract_rust(path: Path) -> dict {
         parent_impl_type: str | None = None,
         parent_impl_key: str | None = None,
         parent_impl_pre_nid: str | None = None,
-    ) -> None {
+    ) {
         item_nid: any;
         vc: any;
         scope_mods: any;
@@ -953,7 +955,7 @@ impl extract_rust(path: Path) -> dict {
                 reexport = visibility is not None
                     and operator.eq(_read_text(visibility, source).strip(), "pub");
 
-                def name_use(written: str, path: str) -> None {
+                def name_use(written: str, path: str) {
                     first: any = path.lstrip(": ").split("::")[0].strip();
                     bound: any = written.split(" as ")[-1].strip();
                     ident: any = re.match("[A-Za-z_][A-Za-z0-9_]*", first);
@@ -1027,7 +1029,7 @@ impl extract_rust(path: Path) -> dict {
 
     def walk_calls(
         `node, caller_nid: str, self_type: str | None = None, self_impl_key: str | None = None
-    ) -> None {
+    ) {
         if `node.type == "function_item" {
             return;
         }

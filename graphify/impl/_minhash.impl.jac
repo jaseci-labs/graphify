@@ -23,7 +23,7 @@ impl MinHash.init(num_perm: int = 128) {
     self._b = items_[1];
 }
 
-impl MinHash.update(v: bytes) -> None {
+impl MinHash.update(v: bytes) {
     hv: any = np.uint64(struct.unpack("<I", hashlib.sha1(v).digest()[:4])[0]);
     phv: any = np.bitwise_and((self._a * hv + self._b) % _MP, _MH);
     self.hashvalues = np.minimum(self.hashvalues, phv);
@@ -96,7 +96,7 @@ impl MinHashLSH.init(threshold: float = 0.5, num_perm: int = 128) {
     self._keys = set[any]();
 }
 
-impl MinHashLSH.insert(key: str, minhash: MinHash) -> None {
+impl MinHashLSH.insert(key: str, minhash: MinHash) {
     if key in self._keys {
         raise ValueError(f"Key {key!r} already exists in MinHashLSH");
     }

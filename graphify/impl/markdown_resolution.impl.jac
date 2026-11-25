@@ -194,7 +194,7 @@ impl resolve_markdown_mentions(
     all_edges: list[dict],
     *,
     scan_root: "Path | str | None" = None,
-) -> None {
+) {
     by_label: dict[str, list[str]];
     by_file: dict[str, dict[str, list[str]]];
     n: any;
@@ -265,8 +265,6 @@ impl resolve_markdown_mentions(
         }
         return candidates[0] if len(candidates) == 1 else None;
     }
-
-    """The node a mention resolves to, plus the confidence of that match."""
     def _target(rc: dict) -> tuple[str | None, str, float] {
         names: any;
         names = `list(rc.get("qualifiers") or []) + [`str(rc.get("callee", "")).strip()];
@@ -302,8 +300,6 @@ impl resolve_markdown_mentions(
         }
         return (candidates[0] if len(candidates) == 1 else None, "INFERRED", 0.95);
     }
-
-    """The class that owns *node_id*, when it is a method and not a function."""
     def _method_owner(node_id: str) -> str | None {
         for parent in parents.get(node_id, ()) {
             `node: any = nodes_by_id.get(parent);
@@ -313,13 +309,6 @@ impl resolve_markdown_mentions(
         }
         return None;
     }
-
-    """*caller* (a heading or page) plus every heading enclosing it.
-
-        A citation recorded under a heading licenses bare mentions in that
-        heading's own section and every section nested inside it; a sibling
-        section is not covered (#4804).
-        """
     def _section_chain(caller: str) -> set[str] {
         chain: any = {caller};
         frontier: any = [caller];
@@ -423,7 +412,7 @@ impl resolve_markdown_mentions(
         });
     }
 
-    def _add(rc: dict, target: str | None, confidence: str, score: float) -> None {
+    def _add(rc: dict, target: str | None, confidence: str, score: float) {
         caller: any = `str(rc.get("caller_nid", ""));
         if target is None or target == caller {
             return;

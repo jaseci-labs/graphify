@@ -276,7 +276,9 @@ impl diagnose_extraction(
 }
 
 impl _read_json_file(path: str | Path) -> dict[str, Any] {
-    check_graph_file_size_cap: any = importlib.import_module("graphify.security").check_graph_file_size_cap;
+    check_graph_file_size_cap: any = importlib.import_module(
+        "graphify.security"
+    ).check_graph_file_size_cap;
 
     json_path: any = Path(path);
     check_graph_file_size_cap(json_path);

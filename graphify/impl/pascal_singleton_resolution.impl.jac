@@ -59,7 +59,7 @@ impl _corpus_path_matcher(corpus_files: set[str]) -> any {
 
 impl resolve_pascal_singleton_calls(
     per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+) {
     node_by_id: any;
     globals_of: dict[str, dict[str, str]];
     uses_of: dict[str, set[str]];
@@ -164,8 +164,6 @@ impl resolve_pascal_singleton_calls(
     if not types_by_name {
         return;
     }
-
-    """The type of the global *qualifier* as seen from *from_file*."""
     def _visible_type(qualifier: str, from_file: str) -> str | None {
         found: set[str] = set[any]();
         for unit in (from_file, *uses_of.get(from_file, ())) {
@@ -193,8 +191,6 @@ impl resolve_pascal_singleton_calls(
         ];
         return scoped[0] if len(scoped) == 1 else None;
     }
-
-    """*name* on the class or, failing that, on its nearest ancestor."""
     def _method_for(class_nid: str, name: str) -> str | None {
         seen: set[str] = set[any]();
         queue: any = [class_nid];

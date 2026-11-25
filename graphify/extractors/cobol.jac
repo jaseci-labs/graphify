@@ -1,7 +1,4 @@
-"""Deterministic extraction for fixed- and free-format COBOL source."""
-
 import operator;
-
 import from __future__ { annotations }
 
 import re;
@@ -85,21 +82,10 @@ with entry {
     _GO_TO_QUALIFIERS = frozenset({"OF", "IN"});
 }
 
-"""The procedure names a GO TO jumps to, from the words that follow it.
-
-    A plain `GO TO A` has exactly one target, so only the first word counts:
-    the rest of the line belongs to the next statement (`... GO TO A ELSE SET
-    B TO TRUE`). Only `GO TO A B C DEPENDING ON X` has several, and there the
-    list runs up to DEPENDING, with the section of a qualified name left out.
-    """
 def _go_to_targets(words: list[str]) -> list[str];
-
-"""Return logical COBOL lines with fixed-format continuations joined."""
 def _code_lines(source: str) -> list[tuple[int, str]];
 
 def _mask_strings(code: str) -> str;
-
-"""Whether *offset* lies inside a COBOL quoted literal."""
 def _starts_inside_string(code: str, offset: int) -> bool;
 
 def extract_cobol(path: Path) -> dict;

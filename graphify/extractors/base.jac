@@ -1,5 +1,4 @@
 import from __future__ { annotations }
-
 import sys;
 
 import from contextvars { ContextVar }
@@ -24,14 +23,7 @@ with entry {
     _ACTIVE_SCAN_ROOT = ContextVar("_ACTIVE_SCAN_ROOT", default=None);
 }
 
-"""Set the in-flight scan root, returning the previous value so the caller
-    can restore it — extraction nests (a XAML shard re-enters extract())."""
 def set_active_scan_root(`root: "Path | None") -> "Path | None";
-
-"""The scan root of the extraction in flight, or None outside extract().
-
-    A direct ``extract_markdown()`` / ``extract_xaml()`` call (no surrounding
-    ``extract()``) sees None and the root-dependent behavior stays off."""
 def active_scan_root -> "Path | None";
 
 with entry {
@@ -349,28 +341,5 @@ with entry {
     _warned_source_encodings = set[any]();
 }
 
-"""Read a source file as the UTF-8 bytes tree-sitter parses.
-
-    tree-sitter treats its input as UTF-8. Raw bytes in another encoding were
-    parsed as-is: a UTF-16 file (interleaved NUL bytes) produced no nodes at
-    all, and a Windows-1252 identifier was cut at its first non-UTF-8 byte
-    (``CaféOrder`` came out as ``Order``) — both silently.
-
-    Valid UTF-8, with or without a BOM, is returned byte-for-byte, so node ids,
-    byte offsets and cache keys for those files are unchanged. A UTF-16 or
-    UTF-32 file with a BOM is decoded exactly and re-encoded as UTF-8. Anything
-    else is decoded as cp1252, then latin-1 (which cannot fail), so names come
-    out whole; line numbers are unchanged in every case. ``warn`` names the file
-    once per process on that last, guessed path — pass ``warn=False`` from
-    secondary passes that re-read a file the extractor already read.
-    """
 def _read_source_bytes(path: Path, *, warn: bool = True) -> bytes;
-
-"""``_read_source_bytes`` as text, for extractors that work on ``str``.
-
-    Matches ``path.read_text(encoding="utf-8")`` exactly for every valid UTF-8
-    file, including its universal-newline translation (``\\r\\n`` and a lone
-    ``\\r`` both become ``\\n``) and a kept BOM, so regex extractors see the same
-    text they always did.
-    """
 def _read_source_text(path: Path, *, warn: bool = True) -> str;

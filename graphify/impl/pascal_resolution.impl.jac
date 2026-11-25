@@ -18,7 +18,7 @@ impl _pascal_raw_calls(per_file: list[dict]) -> list[dict] {
 
 impl resolve_pascal_inherited_calls(
     per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+) {
     class_bases: dict[str, list[str]];
     class_procs: dict[str, dict[str, list[str]]];
     node_by_id: any = {n.get("id"): n for n in all_nodes};

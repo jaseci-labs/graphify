@@ -73,7 +73,7 @@ impl run_benchmark(
     };
 }
 
-impl print_benchmark(result: dict) -> None {
+impl print_benchmark(result: dict) {
     if "error" in result {
         print("Benchmark error: " + format(result["error"], ""));
         return;

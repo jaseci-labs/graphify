@@ -296,7 +296,7 @@ impl _name_key(text: str) -> str {
     return " ".join(re.findall("[^\\W_]+", stripped));
 }
 
-impl _flatten_attr_text(val, parts: list[str]) -> None {
+impl _flatten_attr_text(val, parts: list[str]) {
     if isinstance(val, `dict) {
         for (k, v) in val.items() {
             parts.append(`str(k));
@@ -812,7 +812,7 @@ impl _filter_graph_by_context(G: nx.Graph, context_filters: list[str] | None) ->
     return H;
 }
 
-impl _complete_induced_edges(G: nx.Graph, visited: set[str], edges_seen: list[tuple]) -> None {
+impl _complete_induced_edges(G: nx.Graph, visited: set[str], edges_seen: list[tuple]) {
     directed: any;
     u: any;
     v: any;
@@ -2146,14 +2146,14 @@ impl _shortest_path_text(G: nx.Graph, arguments: dict) -> str {
         + (f"\n{summary}" if summary else "");
 }
 
-impl _filter_blank_stdin -> None {
+impl _filter_blank_stdin {
     w_fd: any;
     saved_fd: any;
     r_fd: any;
     (r_fd, w_fd) = os.pipe() as any;
     saved_fd = os.dup(sys.stdin.fileno());
 
-    def _relay -> None {
+    def _relay {
         try {
             src: any;
             dst: any;
@@ -2237,7 +2237,7 @@ impl _neighbor_lines(G: nx.Graph, nid: str, rel_filter: str = "") -> list[str] {
     return lines;
 }
 
-impl _warm_graph(resolve, load, project_path) -> None {
+impl _warm_graph(resolve, load, project_path) {
     import anyio;
 
     await anyio.to_thread.run_sync(load, resolve(project_path));
@@ -2308,7 +2308,7 @@ impl _on_read_resource(read_resource, ctx, params) -> any {
     );
 }
 
-impl _run_stdio(server, stdio_server) -> None {
+impl _run_stdio(server, stdio_server) {
     streams: any;
     async with stdio_server() as streams {
         await server.run(streams[0], streams[1], server.create_initialization_options());
@@ -2336,24 +2336,12 @@ impl _build_server(graph_path: str) -> any {
     _paths: any = importlib.import_module("graphify.paths");
     _default_graph_path = `str(Path(graph_path).resolve());
     _ctx_cache = _GraphContextCache(_max_server_contexts());
-
-    """Return the current default or project graph context as a tool error.
-
-        Unlike ``_load_graph``, this never lets a missing or corrupt client
-        graph terminate the MCP process; it raises so other projects remain
-        available on the same server.
-        """
     def _load_ctx(path: str) -> any {
         resolved_path: any = `str(Path(path).resolve());
         return _ctx_cache.load(
             resolved_path, pinned=operator.eq(resolved_path, _default_graph_path)
         );
     }
-
-    """Map an optional project_path to a concrete graph.json path. ``None``
-        keeps the server's default graph (backward-compatible); a project_path
-        resolves to ``<project_path>/<GRAPHIFY_OUT>/graph.json``, honouring the
-        GRAPHIFY_OUT override so worktree/shared-output setups keep working."""
     def _resolve_graph_path(project_path) -> str {
         if not project_path {
             return _default_graph_path;
@@ -2367,7 +2355,7 @@ impl _build_server(graph_path: str) -> any {
         (G, communities) = (None, {});
     }
 
-    def _select_graph(project_path) -> None {
+    def _select_graph(project_path) {
         path: any = _resolve_graph_path(project_path);
         (G, communities) = _load_ctx(path) as any;
         active_graph_path = `str(Path(path).resolve());
@@ -2691,7 +2679,9 @@ impl _build_server(graph_path: str) -> any {
         DEFAULT_MAX_CHARS: any = importlib.import_module("graphify.sections").DEFAULT_MAX_CHARS;
         format_section: any = importlib.import_module("graphify.sections").format_section;
         read_section: any = importlib.import_module("graphify.sections").read_section;
-        resolve_section_query: any = importlib.import_module("graphify.sections").resolve_section_query;
+        resolve_section_query: any = importlib.import_module(
+            "graphify.sections"
+        ).resolve_section_query;
         section_root: any = importlib.import_module("graphify.sections").section_root;
 
         raw: any = _node_arg(arguments);
@@ -2804,14 +2794,6 @@ impl _build_server(graph_path: str) -> any {
             + "%\n"
             + format(_build_commit_line(), "");
     }
-
-    """Which commit the graph was built from, and whether HEAD has moved on.
-
-        An MCP client cannot stat graph.json, so this is its only staleness
-        signal (#3354). HEAD is read at query time from the repo holding the
-        graph (the same anchor export.to_json stamps from); no git or no repo
-        just drops the HEAD comparison. Empty when the graph has no commit.
-        """
     def _build_commit_line -> str {
         commit: any = getattr(G, "graph", {}).get("_built_at_commit");
         if not commit {
@@ -2836,7 +2818,9 @@ impl _build_server(graph_path: str) -> any {
         fetch_prs: any = importlib.import_module("graphify.prs").fetch_prs;
         fetch_worktrees: any = importlib.import_module("graphify.prs").fetch_worktrees;
         format_prs_text: any = importlib.import_module("graphify.prs").format_prs_text;
-        _detect_default_branch: any = importlib.import_module("graphify.prs")._detect_default_branch;
+        _detect_default_branch: any = importlib.import_module(
+            "graphify.prs"
+        )._detect_default_branch;
         repo: any = arguments.get("repo") or None;
         base: any = arguments.get("base") or _detect_default_branch(repo);
         try {
@@ -2909,7 +2893,9 @@ impl _build_server(graph_path: str) -> any {
         fetch_pr_files: any = importlib.import_module("graphify.prs").fetch_pr_files;
         compute_pr_impact: any = importlib.import_module("graphify.prs").compute_pr_impact;
         _STATUS_ORDER: any = importlib.import_module("graphify.prs")._STATUS_ORDER;
-        _detect_default_branch: any = importlib.import_module("graphify.prs")._detect_default_branch;
+        _detect_default_branch: any = importlib.import_module(
+            "graphify.prs"
+        )._detect_default_branch;
         repo: any = arguments.get("repo") or None;
         base: any = arguments.get("base") or _detect_default_branch(repo);
         try {
@@ -3077,7 +3063,9 @@ impl _build_server(graph_path: str) -> any {
         }
         if uri_str == "graphify://surprises" {
             try {
-                surprising_connections: any = importlib.import_module("graphify.analyze").surprising_connections;
+                surprising_connections: any = importlib.import_module(
+                    "graphify.analyze"
+                ).surprising_connections;
                 surprises: any = surprising_connections(G, communities, top_n=10);
                 if not surprises {
                     return "No surprising connections found.";
@@ -3120,7 +3108,9 @@ impl _build_server(graph_path: str) -> any {
         }
         if uri_str == "graphify://questions" {
             try {
-                suggest_questions: any = importlib.import_module("graphify.analyze").suggest_questions;
+                suggest_questions: any = importlib.import_module(
+                    "graphify.analyze"
+                ).suggest_questions;
                 community_labels: any = _load_community_labels();
                 questions: any = suggest_questions(G, communities, community_labels, top_n=10);
                 if not questions {
@@ -3172,7 +3162,7 @@ impl _build_server(graph_path: str) -> any {
     return server;
 }
 
-impl serve(graph_path: str | None = None) -> None {
+impl serve(graph_path: str | None = None) {
     graph_path = graph_path or _default_graph_json();
     try {
         import from mcp.server.stdio { stdio_server }
@@ -3186,15 +3176,15 @@ impl serve(graph_path: str | None = None) -> None {
     asyncio.run(_run_stdio(server, stdio_server));
 }
 
-impl _mcp_asgi_call(app, scope, receive, send) -> None {
+impl _mcp_asgi_call(app, scope, receive, send) {
     await app._manager.handle_request(scope, receive, send);
 }
 
-impl _mcp_asgi_init(app, manager) -> None {
+impl _mcp_asgi_init(app, manager) {
     app._manager = manager;
 }
 
-impl _api_key_call(gate, scope, receive, send) -> None {
+impl _api_key_call(gate, scope, receive, send) {
     if scope["type"] != "http" {
         await gate.app(scope, receive, send);
         return;
@@ -3227,7 +3217,7 @@ impl _api_key_call(gate, scope, receive, send) -> None {
     await gate.app(scope, receive, send);
 }
 
-impl _api_key_init(gate, app, api_key: str) -> None {
+impl _api_key_init(gate, app, api_key: str) {
     gate.app = app;
     gate._expected = api_key.encode("utf-8");
 }
@@ -3305,7 +3295,7 @@ impl serve_http(
     json_response: bool = False,
     stateless: bool = False,
     session_timeout: float | None = 3600.0,
-) -> None {
+) {
     graph_path = graph_path or _default_graph_json();
     try {
         import uvicorn;
@@ -3344,7 +3334,7 @@ impl serve_http(
     uvicorn.run(app, host=host, port=port);
 }
 
-impl _main(argv: list[str] | None = None) -> None {
+impl _main(argv: list[str] | None = None) {
     import argparse;
     import os;
 

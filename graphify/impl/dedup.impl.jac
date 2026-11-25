@@ -149,7 +149,7 @@ impl _UF.find(x: str) -> str {
     return x;
 }
 
-impl _UF.union(x: str, y: str) -> None {
+impl _UF.union(x: str, y: str) {
     self._parent.setdefault(x, x);
     self._parent.setdefault(y, y);
     rx: any;
@@ -387,7 +387,7 @@ impl _merge_missing_attributes(survivor: dict, duplicate: dict) -> dict {
     return merged;
 }
 
-impl _report_id_collision(nid: str, survivor: dict, losers: list[dict]) -> None {
+impl _report_id_collision(nid: str, survivor: dict, losers: list[dict]) {
     group: any = (survivor, *losers);
     if survivor.get("type") in _SHARED_ID_TYPES
         and all(operator.eq(n.get("type"), survivor.get("type")) for n in group)
@@ -525,8 +525,6 @@ impl _path_qualify_dropped_collisions(
     def key(sf) -> any {
         return _rank_path(sf, `root) if sf and isinstance(sf, `str) else "";
     }
-
-    """``(new id, matched shorter prefix)`` for a candidate node, else None."""
     def qualified_id(`node: dict) -> tuple[str, str] | None {
         nid: any = `node.get("id");
         sf: any = `node.get("source_file");
@@ -804,7 +802,7 @@ impl _namespace_reference_stub_collisions(
     return (out_nodes, edges);
 }
 
-impl _remap_hyperedge_members(hyperedges: list[dict], remap: dict[str, str]) -> None {
+impl _remap_hyperedge_members(hyperedges: list[dict], remap: dict[str, str]) {
     for he in hyperedges {
         if not isinstance(he, `dict) {
             continue;
@@ -946,7 +944,7 @@ impl deduplicate_entities(
         return prot_by_root.get(uf.find(nid));
     }
 
-    def _union_with_prot(x: str, y: str) -> None {
+    def _union_with_prot(x: str, y: str) {
         px: any = _get_prot(x);
         py: any = _get_prot(y);
         uf.union(x, y);
@@ -957,7 +955,7 @@ impl deduplicate_entities(
         }
     }
 
-    def _crossfile_union(left: dict, right: dict, *, with_prot: bool) -> None {
+    def _crossfile_union(left: dict, right: dict, *, with_prot: bool) {
         if _crossfile_fileanchored_blocked(left, right) {
             return;
         }
@@ -981,7 +979,7 @@ impl deduplicate_entities(
         exact_merges += 1;
     }
 
-    def _crossfile_join(members: list[dict], *, with_prot: bool) -> None {
+    def _crossfile_join(members: list[dict], *, with_prot: bool) {
         for (index, left) in enumerate(members) {
             for right in members[index + 1:] {
                 _crossfile_union(left, right, with_prot=with_prot);
@@ -1362,12 +1360,14 @@ impl _llm_tiebreak(
     protected_set: set[str] | None = None,
     get_prot=None,
     union_with_prot=None,
-) -> None {
+) {
     a: any;
     b: any;
     try {
         BACKENDS: any = importlib.import_module("graphify.llm").BACKENDS;
-        _format_backend_env_keys: any = importlib.import_module("graphify.llm")._format_backend_env_keys;
+        _format_backend_env_keys: any = importlib.import_module(
+            "graphify.llm"
+        )._format_backend_env_keys;
         _get_backend_api_key: any = importlib.import_module("graphify.llm")._get_backend_api_key;
         if backend not in BACKENDS {
             print(

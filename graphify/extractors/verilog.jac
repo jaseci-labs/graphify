@@ -1,17 +1,7 @@
-"""Verilog extractor. Moved verbatim from graphify/extract.py."""
-
 import from __future__ { annotations }
-
 import re;
 
 import from pathlib { Path }
-
-"""First `simple_identifier` under node in pre-order, or None.
-
-    tree-sitter-verilog 1.0.3 nests declaration names a few levels deep instead
-    of exposing a `name` field. Scope the search to the right child node (e.g.
-    `function_identifier`) or this returns the return-type instead of the name.
-    """
 def _sv_first_identifier(`node, source: bytes) -> str | None;
 
 def _sv_child(`node, type_name: str) -> object | None;
@@ -116,9 +106,5 @@ def _augment_systemverilog_semantics(
     nodes: list[dict],
     edges: list[dict],
     seen_ids: set[str],
-) -> None;
-
-"""Extract modules, functions, tasks, package imports, instantiations, and
-    SystemVerilog class semantics (inherits/implements edges, field/parameter/
-    return-type references) from .v/.sv files."""
+);
 def extract_verilog(path: Path) -> dict;

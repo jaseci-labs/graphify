@@ -5,28 +5,12 @@ impl _scan_sql(text: str) -> tuple[str, list[tuple[int, int]]] {
     ident_spans: list[tuple[int, int]] = [];
     out = [];
     (i, n) = (0, len(text));
-
-    """Blank [i, upto), keeping newlines; return upto."""
     def _blank(upto: int) -> int {
         for c in text[i:upto] {
             out.append("\n" if c == "\n" else " ");
         }
         return upto;
     }
-
-    """Blank from start to end-of-line, carrying comment state forward.
-
-        The union-of-readings blank for an ambiguous stretch: the rest of the
-        line is blanked outright; if the raw text of that stretch leaves a /*
-        unclosed on its own line (the maximum comment depth any reading could
-        be left holding), blanking continues, nesting-aware, to the closing
-        */ or EOF. Where a carry closes MID-line the same rule applies to the
-        remainder of that line — under the reading where the carry never
-        opened, that whole line may be a comment or a string, so emitting the
-        post-*/ text verbatim exposed it (found by differential fuzzing).
-        Repeats until a line ends with no carry pending. Appends one output
-        character per input character; returns the resume index.
-        """
     def _blank_tail_and_carry(start: int) -> int {
         k: any = start;
         while True {
@@ -181,10 +165,7 @@ impl _routine_body_refs(masked: str, *, plsql: bool = False) -> list[tuple[str, 
     aliases: dict[str, str] = {};
     for m__ in _BODY_READ_RX.finditer(masked) {
         m = m__;
-        if `any(
-            s <= m.start() and m.start() < e
-            for (s, e, _r, _n) in writes,
-        ) {
+        if `any(s <= m.start() and m.start() < e for (s, e, _r, _n) in writes) {
             continue;
         }
         if _BODY_FROM_NOT_TABLE_RX.search(masked[max(0, m.start() - 200):m.start()]) {
@@ -452,7 +433,7 @@ impl extract_sql(path: Path, content: str | bytes | None = None) -> dict {
         return None;
     }
 
-    def _add_node(nid: str, label: str, line: int) -> None {
+    def _add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -474,7 +455,7 @@ impl extract_sql(path: Path, content: str | bytes | None = None) -> dict {
         }
     }
 
-    def _add_edge(src: str, tgt: str, relation: str, line: int) -> None {
+    def _add_edge(src: str, tgt: str, relation: str, line: int) {
         if not src or not tgt {
             return;
         }
@@ -488,21 +469,6 @@ impl extract_sql(path: Path, content: str | bytes | None = None) -> dict {
             "weight": 1.0,
         });
     }
-
-    """Sourceless bare-name stub for a table referenced but not defined here.
-
-        SQL references are NAME-based, so a table defined in another file (e.g.
-        prisma migration m2 referencing a table created in m1) can only resolve
-        at the corpus level. Minting `_make_id(stem, name)` under THIS file's
-        stem fabricated a node-less compound id — an absolute-path slug when the
-        input path was absolute — that could never match the real definition
-        (#2324). Instead emit a SOURCELESS stub, mirroring the Go extractor's
-        cross-file pattern (#1402): `_rewire_unique_stub_nodes` collapses it
-        onto the unique real table definition, and an unresolvable name survives
-        as a portable name-only node instead of dangling. No contains edge: a
-        sourced/contained stub would get the referencing file's path baked into
-        its id by disambiguation, blocking the rewire.
-        """
     def _ref_stub(name: str) -> str {
         nid: any = _make_id(name);
         if not nid {
@@ -522,7 +488,7 @@ impl extract_sql(path: Path, content: str | bytes | None = None) -> dict {
         return nid;
     }
 
-    def walk(`node) -> None {
+    def walk(`node) {
         cd: any;
         t: any = `node.type;
         line: any = `node.start_point[0] + 1;
@@ -792,15 +758,6 @@ impl extract_sql(path: Path, content: str | bytes | None = None) -> dict {
             walk(child);
         }
     }
-
-    """(table as written, alias) of a `relation`, a bare `from`, or a naked
-        object_reference — the three places this grammar puts a table name.
-
-        Only `relation` (and the bare `from` of a DELETE) can carry an alias:
-        the bare identifier next to the object_reference is one (`dbo.Orders
-        o`). The identifiers INSIDE an object_reference are its name parts and
-        must not be read as an alias.
-        """
     def _table_of(`node) -> tuple[str | None, str | None] {
         c: any;
         has_siblings: any = `node.type in ("relation", "from");
@@ -846,18 +803,9 @@ impl extract_sql(path: Path, content: str | bytes | None = None) -> dict {
         }
         return (f"{name}{suffix}", alias);
     }
-
-    """`#t` / `##t` / `@t`: a temp table or a table variable, i.e. session
-        state rather than a schema object."""
     def _is_temp(tbl: str) -> bool {
         return tbl.lstrip("[").startswith(("#", "@"));
     }
-
-    """The table a DELETE/UPDATE/INSERT/MERGE writes, as written.
-
-        A session object (`#t`, `##t`, `@t`) is returned as-is; the caller drops
-        it, since `_is_temp` has to answer that for the earlier shapes too.
-        """
     def _write_table(write_node) -> str | None {
         if write_node.type == "insert"
             and not `any(operator.eq(c.type, "keyword_into") for c in write_node.children)
@@ -921,20 +869,7 @@ impl extract_sql(path: Path, content: str | bytes | None = None) -> dict {
         }
         return None;
     }
-
-    """Emit `writes_to` for the writes in a structurally parsed routine.
-
-        tree-sitter-sql 0.3.13 parses T-SQL `CREATE PROCEDURE ... AS BEGIN
-        ... END` into `procedure_body`, so its statements stay in the tree
-        instead of an ERROR node. The masked-text scan that reads writes only
-        runs when the parse failed, and `_walk_from_refs` only looked at
-        FROM/JOIN — so a DELETE/UPDATE/INSERT or `SELECT ... INTO` in such a
-        procedure silently lost its edge (#5146).
-
-        Deliberately separate from _walk_from_refs, whose CTE and derived-table
-        handling this does not need to touch.
-        """
-    def _walk_writes(`node, caller_nid: str) -> None {
+    def _walk_writes(`node, caller_nid: str) {
         if `node.type in ("delete", "update", "insert", "merge") {
             tbl: any = _write_table(`node);
             if tbl and not _is_temp(tbl) {
@@ -965,28 +900,9 @@ impl extract_sql(path: Path, content: str | bytes | None = None) -> dict {
     }
 
     cte_names_default_: any = frozenset();
-
-    """Recursively find FROM/JOIN table references inside a node, skipping CTEs.
-
-        A name bound by `WITH <name> AS (...)` is not a table: emitting it as a
-        `reads_from` target minted a bare `_ref_stub`, and because that stub is
-        intentionally sourceless (see `_ref_stub`) it carried no schema, file, or
-        language namespace, so a CTE named `levels` or `slug` collided with any
-        same-named node from another language during the build (#2577).
-
-        Scoping matters: a CTE is visible only inside the query that declares it,
-        and a `WITH` inside a subquery is scoped to that subquery alone. So the
-        active set is extended PER SUBTREE — each node's directly-owned `cte`
-        children (`create_query` for a statement-level WITH, `subquery` for a
-        nested one) join the set passed down into that node's recursion only. A
-        single statement-wide pre-collect would also suppress an OUTER reference
-        to a real table that merely shares a subquery-CTE's name
-        (`... FROM t2 JOIN (WITH t2 AS (...) SELECT ...) sub`), dropping the
-        real `-> t2` edge.
-        """
     def _walk_from_refs(
         `node, caller_nid: str, line: int, cte_names: frozenset[str] = cte_names_default_
-    ) -> None {
+    ) {
         `own: set[str] = set[any]();
         c: any;
         for c in `node.children {
@@ -1046,7 +962,7 @@ impl extract_sql(path: Path, content: str | bytes | None = None) -> dict {
     }
 
     src_text: any = source.decode("utf-8", errors="replace");
-    def _collect_defined_names(`node) -> None {
+    def _collect_defined_names(`node) {
         if `node.type in ("create_table", "create_view") {
             name: any = _obj_name(`node);
             if name {
@@ -1065,10 +981,7 @@ impl extract_sql(path: Path, content: str | bytes | None = None) -> dict {
         (_masked, _ident_spans) = _scan_sql(src_text) as any;
         for m___ in _TABLE_RECOVERY_RX.finditer(_masked) {
             m = m___;
-            if `any(
-                s <= m.start() and m.start() < e
-                for (s, e) in _ident_spans,
-            ) {
+            if `any(s <= m.start() and m.start() < e for (s, e) in _ident_spans) {
                 continue;
             }
             table_nids.setdefault(_norm_ident(m.group(1)), _make_id(stem, m.group(1)));

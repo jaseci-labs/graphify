@@ -116,7 +116,7 @@ impl extract_bash(path: Path) -> dict {
 
     sanitize_metadata: any = importlib.import_module("graphify.security").sanitize_metadata;
 
-    def add_node(nid: str, label: str, line: int, kind: str = "code") -> None {
+    def add_node(nid: str, label: str, line: int, kind: str = "code") {
         if nid and nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -139,7 +139,7 @@ impl extract_bash(path: Path) -> dict {
         weight: float = 1.0,
         context: str | None = None,
         target_file: str | None = None,
-    ) -> None {
+    ) {
         if not src or not tgt or src == tgt {
             return;
         }
@@ -195,12 +195,6 @@ impl extract_bash(path: Path) -> dict {
         }
         return False;
     }
-
-    """Whether a command node should emit call edges.
-
-        Bare ``$(fn)`` at script level and process substitutions stay suppressed
-        (#2141). Value capture via ``x=$(fn)`` is a real invocation (#2978).
-        """
     def _bash_call_in_command_allowed(cmd_node) -> bool {
         parent: any = cmd_node.parent;
         saw_command_substitution: any = False;
@@ -233,8 +227,6 @@ impl extract_bash(path: Path) -> dict {
         }
         return raw;
     }
-
-    """Get the name from a function_definition node."""
     def _bash_func_name(`node) -> str | None {
         for child in `node.children {
             if child.type == "word" {
@@ -244,7 +236,7 @@ impl extract_bash(path: Path) -> dict {
         return None;
     }
 
-    def walk_calls(body_node, func_nid: str, seen_calls: set) -> None {
+    def walk_calls(body_node, func_nid: str, seen_calls: set) {
         if body_node is None {
             return;
         }
@@ -295,7 +287,7 @@ impl extract_bash(path: Path) -> dict {
         }
     }
 
-    def walk(`node, parent_nid: str) -> None {
+    def walk(`node, parent_nid: str) {
         t: any = `node.type;
         if t == "function_definition" {
             name: any = _bash_func_name(`node);
@@ -564,7 +556,7 @@ impl extract_bash(path: Path) -> dict {
             walk(child, parent_nid);
         }
     }
-    def _prescan_functions(`node) -> None {
+    def _prescan_functions(`node) {
         if `node.type == "function_definition" {
             name: any = _bash_func_name(`node);
             if name {

@@ -982,7 +982,7 @@ impl _node_disambiguation_source_key(`node: dict, `root: Path) -> str {
 
 impl _disambiguate_colliding_node_ids(
     nodes: list[dict], edges: list[dict], raw_calls: list[dict], `root: Path
-) -> None {
+) {
     by_id: dict[str, list[dict]] = {};
     folded_files: dict[int, list[str]] = {};
     `node: any;
@@ -1196,7 +1196,7 @@ impl _apply_symbol_resolution_facts(
     facts: _SymbolResolutionFacts,
     resolution_context_nodes: list[dict] | None = None,
     raw_calls: list[dict] | None = None,
-) -> None {
+) {
     path_by_resolved: any;
     symbol_nodes: dict[tuple[Path, str], str];
     member_symbol_keys: set[tuple[Path, str]];
@@ -1404,7 +1404,7 @@ impl _apply_symbol_resolution_facts(
         target_file: str | None = None,
         local_alias: str | None = None,
         type_only: bool = False,
-    ) -> None {
+    ) {
         key: any = (
             source,
             target,
@@ -1961,20 +1961,6 @@ impl _apply_symbol_resolution_facts(
             collision_groups.setdefault(nid[:-7], []).append((n, True));
         }
     }
-
-    """The declaration node a top-level ``def``'s call actually belongs to.
-
-        ``make_id`` strips the underscore edges off each part, so ``_main`` and
-        ``main`` mint one plain id. The engine salts the colliding pair apart
-        (#3302) and leaves only the unique public spelling — ``main()`` — on the
-        plain id, while a ``def`` collected by name here can only carry the plain
-        id. So every call inside ``_main`` was being credited to ``main`` (#4994).
-
-        The declarations sharing that plain id sit on distinct lines, so the one
-        enclosing the call line is the caller. Anything the line cannot settle
-        (no candidates, or several) keeps ``source_id`` unchanged, which is what
-        this pass did before.
-        """
     def _collision_aware(source_id: str, file_path: Path, line: int) -> str {
         group: any = collision_groups.get(source_id, ());
         if not `any(salted for (_, salted) in group) {
@@ -2425,9 +2411,7 @@ impl _ts_heritage_clause_entries(clause_node, source: bytes) -> list[str] {
     return out;
 }
 
-impl _ts_collect_type_refs(
-    `node, source: bytes, generic: bool, out: list[tuple[str, str]]
-) -> None {
+impl _ts_collect_type_refs(`node, source: bytes, generic: bool, out: list[tuple[str, str]]) {
     if `node is None {
         return;
     }
@@ -2495,7 +2479,7 @@ impl _ts_collect_type_refs(
 
 impl _ts_walk_class_members(
     class_node, source: bytes, path: Path, class_nid: str, facts: _SymbolResolutionFacts
-) -> None {
+) {
     line: any = class_node.start_point[0] + 1;
     for child in class_node.children {
         if child.type == "class_heritage" {
@@ -2781,7 +2765,7 @@ impl _js_cjs_export_facts(`node, source: bytes, path: Path) -> list[_SymbolExpor
     return out;
 }
 
-impl _collect_js_symbol_resolution_facts(paths: list[Path], facts: _SymbolResolutionFacts) -> None {
+impl _collect_js_symbol_resolution_facts(paths: list[Path], facts: _SymbolResolutionFacts) {
     path: any;
     `node: any;
     js_paths: any = [path for path in paths if effective_suffix(path) in _JS_CACHE_BYPASS_SUFFIXES];
@@ -3394,7 +3378,7 @@ impl _collect_python_symbol_resolution_facts(
     facts: _SymbolResolutionFacts,
     ambiguous_python_modules: set[str] | None = None,
     raw_calls: list[dict] | None = None,
-) -> None {
+) {
     path: any;
     site: any;
     ambiguous_python_modules = ambiguous_python_modules or set[any]();
@@ -3527,10 +3511,7 @@ impl _collect_python_symbol_resolution_facts(
                     if scopes
                         and (
                             not site
-                            or `any(
-                                start <= site[0] and site[0] < end
-                                for (start, end) in scopes,
-                            )
+                            or `any(start <= site[0] and site[0] < end for (start, end) in scopes)
                         )
                     {
                         continue;
@@ -3568,7 +3549,7 @@ impl _augment_symbol_resolution_edges(
     ambiguous_python_modules: set[str] | None = None,
     resolution_context_nodes: list[dict] | None = None,
     raw_calls: list[dict] | None = None,
-) -> None {
+) {
     facts: any = _SymbolResolutionFacts();
     _collect_js_symbol_resolution_facts(paths, facts);
     _collect_python_symbol_resolution_facts(
@@ -3689,7 +3670,7 @@ impl _resolve_cross_file_imports(
             return source[n.start_byte:n.end_byte].decode("utf-8", errors="replace");
         }
 
-        def resolve_import(`node) -> None {
+        def resolve_import(`node) {
             target_fq: str | None = None;
             absolute_module: str | None = None;
             child: any;
@@ -3789,7 +3770,7 @@ impl _resolve_cross_file_imports(
             }
         }
 
-        def `visit(`node, current_nid: str | None) -> None {
+        def `visit(`node, current_nid: str | None) {
             if `node.type == "import_from_statement" {
                 resolve_import(`node);
                 return;
@@ -3989,7 +3970,7 @@ impl _merge_cpp_forward_classes(
     resolution_nodes: list[dict],
     context_edges: list[dict],
     `root: Path,
-) -> None {
+) {
     includes: any = _cpp_exact_includes(resolution_nodes, [*edges, *context_edges], `root);
 
     groups: dict[str, list[dict]] = {};
@@ -4064,7 +4045,7 @@ impl _merge_cpp_member_declarations(
     resolution_nodes: list[dict],
     context_edges: list[dict],
     `root: Path,
-) -> None {
+) {
     includes: any = _cpp_exact_includes(resolution_nodes, [*edges, *context_edges], `root);
     owners: dict[str, list[dict]] = {};
     members: dict[str, list[dict]] = {};
@@ -4195,7 +4176,7 @@ impl _source_stem(`node: dict) -> str {
     return Path(`str(`node.get("source_file", ""))).stem;
 }
 
-impl _merge_decl_def_classes(all_nodes: list[dict], all_edges: list[dict]) -> None {
+impl _merge_decl_def_classes(all_nodes: list[dict], all_edges: list[dict]) {
     keeper: any;
     e: any;
     by_id: dict[str, list[dict]] = {};
@@ -4333,7 +4314,7 @@ impl _go_package_clause(path: Path) -> str | None {
     return m.group(1).decode("ascii") if m else None;
 }
 
-impl _merge_go_package_types(all_nodes: list[dict], all_edges: list[dict]) -> None {
+impl _merge_go_package_types(all_nodes: list[dict], all_edges: list[dict]) {
     by_id: dict[str, list[dict]] = {};
     n: any;
     for n in all_nodes {
@@ -4542,7 +4523,7 @@ impl _java_import_rows(root_node, source: bytes) -> list[tuple[str, str, int]] {
     rows: list[tuple[str, str, int]];
     rows = [];
 
-    def walk(n) -> None {
+    def walk(n) {
         if n.type == "import_declaration" {
             raw: any = _read_text(n, source).strip();
             body: any = raw[len("import"):].strip().rstrip(";").strip();
@@ -4631,7 +4612,7 @@ impl _resolve_go_type_references(
     `root: Path,
     resolution_context_nodes: list[dict] | None = None,
     resolution_context_edges: list[dict] | None = None,
-) -> None {
+) {
     node_ids: any;
     external_stub_ids: dict[str, str];
     new_nodes: list[dict];
@@ -4762,7 +4743,7 @@ impl _resolve_go_type_references(
 
 impl _resolve_java_type_references(
     per_file: list[dict], paths: list[Path], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+) {
     source: any;
     pkg: any;
     imps: dict[str, str];
@@ -4795,7 +4776,7 @@ impl _resolve_java_type_references(
         pkg = "";
         imps = {};
 
-        def walk(n) -> None {
+        def walk(n) {
             if n.type == "package_declaration" {
                 pkg = _read_text(n, source).strip()[len("package"):].strip().rstrip(";").strip();
             } elif n.type == "import_declaration" {
@@ -5020,7 +5001,7 @@ impl _php_fqn_from_raw(raw: str, ns: str, uses: dict[str, str]) -> str {
 
 impl _resolve_php_type_references(
     per_file: list[dict], paths: list[Path], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+) {
     source: any;
     namespaces: list[str];
     uses: dict[str, str];
@@ -5063,7 +5044,7 @@ impl _resolve_php_type_references(
         uses = {};
         raws = {};
 
-        def _record_raw(relation: str, raw: str) -> None {
+        def _record_raw(relation: str, raw: str) {
             bare: any = raw.rsplit("\\", 1)[-1].strip().lower();
             if not bare {
                 return;
@@ -5076,7 +5057,7 @@ impl _resolve_php_type_references(
             }
         }
 
-        def _record_use_clause(clause, prefix: str) -> None {
+        def _record_use_clause(clause, prefix: str) {
             target: any = None;
             alias: any = None;
             saw_as: any = False;
@@ -5104,7 +5085,7 @@ impl _resolve_php_type_references(
             }
         }
 
-        def walk(n) -> None {
+        def walk(n) {
             t: any = n.type;
             if t == "namespace_definition" {
                 c: any;

@@ -47,7 +47,7 @@ impl _git_root(path: Path) -> Path | None {
     return None;
 }
 
-impl _reject_windows_path(value: str, source: str) -> None {
+impl _reject_windows_path(value: str, source: str) {
     if os.name == "nt" {
         return;
     }

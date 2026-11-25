@@ -1,39 +1,4 @@
-"""tree_html — emit a D3 v7 collapsible-tree HTML view of a graph.
-
-A self-contained printable / browseable tree-of-modules view
-intended to complement the existing force-directed ``graph.html``.
-Key visual elements:
-
-  * Expand-all / collapse-all / reset-view buttons.
-  * Multi-line label wrapping (``wrapText``) with separately-coloured
-    name and descendant-count.
-  * Depth-based colour palette (top-level directories get distinct
-    accent colours; deeper levels follow a level-specific palette).
-  * Click-to-toggle subtree.
-
-Tree-data shape:
-
-    {
-      "name": "<root label>",
-      "total_count": <int>,
-      "children": [ { "name", "total_count", "children": [...] }, ... ]
-    }
-
-CLI: ``graphify tree [--graph PATH] [--output HTML] [--root PATH]
-[--max-children N] [--label NAME]``.
-
-Implementation notes:
-  - ``total_count`` is the descendant leaf count, so collapsed nodes
-    can show ``(Total Count: 95)`` without needing the children loaded.
-  - ``--max-children`` (default 200) caps how many children render
-    under any one node; a synthetic ``(+N more)`` leaf appears when the
-    cap fires so very wide directories stay usable.
-  - The first-level palette is auto-populated from the live top-level
-    directories so each gets a stable accent colour.
-"""
-
 import from __future__ { annotations }
-
 import html as _html;
 
 import importlib;
@@ -50,14 +15,6 @@ glob DEFAULT_MAX_CHILDREN: any = 200;
 def _common_root(paths: List[str]) -> str;
 
 def _make_truncation_leaf(extra: int, total_count: Optional[int] = None) -> Dict[str, Any];
-
-"""Build one directory tree from ``file_nodes`` (all carry ``source_file``).
-
-    Returns ``(root_node, matched_files, by_file)``. ``matched_files`` counts
-    the files that sit under ``root``; files outside it attach flat to the
-    root. Each call owns its own ``dir_index``, so two calls never share
-    directory nodes even when their relative paths are identical.
-    """
 def _attach_files(
     file_nodes: List[Dict[str, Any]],
     *,
@@ -68,13 +25,6 @@ def _attach_files(
 ) -> "tuple[Dict[str, Any], int, Dict[str, List[Dict[str, Any]]]]";
 
 glob _NO_REPO_LABEL: any = "(no repo)";
-
-"""Split nodes into ``({repo tag: nodes}, untagged nodes)``.
-
-    The tag is the ``repo`` attribute set by ``merge-graphs`` / ``global add``.
-    Untagged nodes are returned separately so they never count as a repo: only
-    real tags decide whether a graph is treated as a merged one.
-    """
 def _repo_groups(
     file_nodes: List[Dict[str, Any]]
 ) -> "tuple[Dict[str, List[Dict[str, Any]]], List[Dict[str, Any]]]";
@@ -85,25 +35,6 @@ with entry {
     max_children_default_ = DEFAULT_MAX_CHILDREN;
 }
 
-"""Build a ``{name, total_count, children}`` hierarchy.
-
-    Each leaf is either a code symbol (class / top-level function) or
-    a synthetic "(+N more)" placeholder for truncated wide directories.
-    Each interior node carries the full descendant leaf count, including
-    entries hidden by ``max_children``. Directory omission labels count hidden
-    immediate entries; their totals count all leaves behind those entries.
-
-    A graph whose nodes carry two or more distinct ``repo`` tags (a
-    ``merge-graphs`` / ``global add`` result) gets one top-level root per
-    repo, each with its own directory tree, so identical repo-relative paths
-    in different repos stay separate. Graphs with fewer than two tags are
-    built exactly as before.
-
-    Raises ``ValueError`` for negative ``max_children`` or when an explicit
-    ``root`` matches none of the
-    graph's ``source_file`` paths — every file would silently attach flat
-    to the root and the hierarchy would be lost (#2534).
-    """
 def build_tree(
     `graph: Dict[str, Any],
     *,

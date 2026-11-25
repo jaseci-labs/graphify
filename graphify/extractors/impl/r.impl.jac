@@ -6,9 +6,7 @@ impl _unquote(value: str) -> str {
     return value;
 }
 
-impl resolve_r_sourced_calls(
-    per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+impl resolve_r_sourced_calls(per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]) {
     `node: any;
     source: any;
     file_source_by_id: any = {
@@ -132,7 +130,7 @@ impl extract_r(path: Path) -> dict {
         kind: str,
         source_backed: bool = True,
         callable_node: bool = False,
-    ) -> None {
+    ) {
         if not nid or nid in seen_ids {
             return;
         }
@@ -155,7 +153,7 @@ impl extract_r(path: Path) -> dict {
 
     def add_edge(
         source_id: str, target_id: str, relation: str, line: int, *, target_file: str | None = None
-    ) -> None {
+    ) {
         key: any = (source_id, target_id, relation);
         if not source_id or not target_id or source_id == target_id or key in seen_edges {
             return;
@@ -238,7 +236,7 @@ impl extract_r(path: Path) -> dict {
         return nid;
     }
 
-    def add_class_members(class_id: str, arguments: Node) -> None {
+    def add_class_members(class_id: str, arguments: Node) {
         for argument in arguments.named_children {
             if argument.type != "argument" {
                 continue;
@@ -392,7 +390,7 @@ impl extract_r(path: Path) -> dict {
         return (_read_text(lhs, source), rhs, lhs);
     }
 
-    def scan_declarations(`node: Node, owner: str, *, top_level: bool) -> None {
+    def scan_declarations(`node: Node, owner: str, *, top_level: bool) {
         for child in `node.named_children {
             bound: any = binding(child);
             if bound is not None {
@@ -473,7 +471,7 @@ impl extract_r(path: Path) -> dict {
         return None;
     }
 
-    def walk_calls(`node: Node, caller_id: str) -> None {
+    def walk_calls(`node: Node, caller_id: str) {
         if `node.type == "function_definition" {
             return;
         }

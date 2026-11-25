@@ -1,20 +1,11 @@
-"""Dm extractor. Moved verbatim from graphify/extract.py."""
-
 import from __future__ { annotations }
-
 import re;
 
 import from pathlib { Path }
 
 import from typing { Any }
-
-"""Extract types, procs, includes, and calls from a .dm/.dme file."""
 def extract_dm(path: Path) -> dict;
-
-"""Pull the BYOND metadata text out of a .dmi PNG, or empty string on failure."""
 def _read_dmi_description(data: bytes) -> str;
-
-"""Extract icon state names from a .dmi (BYOND PNG icon sheet)."""
 def extract_dmi(path: Path) -> dict;
 
 glob _DMM_GRID_RE: any;
@@ -32,8 +23,6 @@ with entry {
 def _split_dmm_tile(body: str) -> list[str];
 
 def _dmm_type_path(`entry: str) -> str;
-
-"""Extract type-path references from a .dmm map file's tile dictionary."""
 def extract_dmm(path: Path) -> dict;
 
 with entry {
@@ -44,5 +33,4 @@ with entry {
     _DMF_TYPE_RE = re.compile("^\\s*type\\s*=\\s*(\\S+)\\s*$");
 }
 
-"""Extract windows and controls from a .dmf interface file."""
 def extract_dmf(path: Path) -> dict;

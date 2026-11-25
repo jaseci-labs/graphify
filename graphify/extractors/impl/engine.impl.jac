@@ -31,9 +31,7 @@ impl _semantic_reference_edge(
     };
 }
 
-impl _python_collect_type_refs(
-    `node, source: bytes, generic: bool, out: list[tuple[str, str]]
-) -> None {
+impl _python_collect_type_refs(`node, source: bytes, generic: bool, out: list[tuple[str, str]]) {
     if `node is None {
         return;
     }
@@ -284,7 +282,7 @@ impl _csharp_pre_scan_name_collisions(
     type_decls: list[tuple[object, str, str]] = [];
     type_scopes = {};
 
-    def _visit(n, ns: list[str], owners: tuple[str, ...] = ()) -> None {
+    def _visit(n, ns: list[str], owners: tuple[str, ...] = ()) {
         scoped: any = `list(ns);
         for c in n.children {
             if c.type == "namespace_declaration" {
@@ -339,7 +337,7 @@ impl _csharp_pre_scan_name_collisions(
         }
     }
 
-    def _members(n, type_nid: str) -> None {
+    def _members(n, type_nid: str) {
         for c in n.children {
             if c.type in ("method_declaration", "property_declaration", "enum_member_declaration") {
                 name_node: any = c.child_by_field_name("name");
@@ -412,7 +410,7 @@ impl _csharp_collect_type_refs(
     generic: bool,
     out: list[tuple[str, str, bool, str]],
     `skip: frozenset[str] | None = None,
-) -> None {
+) {
     if `node is None {
         return;
     }
@@ -571,7 +569,7 @@ impl _java_collect_type_refs(
     out: list[tuple[str, str]],
     `skip: frozenset[str] | None = None,
     preserve_qualified: bool = False,
-) -> None {
+) {
     if `node is None {
         return;
     }
@@ -851,7 +849,7 @@ impl _java_method_receiver_types(
     method_types = {};
     ambiguous = set[any]();
 
-    def bind(name: str, type_name: str | None) -> None {
+    def bind(name: str, type_name: str | None) {
         if not name or not type_name or name in ambiguous {
             return;
         }
@@ -1010,9 +1008,7 @@ impl _php_name_text(`node, source: bytes) -> str | None {
     return _read_text(`node, source).rsplit("\\", 1)[-1] or None;
 }
 
-impl _php_collect_type_refs(
-    `node, source: bytes, generic: bool, out: list[tuple[str, str]]
-) -> None {
+impl _php_collect_type_refs(`node, source: bytes, generic: bool, out: list[tuple[str, str]]) {
     if `node is None {
         return;
     }
@@ -1090,7 +1086,7 @@ impl _php_first_declared_type(`node, source: bytes) -> str | None {
     );
 }
 
-impl _php_receiver_type_table(`root, source: bytes, table: dict[str, str]) -> None {
+impl _php_receiver_type_table(`root, source: bytes, table: dict[str, str]) {
     stack: any = [`root];
     while stack {
         n: any = stack.pop();
@@ -1343,7 +1339,7 @@ impl _kotlin_collect_type_refs(
     generic: bool,
     out: list[tuple[str, str]],
     `skip: frozenset[str] | None = None,
-) -> None {
+) {
     if `node is None {
         return;
     }
@@ -1521,7 +1517,7 @@ impl _python_pre_scan_underscore_collisions(
     groups: dict[str, set[str]];
     groups = {};
 
-    def _record(plain_nid: str, name: str) -> None {
+    def _record(plain_nid: str, name: str) {
         groups.setdefault(plain_nid, set[any]()).add(name);
     }
 
@@ -2307,7 +2303,7 @@ impl _swift_collect_type_refs(
     generic: bool,
     out: list[tuple[str, str]],
     `skip: frozenset[str] | None = None,
-) -> None {
+) {
     if `node is None {
         return;
     }
@@ -2545,7 +2541,7 @@ impl _swift_operand_tail(`node) -> any {
     return `node;
 }
 
-impl _c_collect_type_refs(`node, source: bytes, generic: bool, out: list[tuple[str, str]]) -> None {
+impl _c_collect_type_refs(`node, source: bytes, generic: bool, out: list[tuple[str, str]]) {
     if `node is None or `node.type in _C_PRIMITIVE_TYPE_NODES {
         return;
     }
@@ -2622,7 +2618,7 @@ impl _cpp_collect_type_refs(
     out: list[tuple[str, str]],
     `skip: frozenset[str] | None = None,
     dialect_quals: frozenset[str] = dialect_quals_default_,
-) -> None {
+) {
     if `node is None or `node.type in _C_PRIMITIVE_TYPE_NODES {
         return;
     }
@@ -2775,7 +2771,7 @@ impl _scala_collect_type_refs(
     generic: bool,
     out: list[tuple[str, str]],
     `skip: frozenset[str] | None = None,
-) -> None {
+) {
     if `node is None {
         return;
     }
@@ -2845,7 +2841,7 @@ impl _scala_collect_type_refs(
     }
 }
 
-impl _scala_collect_context_bounds(tp_node, source: bytes, out: list[tuple[str, str]]) -> None {
+impl _scala_collect_context_bounds(tp_node, source: bytes, out: list[tuple[str, str]]) {
     if tp_node is None {
         return;
     }
@@ -3022,7 +3018,7 @@ impl _python_is_test_module(str_path: str) -> bool {
         or name.endswith("_test.py");
 }
 
-impl _python_collect_assignment_targets(`node, source: bytes, out: set[str]) -> None {
+impl _python_collect_assignment_targets(`node, source: bytes, out: set[str]) {
     if `node is None {
         return;
     }
@@ -3176,7 +3172,7 @@ impl _python_local_bound_names(func_def_node, source: bytes) -> set[str] {
     bound = set[any]();
     bound |= _python_param_names(func_def_node.child_by_field_name("parameters"), source);
 
-    def walk(n) -> None {
+    def walk(n) {
         for child in n.children {
             t: any = child.type;
             if t in ("function_definition", "class_definition", "lambda") {
@@ -3221,7 +3217,7 @@ impl _python_module_bound_names(`root, source: bytes) -> set[str] {
     bound: set[str];
     bound = set[any]();
 
-    def walk(n) -> None {
+    def walk(n) {
         for child in n.children {
             t: any = child.type;
             if t in ("function_definition", "class_definition", "lambda") {
@@ -3339,7 +3335,7 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
             bound.update(_python_param_names(scope.child_by_field_name("parameters"), source));
         }
 
-        def bind_names(`node, names) -> None {
+        def bind_names(`node, names) {
             bound.update(
                 name
                 for name in names
@@ -3351,7 +3347,7 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
             );
         }
 
-        def walk(`node) -> None {
+        def walk(`node) {
             for child in `node.named_children {
                 kind: any = child.type;
                 if kind in {"function_definition", "class_definition"} {
@@ -3699,7 +3695,7 @@ impl _python_self_attr_bindings(
     }
 }
 
-impl _js_collect_pattern_idents(`node, source: bytes, bound: set) -> None {
+impl _js_collect_pattern_idents(`node, source: bytes, bound: set) {
     t: any = `node.type;
     if t in ("identifier", "shorthand_property_identifier_pattern") {
         bound.add(_read_text(`node, source));
@@ -3741,7 +3737,7 @@ impl _js_local_bound_names(func_node, source: bytes) -> set[str] {
         _js_collect_pattern_idents(solo, source, bound);
     }
 
-    def walk(n) -> None {
+    def walk(n) {
         for c in n.children {
             if c.type in _JS_SCOPE_BOUNDARY {
                 continue;
@@ -3883,7 +3879,7 @@ impl _js_module_bound_names(`root, source: bytes) -> set[str] {
     bound: set[str];
     bound = set[any]();
 
-    def walk(n) -> None {
+    def walk(n) {
         for c in n.children {
             if c.type in _JS_SCOPE_BOUNDARY {
                 continue;
@@ -3923,7 +3919,7 @@ impl _js_external_import_names(`root, source: bytes, str_path: str) -> set[str] 
     bound: set[str];
     bound = set[any]();
 
-    def _clause_names(clause) -> None {
+    def _clause_names(clause) {
         for c in clause.children {
             if c.type == "identifier" {
                 bound.add(_read_text(c, source));
@@ -3947,7 +3943,7 @@ impl _js_external_import_names(`root, source: bytes, str_path: str) -> set[str] 
         }
     }
 
-    def walk(n) -> None {
+    def walk(n) {
         for c in n.children {
             if c.type == "import_statement" {
                 src_node: any = c.child_by_field_name("source");
@@ -4146,7 +4142,7 @@ impl _cpp_declarator_name(`node, source: bytes) -> str | None {
     return None;
 }
 
-impl _cpp_parameter_types(body_node, source: bytes, table: dict[str, str]) -> None {
+impl _cpp_parameter_types(body_node, source: bytes, table: dict[str, str]) {
     fn: any = body_node.parent;
     while fn is not None and fn.type != "function_definition" {
         fn = fn.parent;
@@ -4185,7 +4181,7 @@ impl _cpp_parameter_types(body_node, source: bytes, table: dict[str, str]) -> No
     }
 }
 
-impl _cpp_field_types(`root, source: bytes, table: dict[str, str]) -> None {
+impl _cpp_field_types(`root, source: bytes, table: dict[str, str]) {
     stack: any = [`root];
     while stack {
         n: any = stack.pop();
@@ -4976,7 +4972,7 @@ impl _cpp_local_binding_ranges(
     return ranges;
 }
 
-impl _cpp_local_var_types(body_node, source: bytes, table: dict[str, str]) -> None {
+impl _cpp_local_var_types(body_node, source: bytes, table: dict[str, str]) {
     c: any;
     stack: any = [body_node];
     while stack {
@@ -5022,7 +5018,7 @@ impl _swift_local_var_types(
     source: bytes,
     table: dict[str, str],
     factory: dict[str, tuple[str, str]] | None = None,
-) -> None {
+) {
     stack: any = [body_node];
     while stack {
         n: any = stack.pop();
@@ -5249,7 +5245,7 @@ impl _csharp_method_receiver_types(
 
     def bind(
         name: str | None, type_name: str | list | None, scope_node, elem_type: str | None = None
-    ) -> None {
+    ) {
         if not name or scope_node is None {
             return;
         }
@@ -5265,7 +5261,7 @@ impl _csharp_method_receiver_types(
         }
     }
 
-    def bind_parameter(param, scope_node) -> None {
+    def bind_parameter(param, scope_node) {
         name_node: any = param.child_by_field_name("name");
         if name_node is not None {
             ptype: any = param.child_by_field_name("type");
@@ -5468,7 +5464,7 @@ impl _ts_receiver_type_table(
     source: bytes,
     table: dict[str, str],
     field_table: "dict[str, dict[str, str]] | None" = None,
-) -> None {
+) {
     p: any;
     c: any;
     def _bare_type_ident(type_annotation) -> any {
@@ -5714,9 +5710,7 @@ impl _ts_receiver_type_table(
     }
 }
 
-impl _ts_attach_class_fields(
-    result: dict, field_table: dict[str, dict[str, str]], str_path: str
-) -> None {
+impl _ts_attach_class_fields(result: dict, field_table: dict[str, dict[str, str]], str_path: str) {
     def _fold(label: str) -> str {
         return "".join(c for c in `str(label) if c.isascii() and c.isalnum()).lower();
     }
@@ -5985,7 +5979,7 @@ impl _scan_js_nested_function_declarations(
     function_bodies: list,
     scope_parents: dict[str, str] | None = None,
     lexical_nids_by_scope: dict[str, dict[str, str]] | None = None,
-) -> None {
+) {
     if container_node is None {
         return;
     }
@@ -6082,7 +6076,7 @@ impl _scan_python_nested_function_declarations(
     function_bodies: list,
     scope_parents: dict[str, str] | None = None,
     lexical_nids_by_scope: dict[str, dict[str, str]] | None = None,
-) -> None {
+) {
     if container_node is None {
         return;
     }
@@ -6159,7 +6153,7 @@ impl _scan_python_nested_function_declarations(
     }
 }
 
-impl _js_topmost_closures(`node, out: list) -> None {
+impl _js_topmost_closures(`node, out: list) {
     for c in `node.children {
         if c.type in _JS_FUNCTION_VALUE_TYPES {
             out.append(c);
@@ -6224,7 +6218,7 @@ impl _js_scan_member_assignments(
     add_edge_fn,
     function_bodies: list,
     closure_locals_by_body: dict | None = None,
-) -> None {
+) {
     object_bindings: dict[str, object] = {};
     stmt: any;
     for stmt in body.children {
@@ -7774,7 +7768,7 @@ impl _python_local_class_bindings(
     bindings = {};
     poison_only = False;
 
-    def bind(name: str, cls: str | tuple[int, int] | None) -> None {
+    def bind(name: str, cls: str | tuple[int, int] | None) {
         if poison_only or cls is None or bindings.get(name, cls) != cls {
             bindings[name] = None;
         } elif name not in bindings {
@@ -7782,7 +7776,7 @@ impl _python_local_class_bindings(
         }
     }
 
-    def poison(target) -> None {
+    def poison(target) {
         names: set[str] = set[any]();
         _python_collect_assignment_targets(target, source, names);
         for name in names {
@@ -7790,7 +7784,7 @@ impl _python_local_class_bindings(
         }
     }
 
-    def poison_identifiers(`node) -> None {
+    def poison_identifiers(`node) {
         stack: any = [`node];
         while stack {
             cur: any = stack.pop();
@@ -7823,7 +7817,7 @@ impl _python_local_class_bindings(
         }
     }
 
-    def `visit(n) -> None {
+    def `visit(n) {
         c: any;
         for child in n.children {
             if child.type == "function_definition" {
@@ -7934,7 +7928,7 @@ impl _ruby_local_class_bindings(body_node, source: bytes) -> dict[str, str | Non
     bindings = {};
     boundary = {"method", "singleton_method"};
 
-    def `visit(n) -> None {
+    def `visit(n) {
         for child in n.children {
             if child.type in boundary {
                 continue;
@@ -7997,7 +7991,7 @@ impl _ruby_local_names(body_node, source: bytes) -> frozenset[str] {
         return None;
     }
 
-    def _add_params(param_list) -> None {
+    def _add_params(param_list) {
         for child in param_list.children {
             if child.type == "identifier" {
                 names.add(_read_text(child, source));
@@ -8010,7 +8004,7 @@ impl _ruby_local_names(body_node, source: bytes) -> frozenset[str] {
         }
     }
 
-    def _add_targets(n) -> None {
+    def _add_targets(n) {
         if n.type == "identifier" {
             names.add(_read_text(n, source));
             return;
@@ -8028,7 +8022,7 @@ impl _ruby_local_names(body_node, source: bytes) -> frozenset[str] {
         }
     }
 
-    def `visit(n) -> None {
+    def `visit(n) {
         for child in n.children {
             if child.type in boundary {
                 continue;
@@ -8192,7 +8186,7 @@ impl _ruby_external_method_owners(root_node, source: bytes) -> list[str] {
         return f"{raw}::*";
     }
 
-    def `visit(`node) -> None {
+    def `visit(`node) {
         raw: any;
         if `node.type in {"assignment", "operator_assignment"} {
             left: any = `node.child_by_field_name("left");
@@ -8807,7 +8801,7 @@ impl _extract_generic(
         *,
         node_type: str | None = None,
         metadata: dict | None = None,
-    ) -> None {
+    ) {
         if nid in seen_ids {
             return;
         }
@@ -8844,7 +8838,7 @@ impl _extract_generic(
         weight: float = 1.0,
         context: str | None = None,
         metadata: dict | None = None,
-    ) -> None {
+    ) {
         `edge: any = {
             "source": src,
             "target": tgt,
@@ -8957,17 +8951,6 @@ impl _extract_generic(
         file_node["metadata"] = sanitize_metadata(file_metadata);
     }
     csharp_ctor_records = [];
-
-    """Mint the node for one C# constructor and own it from its type.
-
-        The id is the one a method named after the type would get, so the
-        first declared constructor keeps it and each other signature is salted
-        like a method overload (#4584). A member spelled like the type in
-        another case (`Foo` / `foo()`) already owns that id: the constructor,
-        never the existing member, takes a salted one. A static constructor
-        has no parameters and is never what `new` runs, so it is its own
-        signature.
-        """
     def csharp_add_constructor(
         type_nid: str, type_name: str, decl, params, line: int, `static: bool
     ) -> str {
@@ -9002,16 +8985,7 @@ impl _extract_generic(
         add_edge(type_nid, ctor_nid, "method", line);
         return ctor_nid;
     }
-
-    """Walk a C# property's or indexer's accessor bodies as its calls.
-
-        `get { ... }` / `set => ...` and an expression body (`int P => F();`)
-        run code just like a method, so their calls belong to the member. An
-        auto-accessor (`get;`) and an initializer (`= F();`, which runs in the
-        constructor) have no body here. The declaration is the scope, so an
-        indexer's parameters type receivers in every accessor.
-        """
-    def csharp_queue_member_bodies(member_nid: str, decl, class_nid: str) -> None {
+    def csharp_queue_member_bodies(member_nid: str, decl, class_nid: str) {
         bodies: any = [];
         accessors: any = decl.child_by_field_name("accessors");
         if accessors is not None {
@@ -9034,7 +9008,7 @@ impl _extract_generic(
         }
     }
 
-    def walk(`node, parent_class_nid: str | None = None) -> None {
+    def walk(`node, parent_class_nid: str | None = None) {
         class_nid: any;
         c: any;
         getter_nid: any;
@@ -9377,7 +9351,7 @@ impl _extract_generic(
                 }
             }
             if config.ts_module == "tree_sitter_php" {
-                def _php_emit_base(base_name: str, rel: str, at_line: int) -> None {
+                def _php_emit_base(base_name: str, rel: str, at_line: int) {
                     if not base_name {
                         return;
                     }
@@ -9828,7 +9802,7 @@ impl _extract_generic(
                 }
             }
             if config.ts_module in ("tree_sitter_java", "tree_sitter_groovy") {
-                def _emit_java_parent(base_name: str, rel: str, at_line: int) -> None {
+                def _emit_java_parent(base_name: str, rel: str, at_line: int) {
                     if not base_name {
                         return;
                     }
@@ -9849,7 +9823,7 @@ impl _extract_generic(
                     add_edge(class_nid, base_nid, rel, at_line);
                 }
 
-                def _emit_java_parent_type(type_node, rel: str, at_line: int) -> None {
+                def _emit_java_parent_type(type_node, rel: str, at_line: int) {
                     refs: list[tuple[str, str]] = [];
                     _java_collect_type_refs(type_node, source, False, refs);
                     parent_emitted: any = False;
@@ -11636,9 +11610,7 @@ impl _extract_generic(
 
             if config.ts_module in ("tree_sitter_c", "tree_sitter_cpp") {
                 if config.ts_module == "tree_sitter_cpp" {
-                    def collect(
-                        `node, source: bytes, generic: bool, out: list[tuple[str, str]]
-                    ) -> None {
+                    def collect(`node, source: bytes, generic: bool, out: list[tuple[str, str]]) {
                         _cpp_collect_type_refs(
                             `node, source, generic, out, None, dialect_type_quals
                         );
@@ -12495,17 +12467,7 @@ impl _extract_generic(
         )
         for (body_id, (method_node, class_nid)) in csharp_method_scopes.items()
     };
-
-    """Resolve a name that is referenced AS A VALUE to a real callable def and emit
-        one INFERRED ``indirect_call`` edge — deferring an unknown / foreign name to the
-        cross-file resolver, which applies the single-definition god-node guard and the
-        GLOBAL callable-target check. The name is already extracted; scope filtering is
-        the CALLER's job: an identifier reference must reject param/local shadows (a bare
-        name IS a binding — see ``_emit_indirect_ref``), whereas a ``getattr(obj, "x")``
-        string names an ATTRIBUTE and is never shadowed by a local, so that path passes
-        the name straight through. ``loc_node`` supplies the source line.
-        """
-    def _emit_indirect_by_name(ident_name: str, loc_node, scope_nid: str, context: str) -> None {
+    def _emit_indirect_by_name(ident_name: str, loc_node, scope_nid: str, context: str) {
         ref_nid: any = None;
         if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript") {
             curr_scope: any = scope_nid;
@@ -12581,8 +12543,6 @@ impl _extract_generic(
         }
         return name;
     }
-
-    """Check lambda body bindings. Defaults cannot see that lambda's own parameters."""
     def _python_lambda_param_shadows(`node, name: str) -> bool {
         while (parent := `node.parent) is not None {
             if parent.type in ("function_definition", "class_definition", "module") {
@@ -12608,17 +12568,7 @@ impl _extract_generic(
         }
         return False;
     }
-
-    """A function referenced BY NAME — passed as a call argument, or listed as a
-        value in a dispatch table — is an indirect dependency of ``scope_nid``. Emit
-        it as a distinct INFERRED ``indirect_call`` (kept out of the precise ``calls``
-        relation) only when the name resolves to a real callable and is NOT shadowed
-        by a parameter / local binding. A callback defined in another file is deferred
-        to the cross-file resolver via an ``indirect`` raw_call carrying its context.
-        Language-agnostic; shared by the call-argument and dispatch-table capture
-        paths for Python and JS/TS (#1565, #1566).
-        """
-    def _emit_indirect_ref(ident, scope_nid: str, enclosing_locals, context: str) -> None {
+    def _emit_indirect_ref(ident, scope_nid: str, enclosing_locals, context: str) {
         if ident is None or ident.type not in ("identifier", "shorthand_property_identifier") {
             return;
         }
@@ -12636,10 +12586,6 @@ impl _extract_generic(
         }
         _emit_indirect_by_name(ident_name, ident, scope_nid, context);
     }
-
-    """Yield the identifier value-nodes of a dict/list/set/tuple literal that are
-        function-reference candidates: dict VALUES (never keys), and the elements of a
-        list/set/tuple. Nested collections are reached by the caller's own recursion."""
     def _python_dispatch_value_idents(coll_node) -> Generator[any, any, any] {
         if coll_node.type == "dictionary" {
             for pair in coll_node.children {
@@ -12658,11 +12604,6 @@ impl _extract_generic(
             }
         }
     }
-
-    """Yield the ``module.func`` value-nodes of a dict/list/set/tuple literal: the
-        same value positions as ``_python_dispatch_value_idents``, written with a module
-        prefix (``{"card": card.card_charge}``). Only a bare-name receiver qualifies; a
-        longer chain (``a.b.c``) or a call result has no single receiver to resolve."""
     def _python_dispatch_value_attrs(coll_node) -> Generator[any, any, any] {
         if coll_node.type == "dictionary" {
             values: any = (p.child_by_field_name("value")
@@ -12684,15 +12625,7 @@ impl _extract_generic(
             }
         }
     }
-
-    """``module.func`` listed in a dispatch table: defer it to the Python member-call
-        resolver as an ``indirect`` member raw_call. That resolver binds it only when the
-        receiver is a module imported into this file holding exactly one callable of that
-        name, and emits an INFERRED ``indirect_call`` like the bare-name path. A receiver
-        bound as a param/local (or ``self``/``cls``) names a value, not a module."""
-    def _emit_indirect_member_ref(
-        attr_node, scope_nid: str, enclosing_locals, context: str
-    ) -> None {
+    def _emit_indirect_member_ref(attr_node, scope_nid: str, enclosing_locals, context: str) {
         receiver: any = _read_text(attr_node.child_by_field_name("object"), source);
         if receiver in enclosing_locals or receiver in ("self", "cls") {
             return;
@@ -12708,11 +12641,6 @@ impl _extract_generic(
             "source_location": f"L{attr_node.start_point[0] + 1}",
         });
     }
-
-    """Identifiers on the VALUE side of an assignment RHS or a return: a bare name
-        (`cb = handler`, `return handler`) or the elements of a bare unpack
-        (`a, b = f, g`). A collection LITERAL on the RHS (`cb = [f]`, `cb = (f, g)`) is a
-        dispatch table reached by the normal recursion, so it is not handled here."""
     def _python_ref_value_idents(value_node) -> Generator[any, any, any] {
         if value_node is None {
             return;
@@ -12727,16 +12655,6 @@ impl _extract_generic(
             }
         }
     }
-
-    """If ``call_node`` is a builtin ``getattr(obj, "name"[, default])`` whose name
-        argument is a PLAIN string literal, return ``(name, string_node)``: the string
-        names an attribute looked up by that exact name, so it resolves to a callable
-        def of the same label. A dynamic name — a variable, an f-string, a concatenation,
-        any expression — is not statically resolvable and yields ``None`` (no edge is
-        manufactured), as do the 1-arg form and ``obj.getattr(...)`` (a method, not the
-        builtin). Unlike an identifier, a string is an attribute name and is never
-        shadowed by a param/local, so callers resolve it without the shadow guard.
-        """
     def _getattr_ref_name(call_node) -> any {
         fn: any = call_node.child_by_field_name("function");
         if fn is None or fn.type != "identifier" or _read_text(fn, source) != "getattr" {
@@ -12795,7 +12713,7 @@ impl _extract_generic(
         caller_nid: str,
         receiver_types: dict[str, str] | tuple | None = None,
         extra_locals: frozenset[str] = extra_locals_default_,
-    ) -> None {
+    ) {
         if `node.type in config.function_boundary_types {
             if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript")
                 and `node.type in _JS_DESCEND_TYPES
@@ -14197,7 +14115,7 @@ impl _extract_generic(
         };
         conflicting = set[any]();
 
-        def _fold(table: dict[str, str]) -> None {
+        def _fold(table: dict[str, str]) {
             for (var, type_name) in table.items() {
                 if not type_name or type_table.setdefault(var, type_name) != type_name {
                     conflicting.add(var);
@@ -14265,7 +14183,7 @@ impl _extract_generic(
     if config.ts_module == "tree_sitter_python" {
         module_bound = _python_module_bound_names(`root, source);
 
-        def _scan_module_dispatch(n) -> None {
+        def _scan_module_dispatch(n) {
             if n.type in ("function_definition", "class_definition") {
                 return;
             }
@@ -14299,7 +14217,7 @@ impl _extract_generic(
     } elif config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript") {
         js_module_bound = _js_module_bound_names(`root, source);
 
-        def _scan_js_module_dispatch(n) -> None {
+        def _scan_js_module_dispatch(n) {
             if n.type in _JS_SCOPE_BOUNDARY {
                 return;
             }
@@ -14473,7 +14391,7 @@ impl _extract_generic(
     return result;
 }
 
-impl _ts_mark_public_twins(`root, source: bytes, result: dict) -> None {
+impl _ts_mark_public_twins(`root, source: bytes, result: dict) {
     shared: dict[str, set[str]] = {};
     stack: any = [`root];
     while stack {
@@ -14603,7 +14521,7 @@ impl _ts_descendant_decorators(`node) -> list {
     out: list;
     out = [];
 
-    def rec(n, top: bool) -> None {
+    def rec(n, top: bool) {
         for child in n.children {
             ct: any = child.type;
             if ct == "decorator" {
@@ -14624,8 +14542,8 @@ impl _ts_descendant_decorators(`node) -> list {
 
 impl _ts_emit_decorator_edges(
     class_node, class_nid: str, stem: str, source: bytes, ensure_named_node, add_edge
-) -> None {
-    def emit(deco_node, owner_nid: str) -> None {
+) {
+    def emit(deco_node, owner_nid: str) {
         name: any = _ts_decorator_name(deco_node, source);
         if not name {
             return;

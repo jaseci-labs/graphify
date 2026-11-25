@@ -136,7 +136,7 @@ impl extract_cobol(path: Path) -> dict {
         *,
         target_file: str | None = None,
         context: str | None = None,
-    ) -> None {
+    ) {
         key: any = (source_id, target_id, relation);
         if not source_id or not target_id or source_id == target_id or key in seen_edges {
             return;

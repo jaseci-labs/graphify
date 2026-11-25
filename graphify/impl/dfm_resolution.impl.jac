@@ -14,9 +14,7 @@ impl _method_name(label: str) -> str {
     return `str(label).removesuffix("()").strip().lower();
 }
 
-impl resolve_dfm_handlers(
-    per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+impl resolve_dfm_handlers(per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]) {
     existing_pairs: any;
     nodes_by_file: dict[str, list[dict]] = {};
     `node: any;
@@ -53,7 +51,7 @@ impl resolve_dfm_handlers(
     known_files: any = `set(nodes_by_file);
     existing_pairs = {(e.get("source"), e.get("target")) for e in all_edges};
 
-    def _emit(source: str, target: str, context: str, form_file: str, location) -> None {
+    def _emit(source: str, target: str, context: str, form_file: str, location) {
         pair: any = (source, target);
         if source == target or pair in existing_pairs {
             return;

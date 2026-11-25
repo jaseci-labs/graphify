@@ -106,7 +106,7 @@ impl _strip_trailing_csharp_generic_args(target_fqn: str) -> str {
 
 impl _resolve_cross_file_csharp_imports(
     per_file: list[dict], paths: list[Path], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+) {
     _: any = (per_file, paths);
     namespace_id_by_label: dict[str, str] = {};
     for `node in sorted(
@@ -426,7 +426,7 @@ impl CsharpNameResolver._using_in_scope(
 }
 
 impl CsharpNameResolver._scopes_for(source_node: dict, source_file: str) -> list[str] {
-    def _append_unique(items: list[str], value: str) -> None {
+    def _append_unique(items: list[str], value: str) {
         if value not in items {
             items.append(value);
         }
@@ -681,7 +681,7 @@ impl CsharpNameResolver.__hash__ -> int {
 
 impl _resolve_csharp_type_references(
     per_file: list[dict], paths: list[Path], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+) {
     resolver: any;
     node_by_id: any;
     aliases_by_file: any;

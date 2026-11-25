@@ -128,7 +128,7 @@ impl extract_json(path: Path) -> dict {
         "bundledDependencies",
     });
 
-    def add_node(nid: str, label: str, line: int, file_type: str = "code") -> None {
+    def add_node(nid: str, label: str, line: int, file_type: str = "code") {
         if nid and nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -148,7 +148,7 @@ impl extract_json(path: Path) -> dict {
         line: int,
         context: str | None = None,
         target_file: "Path | None" = None,
-    ) -> None {
+    ) {
         if not src or not tgt or src == tgt {
             return;
         }
@@ -181,8 +181,6 @@ impl extract_json(path: Path) -> dict {
 
     file_nid = _make_id(`str(path));
     add_node(file_nid, path.name, 1);
-
-    """Extract the string content of a pair's key."""
     def _key_text(pair_node) -> str | None {
         key_node: any = pair_node.child_by_field_name("key");
         if key_node is None {
@@ -205,7 +203,7 @@ impl extract_json(path: Path) -> dict {
 
     def walk_object(
         obj_node, parent_nid: str, parent_key: str | None, depth: int, pair_count: list
-    ) -> None {
+    ) {
         if depth > 6 {
             return;
         }

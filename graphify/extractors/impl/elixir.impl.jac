@@ -44,7 +44,7 @@ impl extract_elixir(path: Path) -> dict {
     seen_ids = set[any]();
     function_bodies = [];
 
-    def add_node(nid: str, label: str, line: int, **attrs) -> None {
+    def add_node(nid: str, label: str, line: int, **attrs) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             `node: any = {
@@ -67,7 +67,7 @@ impl extract_elixir(path: Path) -> dict {
         confidence: str = "EXTRACTED",
         weight: float = 1.0,
         context: str | None = None,
-    ) -> None {
+    ) {
         `edge: any = {
             "source": src,
             "target": tgt,
@@ -101,14 +101,6 @@ impl extract_elixir(path: Path) -> dict {
         }
         return None;
     }
-
-    """Every module named by an alias/import/require/use argument.
-
-        Handles the single form (``alias Foo.Bar`` -> ``["Foo.Bar"]``) and the
-        multi-alias brace form (``alias Foo.{Bar, Baz}`` ->
-        ``["Foo.Bar", "Foo.Baz"]``), which the grammar represents as a ``dot``
-        node holding the base alias and a trailing ``tuple`` of member aliases.
-        """
     def _get_alias_modules(`node) -> list[str] {
         def _text(n) -> str {
             return source[n.start_byte:n.end_byte].decode("utf-8", errors="replace");
@@ -139,11 +131,6 @@ impl extract_elixir(path: Path) -> dict {
         }
         return [];
     }
-
-    """The module given for keyword ``key`` in an argument list, e.g. the
-        `for:` of `defimpl Proto, for: Type` or the `as:` of `alias A.B, as: C`.
-        The grammar holds it in a trailing `keywords` node as a `pair` whose
-        keyword is `key:` and whose value is an `alias`."""
     def _get_keyword_alias(`node, key: str) -> str | None {
         for child in `node.children {
             if child.type != "keywords" {
@@ -169,9 +156,6 @@ impl extract_elixir(path: Path) -> dict {
         }
         return None;
     }
-
-    """Expand the first segment of a module reference through the `alias`
-        tables visible from ``scope`` (or `__MODULE__` to the current module)."""
     def _expand_module(name: str, scope: str | None) -> str {
         first: any;
         _: any;
@@ -201,7 +185,7 @@ impl extract_elixir(path: Path) -> dict {
         return f"{target}.{rest}" if rest else target;
     }
 
-    def _record_aliases(arguments_node, scope: str | None) -> None {
+    def _record_aliases(arguments_node, scope: str | None) {
         modules: any = [_expand_module(m, scope) for m in _get_alias_modules(arguments_node)];
         as_name: any = _get_keyword_alias(arguments_node, "as");
         table: any = aliases.setdefault(scope, {});
@@ -214,7 +198,7 @@ impl extract_elixir(path: Path) -> dict {
         }
     }
 
-    def _register_module(nid: str, name: str, parent: str | None) -> None {
+    def _register_module(nid: str, name: str, parent: str | None) {
         parent_name: any = module_names.get(parent) if parent is not None else None;
         if parent_name {
             first: any = name.split(".", 1)[0];
@@ -223,13 +207,6 @@ impl extract_elixir(path: Path) -> dict {
         }
         module_names[nid] = name;
     }
-    """The body of a keyword-form definition (`def f(x), do: expr`).
-
-        tree-sitter-elixir puts the keyword body in the `arguments` node's
-        trailing `keywords` child, as the value of the `pair` whose keyword
-        is `do:` (#4207). Returns the value node, or None when the definition
-        uses a `do_block` (or has no keyword body at all).
-        """
     def _get_do_keyword_body(`node) -> any {
         if `node is None {
             return None;
@@ -298,20 +275,6 @@ impl extract_elixir(path: Path) -> dict {
         return None;
     }
     def_groups = {};
-
-    """Id for a def, salted when a sibling def differs only by `_`/case/`!`/`?`.
-
-        ``make_id`` drops ``_``, ``!`` and ``?`` and folds case, so
-        ``__schema__`` / ``schema``, ``get`` / ``get!`` or ``valid?`` / ``valid``
-        of one module minted one id: the second def vanished and its calls were
-        credited to its twin. Group the defs of the enclosing module (or of
-        the file, outside any module) by the id they would get, then apply
-        ``_underscore_salted_nid``, the Python/C#/Solidity/Java rule (#3302,
-        #4415, #5058, #5151): a unique public name keeps the plain id, every
-        other colliding name is salted. Defs that collide with nothing keep
-        their old id; clauses of one function share one name, so they are not
-        a collision.
-        """
     def _def_nid(container: str, def_node, func_name: str) -> str {
         scope: any = def_node.parent;
         while scope is not None
@@ -356,7 +319,7 @@ impl extract_elixir(path: Path) -> dict {
         );
     }
 
-    def walk(`node, parent_module_nid: str | None = None) -> None {
+    def walk(`node, parent_module_nid: str | None = None) {
         if `node.type != "call" {
             child: any;
             for child in `node.children {
@@ -565,9 +528,6 @@ impl extract_elixir(path: Path) -> dict {
         "with",
         "for",
     });
-
-    """import/use targets visible to a call inside ``caller_nid``: its own
-        module's, each enclosing module's, then the file's top-level ones."""
     def _call_scope_for(caller_nid: str) -> list[str] {
         scope: list[str] = [];
         seen: set[str] = set[any]();
@@ -581,7 +541,7 @@ impl extract_elixir(path: Path) -> dict {
         return scope;
     }
 
-    def walk_calls(`node, caller_nid: str) -> None {
+    def walk_calls(`node, caller_nid: str) {
         if `node.type != "call" {
             child: any;
             for child in `node.children {

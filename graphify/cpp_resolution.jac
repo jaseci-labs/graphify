@@ -1,13 +1,6 @@
-"""Conservative C++ type lookup for declared member-call receivers.
-
-This is lexical name lookup, not a C++ compiler: dependent types, alias templates,
-transitive using directives and arbitrary template specializations remain unresolved.
-"""
-
 import builtins;
 
 import operator;
-
 import from __future__ { annotations }
 
 import re;
@@ -24,7 +17,6 @@ with entry {
     seen_default_ = frozenset();
 }
 
-"""Reuse persisted AST facts while keeping scope/include lookup out of extract.py."""
 obj CppTypeLookup {
     has nodes: any,
         files: any,
@@ -72,11 +64,7 @@ obj CppTypeLookup {
     ) -> str | None;
 
     def shadowed_prefix(prefix: str, scope: str, source: str, position: int) -> bool;
-
-    """An unresolved lexical alias must not become an unrelated cross-repo class."""
     def is_alias(name: str, scope: str, source: str, position: int) -> bool;
-
-    """Return an owner, None for absent, or False for an unknown/ambiguous lookup."""
     def member_owner(
         type_nid: str, name: str, kind: str, seen: frozenset[str] = seen_default_
     ) -> str | bool | None;

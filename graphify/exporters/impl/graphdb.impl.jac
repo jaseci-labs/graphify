@@ -23,8 +23,6 @@ impl push_to_neo4j(
         return re.sub("[^A-Z0-9_]", "_", relation.upper().replace(" ", "_").replace("-", "_"))
             or "RELATED_TO";
     }
-
-    """Sanitize a Neo4j node label to prevent Cypher injection."""
     def _safe_label(label: str) -> str {
         sanitized: any = re.sub("[^A-Za-z0-9_]", "", label);
         return sanitized or "Entity";
@@ -103,8 +101,6 @@ impl push_to_falkordb(
         return re.sub("[^A-Z0-9_]", "_", relation.upper().replace(" ", "_").replace("-", "_"))
             or "RELATED_TO";
     }
-
-    """Sanitize a FalkorDB node label to prevent Cypher injection."""
     def _safe_label(label: str) -> str {
         sanitized: any = re.sub("[^A-Za-z0-9_]", "", label);
         return sanitized or "Entity";

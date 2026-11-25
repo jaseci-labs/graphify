@@ -1,7 +1,4 @@
-"""Query logging for graphify — append-only JSONL, fail-silent."""
-
 import from __future__ { annotations }
-
 import json;
 
 import os;
@@ -27,8 +24,6 @@ def _log_path -> Path | None;
 def _log_responses -> bool;
 
 def nodes_from_result(result: str) -> int | None;
-
-"""Append one JSONL record to the query log. Never raises."""
 def log_query(
     *,
     kind: str,
@@ -38,4 +33,4 @@ def log_query(
     nodes_returned: int | None = None,
     duration_ms: float | None = None,
     **extra: Any,
-) -> None;
+);

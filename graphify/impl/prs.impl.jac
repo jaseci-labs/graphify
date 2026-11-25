@@ -353,7 +353,9 @@ impl _load_graph_json(graph_path: Path) -> dict | None {
     if not graph_path.exists() {
         return None;
     }
-    check_graph_file_size_cap: any = importlib.import_module("graphify.security").check_graph_file_size_cap;
+    check_graph_file_size_cap: any = importlib.import_module(
+        "graphify.security"
+    ).check_graph_file_size_cap;
     try {
         check_graph_file_size_cap(graph_path);
         return json.loads(graph_path.read_text(encoding="utf-8"));
@@ -440,7 +442,7 @@ impl _truncate(s: str, n: int) -> str {
     return s if len(s) <= n else s[:n - 1] + "…";
 }
 
-impl render_dashboard(prs: list[PRInfo], base: str = "v8", show_wrong_base: bool = False) -> None {
+impl render_dashboard(prs: list[PRInfo], base: str = "v8", show_wrong_base: bool = False) {
     p: any;
     actionable: any = [p for p in prs if p.base_branch == base];
     wrong_base: any = [p for p in prs if p.base_branch != base];
@@ -545,7 +547,7 @@ impl render_dashboard(prs: list[PRInfo], base: str = "v8", show_wrong_base: bool
     }
 }
 
-impl render_worktrees(prs: list[PRInfo], worktrees: dict[str, str]) -> None {
+impl render_worktrees(prs: list[PRInfo], worktrees: dict[str, str]) {
     print();
     print(bold("  Worktrees"));
     print();
@@ -590,7 +592,7 @@ impl render_worktrees(prs: list[PRInfo], worktrees: dict[str, str]) -> None {
 
 impl render_conflicts(
     prs: list[PRInfo], base: str = "v8", community_labels: dict[int, list[str]] | None = None
-) -> None {
+) {
     ps: any;
     actionable: any = [p for p in prs if p.base_branch == base and p.communities_touched];
     if not actionable {
@@ -637,7 +639,7 @@ impl render_conflicts(
     }
 }
 
-impl render_pr_detail(pr: PRInfo, repo: str | None = None) -> None {
+impl render_pr_detail(pr: PRInfo, repo: str | None = None) {
     print();
     print(bold(f"  PR #{pr.number}  ·  {_status_color(pr.status)}"));
     print(f"  {pr.title}");
@@ -688,7 +690,9 @@ impl render_pr_detail(pr: PRInfo, repo: str | None = None) -> None {
 impl _resolve_triage_backend -> tuple[str, str] {
     BACKENDS: any = importlib.import_module("graphify.llm").BACKENDS;
     _get_backend_api_key: any = importlib.import_module("graphify.llm")._get_backend_api_key;
-    _default_model_for_backend: any = importlib.import_module("graphify.llm")._default_model_for_backend;
+    _default_model_for_backend: any = importlib.import_module(
+        "graphify.llm"
+    )._default_model_for_backend;
 
     explicit: any = os.environ.get("GRAPHIFY_TRIAGE_BACKEND", "").strip();
     if explicit in BACKENDS {
@@ -715,7 +719,7 @@ impl _resolve_triage_backend -> tuple[str, str] {
     return ("ollama", _default_model_for_backend("ollama"));
 }
 
-impl triage_with_opus(prs: list[PRInfo], base: str) -> None {
+impl triage_with_opus(prs: list[PRInfo], base: str) {
     try {
         BACKENDS: any = importlib.import_module("graphify.llm").BACKENDS;
         _get_backend_api_key: any = importlib.import_module("graphify.llm")._get_backend_api_key;
@@ -842,7 +846,7 @@ impl triage_with_opus(prs: list[PRInfo], base: str) -> None {
     }
 }
 
-impl cmd_prs(argv: list[str]) -> None {
+impl cmd_prs(argv: list[str]) {
     pr_number: int | None;
     base: str | None = None;
     repo: str | None = None;
@@ -880,7 +884,7 @@ impl cmd_prs(argv: list[str]) -> None {
         } elif arg.lstrip("#").isdigit() {
             pr_number = `int(arg.lstrip("#"));
         } elif arg in ("-h", "--help") {
-            print(__doc__);
+            print(_USAGE);
             return;
         }
         i += 1;

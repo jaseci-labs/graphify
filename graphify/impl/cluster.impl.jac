@@ -58,7 +58,7 @@ impl _load_cached_partition(cache_path: "str | Path", topo_hash: str) -> dict[in
 
 impl _store_cached_partition(
     cache_path: "str | Path", topo_hash: str, communities: dict[int, list[str]]
-) -> None {
+) {
     write_json_atomic: any = importlib.import_module("graphify.paths").write_json_atomic;
 
     write_json_atomic(

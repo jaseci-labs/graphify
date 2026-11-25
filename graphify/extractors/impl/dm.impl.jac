@@ -34,7 +34,7 @@ impl extract_dm(path: Path) -> dict {
     seen_ids = set[any]();
     function_bodies = [];
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid and nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -55,7 +55,7 @@ impl extract_dm(path: Path) -> dict {
         confidence: str = "EXTRACTED",
         weight: float = 1.0,
         context: str | None = None,
-    ) -> None {
+    ) {
         if not src or not tgt or src == tgt {
             return;
         }
@@ -112,9 +112,7 @@ impl extract_dm(path: Path) -> dict {
         return _read_text(file_node, source).strip("'\"");
     }
 
-    def walk(
-        `node, parent_type_path: "str | None" = None, parent_type_nid: "str | None" = None
-    ) -> None {
+    def walk(`node, parent_type_path: "str | None" = None, parent_type_nid: "str | None" = None) {
         t: any = `node.type;
         line: any = `node.start_point[0] + 1;
 
@@ -243,7 +241,7 @@ impl extract_dm(path: Path) -> dict {
     seen_call_pairs = set[any]();
     raw_calls = [];
 
-    def _emit_call(caller_nid: str, callee: str, line: int, is_member: bool) -> None {
+    def _emit_call(caller_nid: str, callee: str, line: int, is_member: bool) {
         candidates: any = label_to_nids.get(callee.lower(), []);
         tgt_nid: any = candidates[0] if len(candidates) == 1 else None;
         if tgt_nid and tgt_nid != caller_nid {
@@ -273,7 +271,7 @@ impl extract_dm(path: Path) -> dict {
         }
     }
 
-    def walk_calls(body_node, caller_nid: str) -> None {
+    def walk_calls(body_node, caller_nid: str) {
         if body_node is None {
             return;
         }

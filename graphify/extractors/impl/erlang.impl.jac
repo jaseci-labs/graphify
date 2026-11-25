@@ -15,7 +15,7 @@ impl _descendants(`node: Node) -> Generator[any, any, any] {
 
 impl resolve_erlang_remote_calls(
     per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+) {
     functions: dict[tuple[str, str, int], list[str]] = {};
     for `node in all_nodes {
         metadata: any = `node.get("metadata");
@@ -137,7 +137,7 @@ impl extract_erlang(path: Path) -> dict {
         return nid;
     }
 
-    def add_edge(source_id: str, target_id: str, relation: str, `node: Node) -> None {
+    def add_edge(source_id: str, target_id: str, relation: str, `node: Node) {
         key: any = (source_id, target_id, relation);
         if not source_id or not target_id or source_id == target_id or key in seen_edges {
             return;

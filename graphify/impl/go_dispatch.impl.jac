@@ -7,7 +7,7 @@ impl _is_go_interface(`node: dict | None) -> bool {
 
 impl resolve_go_interface_dispatch(
     per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+) {
     interfaces: any;
     method_names: dict[str, set[str]];
     embeds: dict[str, set[str]];

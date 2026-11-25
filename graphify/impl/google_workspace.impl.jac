@@ -105,9 +105,7 @@ impl read_google_shortcut(path: Path) -> dict[str, str | None] {
     };
 }
 
-impl _run_gws_export(
-    file_id: str, mime_type: str, output: Path, resource_key: str | None = None
-) -> None {
+impl _run_gws_export(file_id: str, mime_type: str, output: Path, resource_key: str | None = None) {
     exe: any = shutil.which("gws");
     if not exe {
         raise RuntimeError(

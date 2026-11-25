@@ -119,7 +119,7 @@ impl _active -> dict[str, str] {
     return got;
 }
 
-impl set_language_overrides(mapping: dict[str, str] | None) -> None {
+impl set_language_overrides(mapping: dict[str, str] | None) {
     active: any = _active();
     active.clear();
     if mapping {

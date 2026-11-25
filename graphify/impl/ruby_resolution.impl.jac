@@ -40,9 +40,7 @@ impl _ruby_raw_calls(per_file: list[dict]) -> list[dict] {
     return calls;
 }
 
-impl resolve_ruby_member_calls(
-    per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+impl resolve_ruby_member_calls(per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]) {
     node_by_id: dict[str, dict];
     external_method_owners: any;
     class_def_nids: dict[str, list[str]];
@@ -161,8 +159,6 @@ impl resolve_ruby_member_calls(
         label = `str(node_by_id.get(nid, {}).get("label", ""));
         class_labels.setdefault(label, set[any]()).add(nid);
     }
-
-    """Resolve the extracted Ruby superclass reference in lexical order."""
     def _resolve_base(raw_base: str | None, lexical_scopes: list[str] | None) -> str | None {
         if not raw_base or lexical_scopes is None {
             return None;
@@ -294,17 +290,6 @@ impl resolve_ruby_member_calls(
         nids: any = class_def_nids.get(_key(name), []);
         return nids[0] if len(nids) == 1 else None;
     }
-
-    """Resolve a qualified constant receiver (``Billing::Processor``) to one class.
-
-        Matches on the constant path rather than its tail: a class qualifies when its
-        own label ends with the referenced segments, so ``Billing::Processor`` still
-        finds an ``App::Billing::Processor`` while ``ActiveRecord::Base`` no longer
-        binds to an unrelated ``Thing::Base`` (#3078). A leading ``::`` pins the
-        reference to top level, so it must match the label whole. Ambiguous, or
-        matching nothing in the corpus (the usual case for a framework constant) ->
-        no edge, never a guess.
-        """
     def _class_by_const_path(raw: str) -> str | None {
         segs: any = `tuple(_segment_path(raw));
         if not segs {
@@ -325,7 +310,7 @@ impl resolve_ruby_member_calls(
 
     def _emit(
         caller: str, target: str, rc: dict[str, Any], relation: str = "calls", context: str = "call"
-    ) -> None {
+    ) {
         if not caller or not target or caller == target {
             return;
         }
@@ -345,8 +330,6 @@ impl resolve_ruby_member_calls(
             "weight": 1.0,
         });
     }
-
-    """Find one nearest same-kind method on one safe, acyclic base chain."""
     def _inherited_method(owner: str, name: str, kind: str) -> str | None {
         current: any = owner;
         seen: set[str] = set[any]();
@@ -381,9 +364,7 @@ impl resolve_ruby_member_calls(
         }
         return None;
     }
-
-    """Promote exactly one matching edge in place; never create or repoint."""
-    def _promote_inferred(caller: str, target: str, callee: str, rc: dict) -> None {
+    def _promote_inferred(caller: str, target: str, callee: str, rc: dict) {
         matches: any = [
             `edge
             for `edge in all_edges

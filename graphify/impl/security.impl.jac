@@ -104,7 +104,7 @@ impl _resolve_and_validate(host: str, port: int) -> tuple[int, str] {
     raise OSError(f"SSRF blocked: no usable address resolved from '{host}'");
 }
 
-impl _SSRFGuardedHTTPConnection.connect -> None {
+impl _SSRFGuardedHTTPConnection.connect {
     family: any;
     ip: any;
     (family, ip) = _resolve_and_validate(self.host, self.port) as any;
@@ -114,7 +114,7 @@ impl _SSRFGuardedHTTPConnection.connect -> None {
     }
 }
 
-impl _SSRFGuardedHTTPSConnection.connect -> None {
+impl _SSRFGuardedHTTPSConnection.connect {
     family: any;
     ip: any;
     (family, ip) = _resolve_and_validate(self.host, self.port) as any;
@@ -220,7 +220,7 @@ impl validate_graph_path(path: str | Path, base: Path | None = None) -> Path {
     return resolved;
 }
 
-impl check_graph_file_size_cap(path: Path) -> None {
+impl check_graph_file_size_cap(path: Path) {
     cap: any = _max_graph_file_bytes();
     try {
         size: any = path.stat().st_size;

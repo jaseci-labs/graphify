@@ -1,7 +1,4 @@
-"""Elixir extractor. Moved verbatim from graphify/extract.py."""
-
 import from __future__ { annotations }
-
 import re;
 
 import from pathlib { Path }
@@ -28,5 +25,4 @@ with entry {
     _ELIXIR_PRIVATE_SUFFIXES = ("!", "?");
 }
 
-"""Extract modules, functions, imports, and calls from a .ex/.exs file."""
 def extract_elixir(path: Path) -> dict;

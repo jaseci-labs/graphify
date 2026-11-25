@@ -80,7 +80,9 @@ impl _attach_files(
         for n in syms {
             label = n.get("label", n.get("id", "?"));
             if n.get("file_type") == "code" {
-                _is_file_node_label: any = importlib.import_module("graphify.build")._is_file_node_label;
+                _is_file_node_label: any = importlib.import_module(
+                    "graphify.build"
+                )._is_file_node_label;
                 if _is_file_node_label(label, src_file) {
                     continue;
                 }
@@ -259,7 +261,9 @@ impl write_tree_html(
     project_label: Optional[str] = None,
     top_k_edges: int = 0,
 ) -> Path {
-    check_graph_file_size_cap: any = importlib.import_module("graphify.security").check_graph_file_size_cap;
+    check_graph_file_size_cap: any = importlib.import_module(
+        "graphify.security"
+    ).check_graph_file_size_cap;
     check_graph_file_size_cap(graph_path);
     `graph: any = json.loads(graph_path.read_text(encoding="utf-8"));
     tree: any = build_tree(

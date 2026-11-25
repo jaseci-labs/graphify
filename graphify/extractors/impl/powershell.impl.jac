@@ -42,7 +42,7 @@ impl extract_powershell(path: Path) -> dict {
     class_names_by_id = {};
     methods_by_class = {};
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -63,7 +63,7 @@ impl extract_powershell(path: Path) -> dict {
         confidence: str = "EXTRACTED",
         weight: float = 1.0,
         context: str | None = None,
-    ) -> None {
+    ) {
         `edge: any = {
             "source": src,
             "target": tgt,
@@ -141,8 +141,6 @@ impl extract_powershell(path: Path) -> dict {
         }
         return nid;
     }
-
-    """Drill into a type_literal node and return the inner type_identifier text."""
     def _ps_type_name(type_literal_node) -> str | None {
         if type_literal_node is None {
             return None;
@@ -165,7 +163,7 @@ impl extract_powershell(path: Path) -> dict {
         return None;
     }
 
-    def walk(`node, parent_class_nid: str | None = None) -> None {
+    def walk(`node, parent_class_nid: str | None = None) {
         t: any = `node.type;
 
         if t == "function_statement" {
@@ -445,7 +443,7 @@ impl extract_powershell(path: Path) -> dict {
     seen_call_pairs = set[any]();
     raw_calls = [];
 
-    def walk_calls(`node, caller_nid: str, parent_class_nid: str | None) -> None {
+    def walk_calls(`node, caller_nid: str, parent_class_nid: str | None) {
         if `node.type in ("function_statement", "class_statement") {
             return;
         }
@@ -561,7 +559,7 @@ impl _psd1_collect_string_literals(`node, source: bytes) -> list[str] {
     results: list[str];
     results = [];
 
-    def _walk(n) -> None {
+    def _walk(n) {
         if n.type == "string_literal" {
             raw: any = source[n.start_byte:n.end_byte].decode(errors="replace");
             results.append(raw.strip("'\""));
@@ -611,7 +609,7 @@ impl extract_powershell_manifest(path: Path) -> dict {
     edges = [];
     seen_ids = set[any]();
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -624,7 +622,7 @@ impl extract_powershell_manifest(path: Path) -> dict {
         }
     }
 
-    def add_import_edge(src: str, module_raw: str, line: int) -> None {
+    def add_import_edge(src: str, module_raw: str, line: int) {
         name: any = _psd1_module_name(module_raw);
         if not name {
             return;
@@ -644,9 +642,7 @@ impl extract_powershell_manifest(path: Path) -> dict {
 
     file_nid = _make_id(`str(path));
     add_node(file_nid, path.name, 1);
-
-    """Walk the AST and emit edges for import-relevant hash_entry nodes."""
-    def walk_manifest(`node) -> None {
+    def walk_manifest(`node) {
         module_name_strings: list[str];
         inside_hash_entries: set[int];
         if `node.type != "hash_entry" {
@@ -687,8 +683,6 @@ impl extract_powershell_manifest(path: Path) -> dict {
         } elif key_text == "RequiredModules" {
             module_name_strings = [];
             inside_hash_entries = set[any]();
-
-            """Return all string_literal nodes in subtree."""
             def _collect_string_nodes(n) -> Generator[any, any, any] {
                 if n.type == "string_literal" {
                     yield n;
@@ -699,7 +693,7 @@ impl extract_powershell_manifest(path: Path) -> dict {
                 }
             }
 
-            def find_modulename_entries(n) -> None {
+            def find_modulename_entries(n) {
                 c: any;
                 if n.type == "hash_entry" {
                     sub_key: any = next(

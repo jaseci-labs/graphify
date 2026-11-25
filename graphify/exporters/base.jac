@@ -1,12 +1,4 @@
-"""Shared constants/helpers for the graphify exporters package.
-
-Symbols used by more than one exporter live here so each exporter module can be
-split out of graphify/export.py without a circular import (export.py and the
-per-format modules both import from here, never from each other).
-"""
-
 import from __future__ { annotations }
-
 glob COMMUNITY_COLORS: any = [
     "#4E79A7",
     "#F28E2B",

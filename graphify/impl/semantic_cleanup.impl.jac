@@ -106,7 +106,7 @@ impl load_validated_semantic_fragment(path: Path) -> tuple[dict | None, list[str
     return (None, errors) if errors else (fragment, []);
 }
 
-impl _validate_semantic_id(errors: list[str], field: str, value: object) -> None {
+impl _validate_semantic_id(errors: list[str], field: str, value: object) {
     if not isinstance(value, `str) {
         errors.append(f"{field} must be a string");
         return;
@@ -251,7 +251,7 @@ impl _is_sentence_like_rationale_label(label: str) -> bool {
     return `bool(re.search("[.!?:]", label));
 }
 
-impl _append_rationale_attr(`node: dict, texts: list[str]) -> None {
+impl _append_rationale_attr(`node: dict, texts: list[str]) {
     existing: any = `node.get("rationale", "");
     new_text: any = "\n\n".join(texts).strip();
     if existing {

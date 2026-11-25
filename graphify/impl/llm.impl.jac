@@ -615,7 +615,9 @@ impl _sanitize_fragment(parsed: dict) -> dict {
     }
     hyperedges: any = parsed.get("hyperedges");
     if hyperedges {
-        _coerce_hyperedge_member_refs: any = importlib.import_module("graphify.build")._coerce_hyperedge_member_refs;
+        _coerce_hyperedge_member_refs: any = importlib.import_module(
+            "graphify.build"
+        )._coerce_hyperedge_member_refs;
         for he in hyperedges {
             if isinstance(he.get("nodes"), `list) {
                 he["nodes"] = _coerce_hyperedge_member_refs(he, he["nodes"]);
@@ -717,11 +719,7 @@ impl _parse_llm_json(raw: str) -> dict {
             return _sanitize_fragment(parsed);
         }
         if isinstance(parsed, `list) {
-            frags: any = [
-                fragment
-                for fragment in parsed
-                if is_fragment(fragment)
-            ];
+            frags: any = [fragment for fragment in parsed if is_fragment(fragment)];
             if len(frags) == 1 {
                 return _sanitize_fragment(frags[0]);
             }
@@ -749,11 +747,7 @@ impl _parse_llm_json(raw: str) -> dict {
             continue;
         }
         if isinstance(parsed, `list) {
-            frags = [
-                fragment
-                for fragment in parsed
-                if is_fragment(fragment)
-            ];
+            frags = [fragment for fragment in parsed if is_fragment(fragment)];
             if len(frags) > 1 {
                 print(
                     "[graphify] LLM returned an array of graph fragments; refusing to accept only its first object.",
@@ -1746,7 +1740,7 @@ impl _looks_like_timeout(exc: BaseException) -> bool {
     return isinstance(exc, `tuple(types));
 }
 
-impl _mark_partial(result: dict) -> None {
+impl _mark_partial(result: dict) {
     for bucket in ("nodes", "edges", "hyperedges") {
         for item in result.get(bucket, []) {
             if isinstance(item, `dict) {
@@ -1784,7 +1778,7 @@ impl _partial_source_files(result: dict) -> list[str] {
     return sorted(seen);
 }
 
-impl _strip_partial_markers(result: dict) -> None {
+impl _strip_partial_markers(result: dict) {
     for bucket in ("nodes", "edges", "hyperedges") {
         for item in result.get(bucket, []) {
             if isinstance(item, `dict) {
@@ -2097,7 +2091,7 @@ impl extract_corpus_parallel(
     };
     held_results = {};
 
-    def _checkpoint_chunk(idx: int, result: dict, chunk: "list[Path | FileSlice]") -> None {
+    def _checkpoint_chunk(idx: int, result: dict, chunk: "list[Path | FileSlice]") {
         sliced: any = [unit_path(u) for u in chunk if isinstance(u, FileSlice)];
         parent: any;
         for parent in sliced {
@@ -2127,7 +2121,7 @@ impl extract_corpus_parallel(
         }
     }
 
-    def _save_checkpoint(result: dict, allowed: "list[Path]") -> None {
+    def _save_checkpoint(result: dict, allowed: "list[Path]") {
         if os.environ.get("GRAPHIFY_NO_INCREMENTAL_CACHE") {
             return;
         }
@@ -2342,7 +2336,7 @@ impl _stamp_semantic_origin(result: dict) -> dict {
     return result;
 }
 
-impl _merge_into(merged: dict, result: dict) -> None {
+impl _merge_into(merged: dict, result: dict) {
     merged["nodes"].extend(result.get("nodes", []));
     merged["edges"].extend(result.get("edges", []));
     merged["hyperedges"].extend(result.get("hyperedges", []));
@@ -2382,7 +2376,7 @@ impl _call_llm(
     }
     mdl: any = model or _default_model_for_backend(backend);
 
-    def _rec(inp, out) -> None {
+    def _rec(inp, out) {
         if usage_out is not None {
             usage_out["input"] = usage_out.get("input", 0) + `int(inp or 0);
             usage_out["output"] = usage_out.get("output", 0) + `int(out or 0);
@@ -2619,7 +2613,7 @@ impl _ollama_host_is_link_local_or_metadata(host: str) -> bool {
     return False;
 }
 
-impl _validate_ollama_base_url(url: str, *, warn: bool = True) -> None {
+impl _validate_ollama_base_url(url: str, *, warn: bool = True) {
     try {
         import from urllib.parse { urlparse }
         parsed: any = urlparse(url);
@@ -2977,7 +2971,7 @@ impl label_communities(
     written = 0;
     errors = {};
 
-    def _merge(batch_idx: int, parsed, exc, batch_usage=None) -> None {
+    def _merge(batch_idx: int, parsed, exc, batch_usage=None) {
         if usage_out is not None and batch_usage {
             usage_out["input"] = usage_out.get("input", 0) + batch_usage.get("input", 0);
             usage_out["output"] = usage_out.get("output", 0) + batch_usage.get("output", 0);

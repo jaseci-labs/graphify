@@ -6,7 +6,7 @@ impl __getattr__(name: str) -> str {
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}");
 }
 
-impl _check_skill_version(skill_dst: Path, platform_names: "list[str] | None" = None) -> None {
+impl _check_skill_version(skill_dst: Path, platform_names: "list[str] | None" = None) {
     if platform_names is None {
         try {
             platform_names = [
@@ -88,7 +88,7 @@ impl _version_tuple(version: str) -> tuple[int, ...] {
     return `tuple(parts);
 }
 
-impl _refresh_stale_skills -> None {
+impl _refresh_stale_skills {
     name: any;
     if os.environ.get("GRAPHIFY_NO_AUTO_REFRESH", "").strip().lower() in ("1", "true", "yes") {
         return;
@@ -159,7 +159,7 @@ impl _skill_platforms -> list[str] {
     return `list(dict.fromkeys([*_PLATFORM_CONFIG, "gemini"]));
 }
 
-impl _refresh_one_skill(name: str, skill_dst: Path, installed: str) -> None {
+impl _refresh_one_skill(name: str, skill_dst: Path, installed: str) {
     backup: any = skill_dst.with_suffix(skill_dst.suffix + ".bak");
     captured: any = io.StringIO();
     try {
@@ -202,7 +202,7 @@ impl _opencode_loads_current_plugin -> bool {
         and operator.ge(`tuple(`int(part) for part in found.groups()), (1, 3, 4));
 }
 
-impl _refresh_v1_opencode_plugins -> None {
+impl _refresh_v1_opencode_plugins {
     directory: any;
     plugin_file: any;
     if os.environ.get("GRAPHIFY_NO_AUTO_REFRESH", "").strip().lower() in ("1", "true", "yes") {
@@ -224,8 +224,6 @@ impl _refresh_v1_opencode_plugins -> None {
     for directory_ in directories {
         directory = directory_;
         plugin_file = directory / _OPENCODE_PLUGIN_PATH.relative_to(".opencode");
-
-        """True for an old plugin, False for a stale entry only, None for neither."""
         def pending -> "bool | None" {
             try {
                 body: any = plugin_file.read_text(encoding="utf-8");
@@ -293,7 +291,7 @@ impl _refresh_v1_opencode_plugins -> None {
     }
 }
 
-impl _silence_broken_pipe -> None {
+impl _silence_broken_pipe {
     try {
         devnull: any = os.open(os.devnull, os.O_WRONLY);
         os.dup2(devnull, sys.stdout.fileno());
@@ -301,7 +299,7 @@ impl _silence_broken_pipe -> None {
     sys.exit(0);
 }
 
-impl _pin_hash_seed_if_needed -> None {
+impl _pin_hash_seed_if_needed {
     if len(sys.argv) < 2 or sys.argv[1] not in _HASHSEED_PINNED_COMMANDS {
         return;
     }
@@ -315,7 +313,7 @@ impl _pin_hash_seed_if_needed -> None {
     } except OSError {}
 }
 
-impl _reexec(argv: list[str], env: dict[str, str], windows: bool | None = None) -> None {
+impl _reexec(argv: list[str], env: dict[str, str], windows: bool | None = None) {
     if windows is None {
         windows = operator.eq(os.name, "nt");
     }
@@ -328,7 +326,7 @@ impl _reexec(argv: list[str], env: dict[str, str], windows: bool | None = None) 
     os.execvpe(argv[0], argv, env);
 }
 
-impl main -> None {
+impl main {
     _pin_hash_seed_if_needed();
     try {
         _run_cli();
@@ -344,7 +342,7 @@ impl main -> None {
     }
 }
 
-impl _run_cli -> None {
+impl _run_cli {
     _silent_cmds: any;
     _help_flags: any;
     for _stream in (sys.stdout, sys.stderr) {

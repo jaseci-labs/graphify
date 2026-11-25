@@ -177,7 +177,9 @@ impl _node_link_payload(data: dict) -> tuple[list, list] | None {
 impl load_graph(path: str | Path) -> tuple {
     i: any;
     if path {
-        check_graph_file_size_cap: any = importlib.import_module("graphify.security").check_graph_file_size_cap;
+        check_graph_file_size_cap: any = importlib.import_module(
+            "graphify.security"
+        ).check_graph_file_size_cap;
         try {
             check_graph_file_size_cap(Path(path));
         } except ValueError as exc {

@@ -1,6 +1,5 @@
 import importlib;
 import operator;
-
 import from __future__ { annotations }
 
 import os;
@@ -42,13 +41,6 @@ glob _GIT_C_ESCAPES: any = {
     "\"": 34,
     "\\": 92,
 };
-
-"""Decode a path as printed by ``git diff --name-only``.
-
-    Even with ``core.quotePath=false`` git wraps a name containing a double
-    quote, backslash or control character in double quotes and C-escapes it,
-    spelling raw bytes as ``\\ooo`` octal. Unquoted names are returned as-is.
-    """
 def _unquote_git_path(name: str) -> str;
 
 glob _REBUILD_BODY_COMMIT: any = "import os, signal, sys, threading, multiprocessing\nfrom pathlib import Path\n\nfrom graphify.hooks import _unquote_git_path\n\nchanged_raw = os.environ.get('GRAPHIFY_CHANGED', '')\nchanged = [Path(_unquote_git_path(f.strip())) for f in changed_raw.strip().splitlines() if f.strip()]\n\nif not changed:\n    sys.exit(0)\n\nprint(f'[graphify hook] {len(changed)} file(s) changed - rebuilding graph...')\n\ntry:\n    from graphify.watch import _rebuild_code, _apply_resource_limits\n    _apply_resource_limits()\n    _timeout = int(os.environ.get('GRAPHIFY_REBUILD_TIMEOUT', '600'))\n    if _timeout > 0:\n        if hasattr(signal, 'SIGALRM'):\n            def _sigalrm_bail(*_a):\n                # Killing here, before the exception unwinds, matters: once\n                # TimeoutError starts propagating it passes straight through\n                # the ProcessPoolExecutor with-block's own __exit__, which\n                # calls shutdown(wait=True) and blocks until every worker\n                # exits -- forever, for a worker stuck the way #3341 was,\n                # since the alarm firing never actually stops it. Killing the\n                # workers first means shutdown has nothing left to wait for.\n                for _child in multiprocessing.active_children():\n                    _child.kill()\n                raise TimeoutError(f'graphify rebuild exceeded {_timeout}s')\n            signal.signal(signal.SIGALRM, _sigalrm_bail)\n            signal.alarm(_timeout)\n        else:\n            def _bail():\n                print(f'[graphify hook] graphify rebuild exceeded {_timeout}s', flush=True)\n                for _child in multiprocessing.active_children():\n                    _child.kill()\n                os._exit(1)\n            _watchdog = threading.Timer(_timeout, _bail)\n            _watchdog.daemon = True\n            _watchdog.start()\n    _force = os.environ.get('GRAPHIFY_FORCE', '').lower() in ('1', 'true', 'yes')\n    _root = Path('.')\n    from graphify.paths import GRAPHIFY_OUT as _out\n    _saved = Path(_out) / '.graphify_root'\n    if _saved.exists():\n        _txt = _saved.read_text(encoding='utf-8-sig').strip()\n        if _txt:\n            _candidate = Path(_txt)\n            try:\n                _cwd = Path.cwd().resolve()\n                _resolved = _candidate.resolve()\n                # Python 3.13 no longer raises on a symlink loop (resolve returns\n                # the path unresolved), so require a real directory: a loop or a\n                # dangling target is not a dir and correctly falls back.\n                _in_repo = (_resolved == _cwd or _cwd in _resolved.parents) and _resolved.is_dir()\n            except (OSError, RuntimeError):\n                _in_repo = False\n            if _in_repo:\n                _root = _candidate\n            else:\n                print(f'[graphify hook] ignoring out-of-repo .graphify_root: {_txt}')\n    _rebuild_code(_root, changed_paths=changed, force=_force)\n    # Refresh the work-memory lessons doc when saved Q&A outcomes exist\n    # (best-effort; never fails the hook).\n    try:\n        _md = (_root / _out) / 'memory'\n        if _md.is_dir() and any(_md.glob('*.md')):\n            from graphify.reflect import reflect as _reflect\n            _gj = (_root / _out) / 'graph.json'\n            _reflect(memory_dir=_md, out_path=(_root / _out) / 'reflections' / 'LESSONS.md',\n                     graph_path=_gj if _gj.exists() else None)\n    except Exception:\n        pass\nexcept TimeoutError as exc:\n    print(f'[graphify hook] {exc}')\n    sys.exit(1)\nexcept Exception as exc:\n    print(f'[graphify hook] Rebuild failed: {exc}')\n    sys.exit(1)\n";
@@ -56,15 +48,6 @@ glob _REBUILD_BODY_COMMIT: any = "import os, signal, sys, threading, multiproces
 glob _REBUILD_BODY_CHECKOUT: any = "from graphify.watch import _rebuild_code, _apply_resource_limits\nfrom pathlib import Path\nimport os, signal, sys, threading, multiprocessing\ntry:\n    _apply_resource_limits()\n    _timeout = int(os.environ.get('GRAPHIFY_REBUILD_TIMEOUT', '600'))\n    if _timeout > 0:\n        if hasattr(signal, 'SIGALRM'):\n            def _sigalrm_bail(*_a):\n                # Killing here, before the exception unwinds, matters: once\n                # TimeoutError starts propagating it passes straight through\n                # the ProcessPoolExecutor with-block's own __exit__, which\n                # calls shutdown(wait=True) and blocks until every worker\n                # exits -- forever, for a worker stuck the way #3341 was,\n                # since the alarm firing never actually stops it. Killing the\n                # workers first means shutdown has nothing left to wait for.\n                for _child in multiprocessing.active_children():\n                    _child.kill()\n                raise TimeoutError(f'graphify rebuild exceeded {_timeout}s')\n            signal.signal(signal.SIGALRM, _sigalrm_bail)\n            signal.alarm(_timeout)\n        else:\n            def _bail():\n                print(f'[graphify] graphify rebuild exceeded {_timeout}s', flush=True)\n                for _child in multiprocessing.active_children():\n                    _child.kill()\n                os._exit(1)\n            _watchdog = threading.Timer(_timeout, _bail)\n            _watchdog.daemon = True\n            _watchdog.start()\n    _force = os.environ.get('GRAPHIFY_FORCE', '').lower() in ('1', 'true', 'yes')\n    # post-checkout: branch switch can touch arbitrary files; full rebuild path\n    # (no changed_paths) is correct here. The flock inside _rebuild_code still\n    # prevents pile-ups when commit + checkout fire back-to-back.\n    _root = Path('.')\n    from graphify.paths import GRAPHIFY_OUT as _out\n    _saved = Path(_out) / '.graphify_root'\n    if _saved.exists():\n        _txt = _saved.read_text(encoding='utf-8-sig').strip()\n        if _txt:\n            _candidate = Path(_txt)\n            try:\n                _cwd = Path.cwd().resolve()\n                _resolved = _candidate.resolve()\n                # Python 3.13 no longer raises on a symlink loop (resolve returns\n                # the path unresolved), so require a real directory: a loop or a\n                # dangling target is not a dir and correctly falls back.\n                _in_repo = (_resolved == _cwd or _cwd in _resolved.parents) and _resolved.is_dir()\n            except (OSError, RuntimeError):\n                _in_repo = False\n            if _in_repo:\n                _root = _candidate\n            else:\n                print(f'[graphify] ignoring out-of-repo .graphify_root: {_txt}')\n    _rebuild_code(_root, force=_force)\n    # Refresh the work-memory lessons doc when saved Q&A outcomes exist\n    # (best-effort; never fails the hook).\n    try:\n        _md = (_root / _out) / 'memory'\n        if _md.is_dir() and any(_md.glob('*.md')):\n            from graphify.reflect import reflect as _reflect\n            _gj = (_root / _out) / 'graph.json'\n            _reflect(memory_dir=_md, out_path=(_root / _out) / 'reflections' / 'LESSONS.md',\n                     graph_path=_gj if _gj.exists() else None)\n    except Exception:\n        pass\nexcept TimeoutError as exc:\n    print(f'[graphify] {exc}')\n    sys.exit(1)\nexcept Exception as exc:\n    print(f'[graphify] Rebuild failed: {exc}')\n    sys.exit(1)\n";
 
 glob _LAUNCHER_TEMPLATE: any = "import os, subprocess, sys\n_src = '''\n__REBUILD_BODY__\n'''\n_log = os.environ.get('GRAPHIFY_REBUILD_LOG') or os.path.join(os.path.expanduser('~'), '.cache', 'graphify-rebuild.log')\ntry:\n    os.makedirs(os.path.dirname(_log), exist_ok=True)\n    _out = open(_log, 'a', buffering=1, encoding='utf-8', errors='replace')\nexcept OSError:\n    _out = subprocess.DEVNULL\n_kw = dict(stdout=_out, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, cwd=os.getcwd(), close_fds=True)\n_cmd = [sys.executable, '-c', _src]\nif os.name == 'nt':\n    _flags = 0x08000000 | 0x00000200  # CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP\n    try:\n        subprocess.Popen(_cmd, creationflags=_flags | 0x01000000, **_kw)  # + CREATE_BREAKAWAY_FROM_JOB\n    except OSError:\n        subprocess.Popen(_cmd, creationflags=_flags, **_kw)\nelse:\n    subprocess.Popen(_cmd, start_new_session=True, **_kw)\n";
-
-"""Return a POSIX-sh line that runs ``rebuild_body`` as a detached background
-    Python process via ``$GRAPHIFY_PYTHON``.
-
-    Replaces the old ``nohup ... &`` form, which failed on Git for Windows'
-    shell (no nohup/setsid) and let the rebuild silently never run (#1161).
-    The launcher writes the child's output to ``$GRAPHIFY_REBUILD_LOG`` and
-    returns the instant the child is spawned, so the git hook never blocks.
-    """
 def _detached_launch(rebuild_body: str) -> str;
 
 glob _WORKTREE_GUARD: any = "_GFY_GITDIR=$(CDPATH= cd \"$(git rev-parse --git-dir 2>/dev/null)\" 2>/dev/null && pwd)\n_GFY_COMMONDIR=$(CDPATH= cd \"$(git rev-parse --git-common-dir 2>/dev/null)\" 2>/dev/null && pwd)\nif [ -n \"$_GFY_COMMONDIR\" ] && [ \"$_GFY_GITDIR\" != \"$_GFY_COMMONDIR\" ]; then\n    exit 0\nfi\n";
@@ -122,147 +105,35 @@ with entry {
         + ")\n# graphify-rewrite-hook-end\n";
 }
 
-"""Load ``<root>/.graphifyrc``; the parser lives in :mod:`graphify.rcfile`.
-
-    Kept as the hooks-side name so callers and tests need not move. Returns
-    ``viz_node_limit`` (used here) alongside any other option the file sets.
-    """
 def _load_graphifyrc(`root: Path) -> dict;
-
-"""Walk up to find .git directory."""
 def _git_root(path: Path) -> Path | None;
 
 with entry {
     _WINDOWS_DRIVE_RE = re.compile("^[A-Za-z]:[\\\\/]");
 }
 
-"""Raise if a hooks path looks like a Windows absolute path (#1385).
-
-    On POSIX/WSL ``Path("C:\\Users\\...").is_absolute()`` is False, so an absolute
-    Windows hooks path gets joined under the repo root and mkdir'd as a literal
-    junk directory (backslashes and all), while install reports success and the
-    real ``.git/hooks`` gets nothing. Fail loudly instead so the user can fix it.
-    """
-def _reject_windows_path(value: str, source: str) -> None;
-
-"""True if `child` is `parent` or a path underneath it."""
+def _reject_windows_path(value: str, source: str);
 def _is_within(child: Path, parent: Path) -> bool;
-
-"""Resolve one ``git rev-parse`` path flag against ``root``.
-
-    ``-c core.hooksPath=`` is not used: an empty value makes ``--git-path hooks``
-    print ``./`` instead of the real hooks directory.
-    """
 def _rev_parse_path(`root: Path, flag: str) -> Path | None;
-
-"""Git's own hooks directory, ignoring core.hooksPath.
-
-    ``--git-path hooks`` follows core.hooksPath, so the default is derived from
-    the common git dir. A linked worktree's hooks live in the main repo's
-    ``.git/hooks``, which is outside the worktree root.
-    """
 def _builtin_hooks_dir(`root: Path) -> Path | None;
-
-"""Allow in-repo hook dirs (Husky) and git's own hooks dir only.
-
-    A core.hooksPath that resolves anywhere else is repository-controlled
-    local config. Honoring it makes `hook install` write outside the repo (#3869).
-    """
 def _hooks_path_allowed(`root: Path, candidate: Path) -> bool;
-
-"""Return the git hooks directory, respecting core.hooksPath if set (e.g. Husky).
-
-    Asks git itself via ``rev-parse --git-path hooks`` rather than parsing
-    ``.git/config`` with configparser: git legally allows duplicate keys and
-    sections (VS Code writes such configs), which a strict configparser rejects
-    with DuplicateOptionError/DuplicateSectionError, so every hook command
-    printed a spurious "could not read core.hooksPath" warning (#1907). git
-    resolves core.hooksPath, includeIf, and linked worktrees (where .git is a
-    file, not a directory) correctly in one place. Genuinely corrupt configs
-    are still surfaced: git itself fails on them, and its stderr is printed.
-    """
 def _hooks_dir(`root: Path) -> Path;
-
-"""Install a single git hook, appending if an existing hook is present, or updating
-    an existing graphify block in-place."""
 def _install_hook(
     hooks_dir: Path, name: str, script: str, marker: str, marker_end: str = ""
 ) -> str;
-
-"""Remove graphify section from a git hook using start/end markers."""
 def _uninstall_hook(hooks_dir: Path, name: str, marker: str, marker_end: str) -> str;
-
-"""Return sys.executable if its path is shell-safe, else an empty string.
-
-    Applies the same allowlist used in _PYTHON_DETECT: rejects any character
-    that is not a valid plain filesystem path character, preventing $(...),
-    backtick, double-quote, semicolon, etc. from being injected into generated
-    shell scripts or the merge-driver command line. The allowlist includes ':'
-    and '\\' so Windows paths (C:\\...) are accepted, and a plain space so
-    Windows profile paths (C:\\Users\\First Last\\...) are too — a space cannot
-    start a substitution or a new command, and every consumer quotes the value:
-    the hook scripts embed it as '$_PINNED' (single-quoted, then referenced as
-    "$_PINNED") and _register_merge_driver double-quotes it (#2166). Before that
-    a space rejected the whole path, so hooks installed under any Windows user
-    whose profile name contains a space silently pinned nothing. An empty return
-    means callers must fall back to the `graphify` launcher on PATH — safe
-    degradation.
-    """
 def _pinned_python -> str;
 
 with entry {
     _ROTATING_PREFIX_RE = re.compile("/snap/[^/]+/(\\d+|current)/");
 }
 
-"""True if `path` lives under a directory the packaging system rotates.
-
-    A pin is only worth writing if it will still resolve tomorrow. An interpreter
-    inside a snap revision will not: the revision number changes on update and the
-    old tree is removed, which silently kills every hook pinned to it — observed
-    across 15 repositories at once when an editor snap moved past its revision.
-
-    Returning "" here is the documented safe degradation: the hook falls through to
-    its other probes, including the uv-tools scan, which searches snap-confined
-    homes too.
-    """
 def _is_rotating_prefix(path: str) -> bool;
-
-"""The .gitattributes line assigning the graphify merge driver to graph.json.
-
-    The graph lives under the configured output directory (graphify.paths,
-    GRAPHIFY_OUT env override). gitattributes patterns are repo-relative, so an
-    absolute output-dir override cannot be expressed there — fall back to the
-    default name in that case.
-    """
 def _merge_attr_line -> str;
-
-"""True if a (non-comment) `<...>graph.json ... merge=graphify` line exists."""
 def _has_merge_attr(content: str) -> bool;
-
-"""Register the graph.json union merge driver in git config + .gitattributes (#1902).
-
-    README and CHANGELOG 0.7.0 document `graphify merge-driver` as being set up
-    by `hook install`, but install never actually registered it. Writes go
-    through `git config` (never hand-edit .git/config — in a linked worktree the
-    effective config is not at root/.git/config). The interpreter is pinned the
-    same way the hook scripts pin it, so the driver works even when the graphify
-    launcher is not on PATH at merge time.
-    """
 def _register_merge_driver(`root: Path) -> str;
-
-"""Remove the merge-driver git config keys and the .gitattributes line."""
 def _unregister_merge_driver(`root: Path) -> str;
-
-"""Report whether the merge driver is registered (config + gitattributes)."""
 def _merge_driver_status(`root: Path) -> str;
-
-"""Return the user-editable hooks directory.
-
-    Husky 9 sets core.hooksPath to .husky/_ (wrapper scripts auto-generated by
-    Husky), while user-editable hooks live in the parent .husky/. Return the
-    parent when the resolved dir ends in '_' so install/status/uninstall target
-    the correct location (#987).
-    """
 def _user_hooks_dir(hooks_dir: Path) -> Path;
 
 glob path_default_: any;
@@ -271,7 +142,6 @@ with entry {
     path_default_ = Path(".");
 }
 
-"""Install graphify's post-commit, post-checkout, post-merge, and post-rewrite hooks in the nearest git repo."""
 def install(path: Path = path_default_) -> str;
 
 glob path_default__: any;
@@ -280,7 +150,6 @@ with entry {
     path_default__ = Path(".");
 }
 
-"""Remove graphify's post-commit, post-checkout, post-merge, and post-rewrite hooks."""
 def uninstall(path: Path = path_default__) -> str;
 
 with entry {
@@ -288,8 +157,6 @@ with entry {
     _VIZ_EXPORT_LINE_RE = re.compile("^export GRAPHIFY_VIZ_NODE_LIMIT=.*\\n", re.MULTILINE);
 }
 
-"""The graphify block in *text* with its per-install values blanked out, or
-    None when the block has no end marker (install cannot rewrite those either)."""
 def _comparable_block(text: str, marker: str, marker_end: str) -> str | None;
 
 glob path_default___: any;
@@ -298,5 +165,4 @@ with entry {
     path_default___ = Path(".");
 }
 
-"""Check if graphify hooks are installed."""
 def status(path: Path = path_default___) -> str;

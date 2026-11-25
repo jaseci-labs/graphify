@@ -299,7 +299,7 @@ impl extract_markdown(path: Path) -> dict {
     seen_ids = set[any]();
     seen_mentions = set[any]();
 
-    def add_mention(caller_nid: str, span: str, line: int) -> None {
+    def add_mention(caller_nid: str, span: str, line: int) {
         mention: any = _code_span_mention(span);
         if mention is None {
             return;
@@ -340,7 +340,7 @@ impl extract_markdown(path: Path) -> dict {
         file_type: str = "document",
         node_kind: str = "heading",
         extra: "dict | None" = None,
-    ) -> None {
+    ) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             `node: any = {
@@ -366,7 +366,7 @@ impl extract_markdown(path: Path) -> dict {
         confidence: str = "EXTRACTED",
         weight: float = 1.0,
         target_file: "str | None" = None,
-    ) -> None {
+    ) {
         `edge: any = {
             "source": src,
             "target": tgt,
@@ -418,8 +418,6 @@ impl extract_markdown(path: Path) -> dict {
     );
 
     source_dir = path.parent;
-
-    """Whether *raw* resolves to a source file (not a document or asset)."""
     def _is_code_file_link(raw: str, base: Path) -> bool {
         resolved: any = _resolve_markdown_link(raw, base, exts=_MD_CITEABLE_EXTS);
         if resolved is None {
@@ -433,7 +431,7 @@ impl extract_markdown(path: Path) -> dict {
 
     owner_default_: any = file_nid;
 
-    def add_link(raw: str, line: int, owner: str = owner_default_, wikilink: bool = False) -> None {
+    def add_link(raw: str, line: int, owner: str = owner_default_, wikilink: bool = False) {
         resolved: any = _resolve_markdown_link(
             raw, source_dir, wikilink=wikilink, exts=_MD_CITEABLE_EXTS
         );

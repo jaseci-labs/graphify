@@ -66,7 +66,7 @@ impl extract_commonlisp(path: Path) -> dict {
         return _make_id(*normalized);
     }
 
-    def add_node(nid: str, label: str, line: int, file_type: str = "code") -> None {
+    def add_node(nid: str, label: str, line: int, file_type: str = "code") {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -86,7 +86,7 @@ impl extract_commonlisp(path: Path) -> dict {
         line: int,
         confidence: str = "EXTRACTED",
         weight: float = 1.0,
-    ) -> None {
+    ) {
         edges.append({
             "source": src,
             "target": tgt,
@@ -100,12 +100,6 @@ impl extract_commonlisp(path: Path) -> dict {
 
     file_nid = _cl_id(stem);
     add_node(file_nid, path.name, 1);
-
-    """Mint a SOURCELESS stub for an imported package so its `imports` edge
-        has a real target instead of dangling. The corpus rewire collapses it
-        onto a unique in-corpus `defpackage` of the same name; an external one
-        (cl, alexandria) stays a sourceless leaf. `origin_file` is stripped
-        before persist (no #1899 leak); a sourced bare stub would salt the id."""
     def add_import_stub(mod_name: str) -> str {
         nid: any = _cl_id(mod_name);
         if nid not in seen_ids {
@@ -121,22 +115,6 @@ impl extract_commonlisp(path: Path) -> dict {
         }
         return nid;
     }
-
-    """Resolve a superclass name to a node id.
-
-        If the class is defined in THIS file, bind to its local node. Otherwise
-        mint a SOURCELESS stub (like `add_import_stub`) so the corpus-level
-        rewire can collapse it onto the real `defclass` in another file. Without
-        this, a cross-file superclass had no matching node and its `inherits`
-        edge was pruned by the dangling-edge filter — silently erasing every
-        inheritance edge whose parent lives in a different file.
-
-        `local` is checked against `local_class_names` (every class this file
-        defines, gathered up front), not just `seen_ids`: forms are walked in
-        file order, so a class referenced before its own `defclass` form is
-        processed — e.g. a subclass listed above its parent — would otherwise
-        still be in `seen_ids` as absent, and this would wrongly mint an
-        external stub for a class that is right here in the same file."""
     def ensure_class_ref(name: str, line: int) -> str {
         local: any = _cl_id(stem, name);
         if local in seen_ids or name in local_class_names {
@@ -156,8 +134,6 @@ impl extract_commonlisp(path: Path) -> dict {
         }
         return stub;
     }
-
-    """Get the first sym_lit text from a list_lit's children."""
     def _first_sym(`node) -> str | None {
         for child in `node.children {
             if child.type == "sym_lit" {
@@ -166,14 +142,12 @@ impl extract_commonlisp(path: Path) -> dict {
         }
         return None;
     }
-
-    """Extract the symbol name from a kwd_lit, stripping the leading colon."""
     def _kwd_text(`node) -> str {
         t: any = _text(`node);
         return t.lstrip(":").lstrip("#:");
     }
 
-    def _handle_defpackage(`node) -> None {
+    def _handle_defpackage(`node) {
         children: any = `node.children;
         pkg_name: any = None;
         child: any;
@@ -220,7 +194,7 @@ impl extract_commonlisp(path: Path) -> dict {
         }
     }
 
-    def _handle_defclass(`node) -> None {
+    def _handle_defclass(`node) {
         children: any = `node.children;
         sym_lits: any = [c for c in children if c.type == "sym_lit"];
         if len(sym_lits) < 2 {
@@ -251,9 +225,7 @@ impl extract_commonlisp(path: Path) -> dict {
             }
         }
     }
-
-    """Handle a defun AST node (covers defun, defmethod, defgeneric, defmacro)."""
-    def _handle_defun_node(`node) -> None {
+    def _handle_defun_node(`node) {
         header: any = None;
         child: any;
         for child in `node.children {
@@ -356,9 +328,6 @@ impl extract_commonlisp(path: Path) -> dict {
             function_bodies.append((func_nid, body_nodes));
         }
     }
-
-    """Get the name being defined. May be a sym_lit or a list_lit whose
-        first sym_lit is the name (e.g. (defstruct (foo :conc-name "BAR-") ...))."""
     def _extract_def_name(`node, def_keyword: str) -> str | None {
         seen_keyword: any = False;
         for child in `node.children {
@@ -382,10 +351,6 @@ impl extract_commonlisp(path: Path) -> dict {
         }
         return None;
     }
-
-    """Collect body forms from (DEFKEYWORD name (params) [doc] body...).
-        Skips the def keyword, the name, the params list (if present), and
-        a leading docstring str_lit."""
     def _collect_def_body(`node, def_keyword: str) -> list {
         children: any = [c for c in `node.children if c.type not in ("(", ")")];
         idx: any = 0;
@@ -406,11 +371,7 @@ impl extract_commonlisp(path: Path) -> dict {
         }
         return children[idx:];
     }
-
-    """Handle a generic (DEFKEYWORD name ...) form. Covers standard CL
-        definers (defstruct, deftype, defvar, define-condition, etc.) and
-        custom def-prefixed macros (definline, definline-maybe, etc.)."""
-    def _handle_def_form(`node, def_keyword: str) -> None {
+    def _handle_def_form(`node, def_keyword: str) {
         name: any = _extract_def_name(`node, def_keyword);
         if not name {
             return;
@@ -466,20 +427,12 @@ impl extract_commonlisp(path: Path) -> dict {
             }
         }
     }
-
-    """Heuristic: does this symbol look like a definition macro?"""
     def _is_def_prefixed(sym: str) -> bool {
         if sym in _CL_NOT_DEFINERS {
             return False;
         }
         return sym.startswith("def") or sym.startswith("define-");
     }
-
-    """Dispatch on a single list_lit form. Returns True if it was
-        recognized as a definition or package directive (caller must NOT
-        recurse into it). Returns False if unrecognized, so the caller can
-        recurse to find defs nested inside wrapper macros like
-        (optimizing ...), (eval-when ...), (progn ...), etc."""
     def _process_form(top) -> bool {
         child: any;
         for child in top.children {
@@ -542,14 +495,7 @@ impl extract_commonlisp(path: Path) -> dict {
 
         return False;
     }
-
-    """Walk list_lit children of `parent`, processing each. If a form
-        isn't recognized, recurse into it — many CL codebases wrap
-        definitions in macros like (optimizing ...), (eval-when ...), or
-        (progn ...) that aren't themselves definers but contain defs.
-        Also descends into reader conditionals (#+feature / #-feature),
-        which wrap their guarded form in an include_reader_macro node."""
-    def _walk_forms(parent) -> None {
+    def _walk_forms(parent) {
         for top in parent.children {
             if top.type == "list_lit" {
                 if not _process_form(top) {
@@ -560,14 +506,6 @@ impl extract_commonlisp(path: Path) -> dict {
             }
         }
     }
-
-    """Collect every name this file defines via `defclass`, regardless of
-        where in the file the definition sits, so `ensure_class_ref` can tell
-        a forward-referenced same-file class apart from a genuinely external
-        one before `_walk_forms` reaches the defining form. Mirrors
-        `_walk_forms`'s own recursion rule (stop at a recognized top-level
-        form, descend into anything else) so it finds a `defclass` nested in
-        a wrapper macro the same way the real walk later will."""
     def _prescan_class_names(parent) -> set[str] {
         names: set[str] = set[any]();
         for top in parent.children {
@@ -608,7 +546,7 @@ impl extract_commonlisp(path: Path) -> dict {
 
     seen_call_pairs = set[any]();
 
-    def walk_calls(`node, caller_nid: str) -> None {
+    def walk_calls(`node, caller_nid: str) {
         if `node.type == "defun" {
             return;
         }

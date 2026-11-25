@@ -1,7 +1,4 @@
-"""Common Lisp extractor for .lisp/.cl/.lsp/.asd, backed by tree-sitter-commonlisp."""
-
 import from __future__ { annotations }
-
 import warnings;
 
 import from pathlib { Path }
@@ -132,5 +129,4 @@ with entry {
     });
 }
 
-"""Extract packages, classes, functions, methods, macros, and calls from a Common Lisp file."""
 def extract_commonlisp(path: Path) -> dict;

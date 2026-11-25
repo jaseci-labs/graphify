@@ -296,7 +296,7 @@ impl _extract_pascal_regex(path: Path) -> dict {
     seen_call_pairs: set[tuple[str, str]] = set[any]();
     seen_edges = set[any]();
 
-    def _add_node(nid: str, label: str, line: int) -> None {
+    def _add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -309,9 +309,7 @@ impl _extract_pascal_regex(path: Path) -> dict {
         }
     }
 
-    def _add_edge(
-        src: str, tgt: str, relation: str, line: int, context: str | None = None
-    ) -> None {
+    def _add_edge(src: str, tgt: str, relation: str, line: int, context: str | None = None) {
         key: any = (src, tgt, relation);
         if key in seen_edges {
             return;
@@ -532,7 +530,7 @@ impl extract_pascal(path: Path) -> dict {
         return source[`node.start_byte:`node.end_byte].decode("utf-8", errors="replace");
     }
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -553,7 +551,7 @@ impl extract_pascal(path: Path) -> dict {
         confidence: str = "EXTRACTED",
         weight: float = 1.0,
         context: str | None = None,
-    ) -> None {
+    ) {
         key: any = (src, tgt, relation);
         if key in seen_edges {
             return;
@@ -580,13 +578,6 @@ impl extract_pascal(path: Path) -> dict {
     global_vars = {};
     fields_of = {};
     shadow_by_proc = {};
-
-    """The type of a ``declVar``/``declField``, when it is a plain typeref.
-
-        ``array[1..12] of TDateTime``, records and pointers return None on
-        purpose: only a variable holding a class instance can receive a
-        method call, and an array's element type is not that variable's type.
-        """
     def _plain_type_name(decl_node) -> str | None {
         for child in decl_node.children {
             if child.type != "type" {
@@ -626,7 +617,7 @@ impl extract_pascal(path: Path) -> dict {
         return None;
     }
 
-    def walk(`node, parent_nid: str) -> None {
+    def walk(`node, parent_nid: str) {
         field_names: set[str];
         t: any = `node.type;
         line: any = `node.start_point[0] + 1;
@@ -717,7 +708,7 @@ impl extract_pascal(path: Path) -> dict {
                 add_edge(parent_nid, cls_nid, "contains", line);
                 field_names = set[any]();
 
-                def _collect_fields(scope_node) -> None {
+                def _collect_fields(scope_node) {
                     for member in scope_node.children {
                         if member.type == "declField" {
                             field_names.update(name.lower() for name in _declared_names(member));
@@ -842,14 +833,6 @@ impl extract_pascal(path: Path) -> dict {
     resolve_callee = _resolve_pascal_callee_factory(proc_bodies, edges, module_nid);
     seen_call_pairs = set[any]();
     raw_calls = [];
-
-    """``(qualifier, member)`` for a plain ``Ident.Ident`` exprDot.
-
-        Only a bare identifier on the left is accepted. A chain
-        (``Grid.Columns.Add``) nests another exprDot there, and its receiver
-        is an expression whose type this pass cannot know -- reporting a
-        qualifier for it would invite the resolver to guess.
-        """
     def _qualified_pair(`node) -> tuple[str, str] | None {
         if `node.type != "exprDot" {
             return None;
@@ -863,12 +846,6 @@ impl extract_pascal(path: Path) -> dict {
         }
         return (_read(parts[0]).lower(), _read(parts[1]).lower());
     }
-
-    """Keep the qualifier only when it could name a global object.
-
-        `Self` is dropped so a `Self.Foo` call keeps reaching the inherited-call
-        resolver, and so is any name the routine declares itself.
-        """
     def _visible_qualifier(caller_nid: str, qualifier: str | None) -> str | None {
         if not qualifier or qualifier == "self" {
             return None;
@@ -879,9 +856,7 @@ impl extract_pascal(path: Path) -> dict {
         return qualifier;
     }
 
-    def _emit_or_report(
-        caller_nid: str, name_lower: str, line: int, qualifier: str | None = None
-    ) -> None {
+    def _emit_or_report(caller_nid: str, name_lower: str, line: int, qualifier: str | None = None) {
         target: any = resolve_callee(caller_nid, name_lower);
         if target == caller_nid {
             return;
@@ -907,7 +882,7 @@ impl extract_pascal(path: Path) -> dict {
         }
     }
 
-    def walk_calls(`node, caller_nid: str) -> None {
+    def walk_calls(`node, caller_nid: str) {
         if `node.type == "exprCall" {
             callee_text: any = None;
             qualifier: any = None;

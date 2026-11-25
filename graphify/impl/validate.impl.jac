@@ -118,7 +118,7 @@ impl validate_extraction(data: dict) -> list[str] {
     return errors;
 }
 
-impl assert_valid(data: dict) -> None {
+impl assert_valid(data: dict) {
     errors: any = validate_extraction(data);
     if errors {
         msg: any = f"Extraction JSON has {len(errors)} error(s):\n"

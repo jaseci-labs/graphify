@@ -4,7 +4,7 @@ impl _is_pascal(source_file: object) -> bool {
 
 impl resolve_pascal_base_classes(
     per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]
-) -> None {
+) {
     node_by_id: any;
     imports_of: dict[str, set[str]];
     by_name: dict[str, list[str]];
@@ -39,8 +39,6 @@ impl resolve_pascal_base_classes(
     if not by_name {
         return;
     }
-
-    """The unique declaration of *name* visible to *from_file*, if any."""
     def _declaration_for(name: str, from_file: object) -> str | None {
         candidates: any = by_name.get(name.lower());
         if not candidates {

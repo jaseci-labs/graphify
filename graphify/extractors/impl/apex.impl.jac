@@ -18,7 +18,7 @@ impl extract_apex(path: Path) -> dict {
     edges = [];
     seen_ids = set[any]();
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -31,9 +31,7 @@ impl extract_apex(path: Path) -> dict {
         }
     }
 
-    def add_edge(
-        src: str, tgt: str, relation: str, line: int, confidence: str = "EXTRACTED"
-    ) -> None {
+    def add_edge(src: str, tgt: str, relation: str, line: int, confidence: str = "EXTRACTED") {
         edges.append({
             "source": src,
             "target": tgt,

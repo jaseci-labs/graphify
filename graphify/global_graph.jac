@@ -1,5 +1,4 @@
 import from __future__ { annotations }
-
 import importlib;
 import json;
 
@@ -29,26 +28,15 @@ with entry {
 
 def _load_manifest -> dict;
 
-def _save_manifest(manifest: dict) -> None;
+def _save_manifest(manifest: dict);
 
 def _load_global_graph -> nx.Graph;
 
-def _save_global_graph(G: nx.Graph) -> None;
+def _save_global_graph(G: nx.Graph);
 
 def _file_hash(path: Path) -> str;
-
-"""Add or update a project graph in the global graph.
-
-    Returns a summary dict with keys: repo_tag, nodes_added, nodes_removed, skipped,
-    cross_repo_calls.
-    Skipped=True means the source graph hasn't changed since last add.
-    """
 def global_add(source_path: Path, repo_tag: str) -> dict;
-
-"""Remove all nodes for repo_tag from the global graph. Returns count removed."""
 def global_remove(repo_tag: str) -> int;
-
-"""Return the manifest repos dict."""
 def global_list -> dict;
 
 def global_path -> Path;

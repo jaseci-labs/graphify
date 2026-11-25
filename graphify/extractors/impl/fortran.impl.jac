@@ -62,7 +62,7 @@ impl extract_fortran(path: Path) -> dict {
     seen_ids = set[any]();
     scope_bodies = [];
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -83,7 +83,7 @@ impl extract_fortran(path: Path) -> dict {
         confidence: str = "EXTRACTED",
         weight: float = 1.0,
         context: str | None = None,
-    ) -> None {
+    ) {
         `edge: any = {
             "source": src,
             "target": tgt,
@@ -103,8 +103,6 @@ impl extract_fortran(path: Path) -> dict {
     add_node(file_nid, path.name, 1);
     type_bound_procs = [];
     generic_procs = [];
-
-    """Extract name from a *_statement node. Fortran is case-insensitive; lowercase."""
     def _fortran_name(stmt_node) -> str | None {
         for child in stmt_node.children {
             if child.type in ("name", "identifier") {
@@ -133,10 +131,7 @@ impl extract_fortran(path: Path) -> dict {
         }
         return nid;
     }
-
-    """Emit references[parameter_type] / references[return_type] edges for
-        a subroutine/function based on its variable_declaration siblings."""
-    def emit_signature_refs(scope_node, fn_nid: str, is_function: bool) -> None {
+    def emit_signature_refs(scope_node, fn_nid: str, is_function: bool) {
         stmt_type: any;
         c: any;
         stmt_type = "function_statement" if is_function else "subroutine_statement";
@@ -204,13 +199,6 @@ impl extract_fortran(path: Path) -> dict {
             }
         }
     }
-
-    """The module procedure implementing a type-bound `procedure` statement.
-
-        `procedure :: area => circle_area` binds the method name `area` to the
-        implementation `circle_area` (a `binding` node with a `method_name`
-        child); `procedure :: scale` binds `scale` to a same-named procedure
-        (a bare `method_name` child)."""
     def _type_bound_impl_name(proc_stmt) -> str | None {
         binding: any = next((c for c in proc_stmt.children if c.type == "binding"), None);
         if binding is not None {
@@ -226,7 +214,7 @@ impl extract_fortran(path: Path) -> dict {
         return None;
     }
 
-    def walk_calls(`node, scope_nid: str) -> None {
+    def walk_calls(`node, scope_nid: str) {
         if `node is None {
             return;
         }
@@ -272,7 +260,7 @@ impl extract_fortran(path: Path) -> dict {
         }
     }
 
-    def walk(`node, scope_nid: str) -> None {
+    def walk(`node, scope_nid: str) {
         t: any = `node.type;
 
         if t == "program" {

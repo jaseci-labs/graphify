@@ -68,7 +68,7 @@ impl _go_collect_type_refs(
     generic: bool,
     out: list[tuple[str, str]],
     `skip: frozenset[str] = skip_default_,
-) -> None {
+) {
     if `node is None {
         return;
     }
@@ -340,7 +340,7 @@ impl extract_go(path: Path) -> dict {
     interface_nids = set[any]();
     go_imported_pkgs = {};
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -361,7 +361,7 @@ impl extract_go(path: Path) -> dict {
         confidence: str = "EXTRACTED",
         weight: float = 1.0,
         context: str | None = None,
-    ) -> None {
+    ) {
         `edge: any = {
             "source": src,
             "target": tgt,
@@ -405,7 +405,7 @@ impl extract_go(path: Path) -> dict {
 
     def emit_go_method_refs(
         func_node, func_nid: str, line: int, type_params: frozenset[str] = type_params_default_
-    ) -> None {
+    ) {
         `skip: any = type_params | _go_type_param_names(func_node, source);
         params: any = func_node.child_by_field_name("parameters");
         if params is not None {
@@ -468,7 +468,7 @@ impl extract_go(path: Path) -> dict {
         }
     }
 
-    def emit_go_package_var_type_refs(var_decl) -> None {
+    def emit_go_package_var_type_refs(var_decl) {
         type_nodes: any;
         stack: any = [var_decl];
         while stack {
@@ -532,7 +532,7 @@ impl extract_go(path: Path) -> dict {
         return (_make_id(base, name), name);
     }
 
-    def _scan_type_names(`node) -> None {
+    def _scan_type_names(`node) {
         if `node.type == "type_spec"
             or `node.type == "type_alias" and not _go_alias_re_exports(`node, source)
         {
@@ -550,7 +550,7 @@ impl extract_go(path: Path) -> dict {
         }
     }
 
-    def _scan_declarations(`node) -> None {
+    def _scan_declarations(`node) {
         if `node.type == "type_spec" {
             name_node: any = `node.child_by_field_name("name");
             if name_node is not None {
@@ -608,7 +608,7 @@ impl extract_go(path: Path) -> dict {
         return symbol_nid(plain_nid, name, "type");
     }
 
-    def walk(`node) -> None {
+    def walk(`node) {
         fc: any;
         t: any = `node.type;
 
@@ -973,7 +973,7 @@ impl extract_go(path: Path) -> dict {
         self_name: str | None,
         self_type: str | None,
         scope_types: dict[str, str | None],
-    ) -> None {
+    ) {
         if `node.type in ("function_declaration", "method_declaration") {
             return;
         }

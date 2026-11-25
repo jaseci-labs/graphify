@@ -30,7 +30,7 @@ impl log_query(
     nodes_returned: int | None = None,
     duration_ms: float | None = None,
     **extra: Any,
-) -> None {
+) {
     try {
         path: any = _log_path();
         if path is None {

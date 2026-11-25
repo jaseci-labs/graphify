@@ -1,13 +1,4 @@
-"""Per-language extractors, incrementally migrated out of graphify/extract.py.
-
-Dispatch still flows through graphify.extract (the facade re-exports every
-moved name), so importing from graphify.extract keeps working unchanged.
-LANGUAGE_EXTRACTORS is the registry seed; wiring dispatch through it is a
-later, separate step. See MIGRATION.md for how to port another language.
-"""
-
 import from __future__ { annotations }
-
 import from pathlib { Path }
 
 import from typing { Callable }

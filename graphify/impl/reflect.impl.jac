@@ -231,7 +231,7 @@ impl _record_node(
     *,
     outcome: str | None = None,
     question: str = "",
-) -> None {
+) {
     bucket["node_score"][`node] = bucket["node_score"].get(`node, 0.0) + sign * weight;
     if sign > 0 {
         bucket["node_pos"][`node] += 1;
@@ -373,7 +373,7 @@ impl aggregate_lessons(
     };
 }
 
-impl _render_bucket(out: list[str], data: dict[str, Any], k: int) -> None {
+impl _render_bucket(out: list[str], data: dict[str, Any], k: int) {
     preferred: any = data["preferred"];
     tentative: any = data["tentative"];
     contested: any = data["contested"];
@@ -690,7 +690,7 @@ impl build_learning_overlay(
     prov_map = agg.get("_node_provenance", {});
     nodes_out = {};
 
-    def _add(entry_src: dict[str, Any], status: str) -> None {
+    def _add(entry_src: dict[str, Any], status: str) {
         cited: any = entry_src["node"];
         cid: any = _resolve_canonical_id(cited, id_set, label_to_ids);
         if cid is None {

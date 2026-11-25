@@ -100,7 +100,7 @@ impl _emit_server(
     edges: list[dict[str, Any]],
     seen_node_ids: set[str],
     seen_edge_keys: set[tuple[str, str, str]],
-) -> None {
+) {
     server_nid: any = _make_id(file_stem, "mcp_server", server_name);
     _add_node(
         nodes,
@@ -239,7 +239,7 @@ impl _add_node(
     kind: str,
     source_file: str,
     line: int,
-) -> None {
+) {
     if not nid or nid in seen {
         return;
     }
@@ -264,7 +264,7 @@ impl _add_edge(
     source_file: str,
     line: int,
     context: str | None = None,
-) -> None {
+) {
     if not source or not target or source == target {
         return;
     }

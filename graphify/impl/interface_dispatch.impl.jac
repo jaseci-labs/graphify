@@ -19,7 +19,7 @@ impl method_label(`node: dict) -> str {
 
 impl resolve_interface_dispatch(
     per_file: list[dict], all_nodes: list[dict], all_edges: list[dict], *, suffixes: tuple[str, ...]
-) -> None {
+) {
     if not `any(declared_in(result, suffixes) for result in per_file if isinstance(result, `dict))
         and not `any(declared_in(n, suffixes) for n in all_nodes)
     {

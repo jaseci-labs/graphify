@@ -25,7 +25,7 @@ impl extract_razor(path: Path) -> dict {
     seen_ids = set[any]();
     seen_ids.add(file_nid);
 
-    def _add_ref(target_name: str, relation: str, line: int) -> None {
+    def _add_ref(target_name: str, relation: str, line: int) {
         tgt_nid: any = _make_id(target_name);
         if not tgt_nid {
             return;

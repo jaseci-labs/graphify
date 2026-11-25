@@ -30,7 +30,7 @@ impl _scope_id(directory: str) -> str {
     return _make_id("terraform", directory, digest);
 }
 
-impl prepare_terraform(result: dict, path: Path, `root: Path) -> None {
+impl prepare_terraform(result: dict, path: Path, `root: Path) {
     directory: any = path.parent.resolve();
     old: any = result.pop("_terraform_scope", _scope_id(directory.as_posix()));
     try {
@@ -69,7 +69,7 @@ impl prepare_terraform(result: dict, path: Path, `root: Path) -> None {
     }
 }
 
-impl resolve_terraform_modules(per_file: list[dict], nodes: list[dict], edges: list[dict]) -> None {
+impl resolve_terraform_modules(per_file: list[dict], nodes: list[dict], edges: list[dict]) {
     files: dict[str, list[dict]] = {};
     anchors: any = {};
     `node: any;
@@ -241,7 +241,7 @@ impl extract_terraform(path: Path) -> dict {
         return nid;
     }
 
-    def _add_edge(src: str, address: str, relation: str, line: int) -> None {
+    def _add_edge(src: str, address: str, relation: str, line: int) {
         tgt: any = _make_id(scope, address);
         if src == tgt {
             return;
@@ -341,9 +341,7 @@ impl extract_terraform(path: Path) -> dict {
         return f"provider.{head}.{attrs[0]}" if attrs else f"provider.{head}";
     }
 
-    def _collect_refs(
-        `node, owner_nid: str, relation: str, in_provider_attr: bool = False
-    ) -> None {
+    def _collect_refs(`node, owner_nid: str, relation: str, in_provider_attr: bool = False) {
         rel: any = relation;
         provider_attr: any = in_provider_attr;
         if `node.type == "attribute" {

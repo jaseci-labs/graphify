@@ -62,7 +62,7 @@ impl ingest_scip_json(
 
 impl _emit_symbol_node(
     record: dict[str, Any], nodes: list[dict[str, Any]], seen_node_ids: set[str]
-) -> None {
+) {
     node_id: any = record["node_id"];
     if node_id in seen_node_ids {
         return;
@@ -103,7 +103,7 @@ impl _emit_relationships(
     edges: list[dict[str, Any]],
     seen_node_ids: set[str],
     seen_edges: set[tuple[str, str, str, str | None]],
-) -> None {
+) {
     raw: any = record["raw"];
     source_node_id: any = record["node_id"];
     doc_path: any = record["doc_path"];

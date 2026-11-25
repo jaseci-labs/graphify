@@ -7,7 +7,7 @@ impl _is_ast_tier(item: dict) -> bool {
     return isinstance(loc, `str) and `bool(_AST_LOC_RE.match(loc));
 }
 
-impl _backfill_origin(item: dict) -> None {
+impl _backfill_origin(item: dict) {
     if _is_external_stub(item) {
         item.pop("_origin", None);
         return;
@@ -192,7 +192,7 @@ impl edge_evidence(d: dict) -> list[dict] {
     return [d, *(a for a in also if isinstance(a, `dict))] if isinstance(also, `list) else [d];
 }
 
-impl _fold_also_seen(winner: dict, loser: dict) -> None {
+impl _fold_also_seen(winner: dict, loser: dict) {
     `own: any = _evidence(winner);
     kept: list[dict] = [];
     for raw in (*edge_evidence(winner)[1:], loser, *edge_evidence(loser)[1:]) {
@@ -208,7 +208,7 @@ impl _fold_also_seen(winner: dict, loser: dict) -> None {
     }
 }
 
-impl _mint_external_stub(G: "nx.Graph", node_set: set, nid: str) -> None {
+impl _mint_external_stub(G: "nx.Graph", node_set: set, nid: str) {
     if nid in node_set {
         return;
     }
@@ -222,7 +222,7 @@ impl _is_external_stub(item: dict) -> bool {
         and not item.get("source_file");
 }
 
-impl mint_external_stubs_in_data(data: dict) -> None {
+impl mint_external_stubs_in_data(data: dict) {
     nodes: any = data.get("nodes");
     links: any = data.get("links");
     if not isinstance(links, `list) {
@@ -254,7 +254,7 @@ impl mint_external_stubs_in_data(data: dict) -> None {
     }
 }
 
-impl finalize_raw_graph_endpoints(data: dict) -> None {
+impl finalize_raw_graph_endpoints(data: dict) {
     nodes: any = data.get("nodes");
     key: any = "links" if isinstance(data.get("links"), `list) else "edges";
     links: any = data.get(key);
@@ -422,7 +422,7 @@ impl _coerce_hyperedge_member_refs(he: dict, members: list) -> list {
     return coerced;
 }
 
-impl _normalize_hyperedge_members(he: object) -> None {
+impl _normalize_hyperedge_members(he: object) {
     if not isinstance(he, `dict) {
         return;
     }
@@ -451,7 +451,7 @@ impl _normalize_hyperedge_members(he: object) -> None {
     }
 }
 
-impl _fold_node_aliases(`node: dict) -> None {
+impl _fold_node_aliases(`node: dict) {
     if not `node.get("label") and isinstance(`node.get("name"), `str) and `node["name"] {
         `node["label"] = `node.pop("name");
     }
@@ -467,7 +467,7 @@ impl _fold_node_aliases(`node: dict) -> None {
     _fold_confidence(`node);
 }
 
-impl _fold_confidence(`obj: dict) -> None {
+impl _fold_confidence(`obj: dict) {
     _conf: any = `obj.get("confidence");
     if isinstance(_conf, (`int, `float)) and not isinstance(_conf, `bool) {
         if `obj.get("confidence_score") is None {
@@ -494,7 +494,7 @@ impl _fold_confidence(`obj: dict) -> None {
     }
 }
 
-impl _fold_edge_aliases(`edge: dict) -> None {
+impl _fold_edge_aliases(`edge: dict) {
     if not `edge.get("relation") and isinstance(`edge.get("type"), `str) and `edge["type"] {
         `edge["relation"] = `edge.pop("type");
     }
@@ -523,7 +523,7 @@ impl _hashable(value: object) -> bool {
     return True;
 }
 
-impl _coerce_non_string_ids(extraction: dict) -> None {
+impl _coerce_non_string_ids(extraction: dict) {
     for `node in extraction.get("nodes") or () {
         if isinstance(`node, `dict) and "id" in `node {
             `node["id"] = _coerce_id(`node["id"]);
@@ -702,7 +702,7 @@ impl _file_label_reassignments(items: "list[tuple]") -> dict {
     return out;
 }
 
-impl _disambiguate_file_node_labels(G: "nx.Graph") -> None {
+impl _disambiguate_file_node_labels(G: "nx.Graph") {
     nid: any;
     items: any = [(nid, a.get("label"), a.get("source_file")) for (nid, a) in G.nodes(data=True)];
     for (nid, new_label) in _file_label_reassignments(items).items() {
@@ -710,7 +710,7 @@ impl _disambiguate_file_node_labels(G: "nx.Graph") -> None {
     }
 }
 
-impl disambiguate_file_labels_in_nodes(nodes: "list") -> None {
+impl disambiguate_file_labels_in_nodes(nodes: "list") {
     i: any;
     items: any = [
         (i, n.get("label"), n.get("source_file"))
@@ -722,8 +722,10 @@ impl disambiguate_file_labels_in_nodes(nodes: "list") -> None {
     }
 }
 
-impl _qualify_csharp_method_labels(G: "nx.Graph") -> None {
-    csharp_method_label_reassignments: any = importlib.import_module("graphify.extractors.csharp").csharp_method_label_reassignments;
+impl _qualify_csharp_method_labels(G: "nx.Graph") {
+    csharp_method_label_reassignments: any = importlib.import_module(
+        "graphify.extractors.csharp"
+    ).csharp_method_label_reassignments;
     method_edges: any = [
         (data.get("_src", u), data.get("_tgt", v))
         for (u, v, data) in G.edges(data=True)
@@ -736,9 +738,11 @@ impl _qualify_csharp_method_labels(G: "nx.Graph") -> None {
     }
 }
 
-impl qualify_csharp_method_labels_in_nodes(nodes: "list", edges: "list") -> None {
+impl qualify_csharp_method_labels_in_nodes(nodes: "list", edges: "list") {
     n: any;
-    csharp_method_label_reassignments: any = importlib.import_module("graphify.extractors.csharp").csharp_method_label_reassignments;
+    csharp_method_label_reassignments: any = importlib.import_module(
+        "graphify.extractors.csharp"
+    ).csharp_method_label_reassignments;
     method_edges: any = [
         (e.get("source"), e.get("target"))
         for e in edges
@@ -877,7 +881,7 @@ impl dedupe_nodes(nodes: list[dict]) -> list[dict] {
     return `list(by_id.values());
 }
 
-impl _execution_wins(a: dict, b: dict) -> None {
+impl _execution_wins(a: dict, b: dict) {
     if `bool(a.get("type_only")) != `bool(b.get("type_only")) {
         a.pop("type_only", None);
         b.pop("type_only", None);
@@ -912,8 +916,12 @@ impl _old_file_stems(rel: Path) -> list[str] {
 
 impl _alias_index(nodes: "Iterable[tuple[str, dict]]") -> dict[str, str] {
     _file_stem: any = importlib.import_module("graphify.extractors.base")._file_stem;
-    bare_csharp_method_label: any = importlib.import_module("graphify.extractors.csharp").bare_csharp_method_label;
-    _PYTHON_STDLIB_MODULE_NAMES: any = importlib.import_module("graphify.extractors.resolution")._PYTHON_STDLIB_MODULE_NAMES;
+    bare_csharp_method_label: any = importlib.import_module(
+        "graphify.extractors.csharp"
+    ).bare_csharp_method_label;
+    _PYTHON_STDLIB_MODULE_NAMES: any = importlib.import_module(
+        "graphify.extractors.resolution"
+    )._PYTHON_STDLIB_MODULE_NAMES;
 
     alias_candidates: dict[str, set[str]] = {};
     for (nid, attrs) in nodes {
@@ -972,7 +980,9 @@ impl _alias_index(nodes: "Iterable[tuple[str, dict]]") -> dict[str, str] {
 }
 
 impl _is_std_angle_include(`edge: dict) -> bool {
-    C_STANDARD_INCLUDE_NAMES: any = importlib.import_module("graphify.extractors.resolution").C_STANDARD_INCLUDE_NAMES;
+    C_STANDARD_INCLUDE_NAMES: any = importlib.import_module(
+        "graphify.extractors.resolution"
+    ).C_STANDARD_INCLUDE_NAMES;
 
     md: any = `edge.get("metadata");
     if not isinstance(md, `dict) or md.get("include_kind") != "angle" {
@@ -1358,7 +1368,9 @@ impl build_from_json(
     _noloc_nodes: dict[tuple[str, str], str] = {};
     _ast_file_nodes: list[tuple[str, str]] = [];
     _ast_method_nodes: dict[tuple[str, str], list[str]] = {};
-    bare_csharp_method_label: any = importlib.import_module("graphify.extractors.csharp").bare_csharp_method_label;
+    bare_csharp_method_label: any = importlib.import_module(
+        "graphify.extractors.csharp"
+    ).bare_csharp_method_label;
     nid: any;
     for nid in sorted(node_set) {
         attrs: any = G.nodes[nid];
@@ -1905,7 +1917,9 @@ impl _load_existing_graph(graph_path: Path) -> "tuple[list, list, list, bool] | 
     if not graph_path.exists() {
         return None;
     }
-    check_graph_file_size_cap: any = importlib.import_module("graphify.security").check_graph_file_size_cap;
+    check_graph_file_size_cap: any = importlib.import_module(
+        "graphify.security"
+    ).check_graph_file_size_cap;
     check_graph_file_size_cap(graph_path);
     try {
         data: any = json.loads(graph_path.read_text(encoding="utf-8"));

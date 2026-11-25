@@ -18,7 +18,7 @@ impl extract_lazarus_form(path: Path) -> dict {
     seen_ids = set[any]();
     seen_edge_pairs = set[any]();
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -31,7 +31,7 @@ impl extract_lazarus_form(path: Path) -> dict {
         }
     }
 
-    def add_edge(src: str, tgt: str, relation: str, line: int, context: str | None = None) -> None {
+    def add_edge(src: str, tgt: str, relation: str, line: int, context: str | None = None) {
         key: any = (src, tgt, relation);
         if key in seen_edge_pairs {
             return;
@@ -122,7 +122,7 @@ impl extract_delphi_form(path: Path) -> dict {
     seen_ids = set[any]();
     seen_edge_pairs = set[any]();
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -135,7 +135,7 @@ impl extract_delphi_form(path: Path) -> dict {
         }
     }
 
-    def add_edge(src: str, tgt: str, relation: str, line: int, context: str | None = None) -> None {
+    def add_edge(src: str, tgt: str, relation: str, line: int, context: str | None = None) {
         key: any = (src, tgt, relation);
         if key in seen_edge_pairs {
             return;

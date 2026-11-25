@@ -66,7 +66,7 @@ impl extract_robot(path: Path) -> dict {
     seen_ids = set[any]();
     seen_edges = set[any]();
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -86,7 +86,7 @@ impl extract_robot(path: Path) -> dict {
         line: int,
         confidence: str = "EXTRACTED",
         context: str | None = None,
-    ) -> None {
+    ) {
         if not src or not tgt or src == tgt {
             return;
         }
@@ -136,7 +136,7 @@ impl extract_robot(path: Path) -> dict {
         return targets;
     }
 
-    def add_call_edges(src: str, name: str, line: int) -> None {
+    def add_call_edges(src: str, name: str, line: int) {
         for tgt in kw_targets(name) {
             add_edge(src, tgt, "calls", line, context="call");
         }

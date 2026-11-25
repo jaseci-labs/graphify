@@ -14,7 +14,7 @@ impl _out_from_env -> str {
     return value;
 }
 
-impl stash_preread_bytes(path: "str | Path", raw: bytes) -> None {
+impl stash_preread_bytes(path: "str | Path", raw: bytes) {
     _PREREAD_RAW.set((`str(path), raw));
 }
 
@@ -45,7 +45,7 @@ impl os_long_path(path: "str | Path") -> str {
     return "\\\\?\\" + s;
 }
 
-impl os_replace_with_fallback(src: "str | Path", dst: "str | Path") -> None {
+impl os_replace_with_fallback(src: "str | Path", dst: "str | Path") {
     try {
         os.replace(src, dst);
         return;
@@ -100,7 +100,7 @@ impl os_replace_with_fallback(src: "str | Path", dst: "str | Path") -> None {
     os.unlink(src);
 }
 
-impl _atomic_replace(path: "str | Path", write_fn) -> None {
+impl _atomic_replace(path: "str | Path", write_fn) {
     real: any = Path(os.path.realpath(`str(path)));
     real.parent.mkdir(parents=True, exist_ok=True);
     fd: any;
@@ -140,7 +140,7 @@ impl _atomic_replace(path: "str | Path", write_fn) -> None {
     }
 }
 
-impl write_text_atomic(path: "str | Path", text: str) -> None {
+impl write_text_atomic(path: "str | Path", text: str) {
     _atomic_replace(path, lambda (f) -> any { f.write(text) });
 }
 
@@ -161,7 +161,7 @@ impl write_json_atomic(
     indent: "int | None" = None,
     ensure_ascii: bool = True,
     compact: bool = False,
-) -> None {
+) {
     separators: any;
     separators = (",", ":") if compact else None;
     _atomic_replace(

@@ -1,20 +1,4 @@
-"""graphify prs — graph-aware PR dashboard.
-
-Fast terminal overview of open PRs with CI/review state, worktree mapping,
-and optional graph-impact analysis (which communities a PR touches) and
-Opus-powered triage ranking.
-
-Usage:
-  graphify prs                   # dashboard of all open PRs
-  graphify prs <number>          # deep dive on one PR
-  graphify prs --triage          # Opus ranks your review queue
-  graphify prs --worktrees       # show worktree → branch → PR mapping
-  graphify prs --conflicts       # PRs sharing graph communities (merge-order risk)
-  graphify prs --base <branch>   # filter to PRs targeting this base (default: v8)
-"""
-
 import from __future__ { annotations }
-
 import importlib;
 import json;
 
@@ -37,6 +21,21 @@ import from datetime { datetime, timezone }
 import from pathlib { Path }
 
 import from typing { TYPE_CHECKING }
+
+glob _USAGE: str = """graphify prs — graph-aware PR dashboard.
+
+Fast terminal overview of open PRs with CI/review state, worktree mapping,
+and optional graph-impact analysis (which communities a PR touches) and
+Opus-powered triage ranking.
+
+Usage:
+  graphify prs                   # dashboard of all open PRs
+  graphify prs <number>          # deep dive on one PR
+  graphify prs --triage          # Opus ranks your review queue
+  graphify prs --worktrees       # show worktree → branch → PR mapping
+  graphify prs --conflicts       # PRs sharing graph communities (merge-order risk)
+  graphify prs --base <branch>   # filter to PRs targeting this base (default: v8)
+""";
 
 glob _NO_COLOR: any;
 
@@ -78,7 +77,6 @@ with entry {
     _ANSI_RE = re.compile("\\033\\[[0-9;]*m");
 }
 
-"""Pad an ANSI-colored string to visible width (strips escape codes for length calc)."""
 def _pad(s: str, width: int) -> str;
 
 @dataclass
@@ -162,8 +160,6 @@ def _status_color(status: str) -> str;
 def _ci_icon(status: str) -> str;
 
 def _gh(*args_: str) -> list | dict | None;
-
-"""Auto-detect the repo's default branch via gh, then git, then fall back to 'main'."""
 def _detect_default_branch(repo: str | None = None) -> str;
 
 with entry {
@@ -190,44 +186,28 @@ def fetch_prs(repo: str | None = None, base: str | None = None, limit: int = 50)
 def fetch_pr(number: int, repo: str | None = None, base: str | None = None) -> PRInfo | None;
 
 def fetch_pr_files(number: int, repo: str | None = None) -> list[str];
-
-"""True if graph_src and pr_file refer to the same file (path-boundary safe)."""
 def _path_match(graph_src: str, pr_file: str) -> bool;
-
-"""Return (communities_touched, nodes_affected) for a set of changed files.
-
-    Builds a file→(communities, count) index first so lookup is O(nodes + files)
-    rather than O(nodes × files).
-    """
 def compute_pr_impact(files: list[str], G: "nx.Graph") -> tuple[list[int], int];
-
-"""Plain-text PR summary for MCP output (no ANSI)."""
 def format_prs_text(prs: list["PRInfo"], base: str) -> str;
-
-"""Returns {branch: worktree_path}."""
 def fetch_worktrees -> dict[str, str];
 
 def _load_graph_json(graph_path: Path) -> dict | None;
-
-"""Return {community_id: [top_labels]} extracted from graph node data."""
 def build_community_labels(data: dict, top_n: int = 4) -> dict[int, list[str]];
-
-"""Fetch PR file lists concurrently, compute graph impact, return community labels."""
 def attach_graph_impact(
     prs: list[PRInfo], graph_path: Path, repo: str | None = None, include_wrong_base: bool = False
 ) -> dict[int, list[str]];
 
 def _truncate(s: str, n: int) -> str;
 
-def render_dashboard(prs: list[PRInfo], base: str = "v8", show_wrong_base: bool = False) -> None;
+def render_dashboard(prs: list[PRInfo], base: str = "v8", show_wrong_base: bool = False);
 
-def render_worktrees(prs: list[PRInfo], worktrees: dict[str, str]) -> None;
+def render_worktrees(prs: list[PRInfo], worktrees: dict[str, str]);
 
 def render_conflicts(
     prs: list[PRInfo], base: str = "v8", community_labels: dict[int, list[str]] | None = None
-) -> None;
+);
 
-def render_pr_detail(pr: PRInfo, repo: str | None = None) -> None;
+def render_pr_detail(pr: PRInfo, repo: str | None = None);
 
 with entry {
     _TRIAGE_MODEL_DEFAULTS = {
@@ -238,9 +218,8 @@ with entry {
     };
 }
 
-"""Return (backend, model) using GRAPHIFY_TRIAGE_BACKEND or first available key."""
 def _resolve_triage_backend -> tuple[str, str];
 
-def triage_with_opus(prs: list[PRInfo], base: str) -> None;
+def triage_with_opus(prs: list[PRInfo], base: str);
 
-def cmd_prs(argv: list[str]) -> None;
+def cmd_prs(argv: list[str]);

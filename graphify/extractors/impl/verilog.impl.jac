@@ -87,7 +87,7 @@ impl _augment_systemverilog_semantics(
     nodes: list[dict],
     edges: list[dict],
     seen_ids: set[str],
-) -> None {
+) {
     label_to_nid: any;
     label_to_nid = {`node["label"]: `node["id"] for `node in nodes};
 
@@ -95,7 +95,7 @@ impl _augment_systemverilog_semantics(
         return raw.count("\n", 0, offset) + 1;
     }
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -121,7 +121,7 @@ impl _augment_systemverilog_semantics(
 
     def add_edge(
         src: str, target_label: str, relation: str, line: int, context: str | None = None
-    ) -> None {
+    ) {
         tgt: any = ensure_type(target_label, line);
         `edge: any = {
             "source": src,
@@ -317,7 +317,7 @@ impl extract_verilog(path: Path) -> dict {
     edges = [];
     seen_ids = set[any]();
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -338,7 +338,7 @@ impl extract_verilog(path: Path) -> dict {
         line: int,
         confidence: str = "EXTRACTED",
         score: float = 1.0,
-    ) -> None {
+    ) {
         edges.append({
             "source": src,
             "target": tgt,
@@ -355,7 +355,7 @@ impl extract_verilog(path: Path) -> dict {
     add_node(file_nid, path.name, 1);
     local_modules = set[any]();
 
-    def _scan_modules(`node) -> None {
+    def _scan_modules(`node) {
         if `node.type == "module_declaration" {
             mn: any = _sv_first_identifier(_sv_child(`node, "module_header"), source);
             if mn {
@@ -369,7 +369,7 @@ impl extract_verilog(path: Path) -> dict {
 
     _scan_modules(`root);
 
-    def walk(`node, module_nid: str | None = None) -> None {
+    def walk(`node, module_nid: str | None = None) {
         t: any = `node.type;
         if t in ("class_declaration", "interface_class_declaration") {
             return;

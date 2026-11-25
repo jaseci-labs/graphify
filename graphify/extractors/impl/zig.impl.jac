@@ -38,7 +38,7 @@ impl extract_zig(path: Path) -> dict {
     seen_ids = set[any]();
     function_bodies = [];
 
-    def add_node(nid: str, label: str, line: int) -> None {
+    def add_node(nid: str, label: str, line: int) {
         if nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -59,7 +59,7 @@ impl extract_zig(path: Path) -> dict {
         confidence: str = "EXTRACTED",
         weight: float = 1.0,
         context: str | None = None,
-    ) -> None {
+    ) {
         `edge: any = {
             "source": src,
             "target": tgt,
@@ -78,7 +78,7 @@ impl extract_zig(path: Path) -> dict {
     file_nid = _make_id(`str(path));
     add_node(file_nid, path.name, 1);
 
-    def _extract_import(`node) -> None {
+    def _extract_import(`node) {
         for child in `node.children {
             if child.type == "builtin_function" {
                 bi: any = None;
@@ -112,7 +112,7 @@ impl extract_zig(path: Path) -> dict {
         }
     }
 
-    def walk(`node, parent_struct_nid: str | None = None) -> None {
+    def walk(`node, parent_struct_nid: str | None = None) {
         t: any = `node.type;
         if t == "container_field"
             and parent_struct_nid
@@ -246,7 +246,7 @@ impl extract_zig(path: Path) -> dict {
     seen_call_pairs = set[any]();
     raw_calls = [];
 
-    def walk_calls(`node, caller_nid: str) -> None {
+    def walk_calls(`node, caller_nid: str) {
         wanted_label: any;
         if `node.type == "function_declaration" {
             return;

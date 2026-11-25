@@ -1,7 +1,4 @@
-"""models — moved verbatim from graphify/extract.py."""
-
 import from __future__ { annotations }
-
 import from typing { Any, Callable }
 
 import from pathlib { Path }

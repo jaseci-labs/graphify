@@ -29,7 +29,9 @@ impl _is_file_node(G: nx.Graph, node_id: str) -> bool {
     if label.startswith(".") and label.endswith("()") {
         return True;
     }
-    bare_csharp_method_label: any = importlib.import_module("graphify.extractors.csharp").bare_csharp_method_label;
+    bare_csharp_method_label: any = importlib.import_module(
+        "graphify.extractors.csharp"
+    ).bare_csharp_method_label;
     if bare_csharp_method_label(label, source_file) is not None {
         return True;
     }

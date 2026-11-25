@@ -1,7 +1,4 @@
-"""Read-only diagnostics for MultiDiGraph readiness."""
-
 import from __future__ { annotations }
-
 import importlib;
 import json;
 
@@ -46,19 +43,7 @@ def _variant_group_count(
 ) -> int;
 
 def _tuple_arity_from_annotation(line: str) -> int;
-
-"""Find likely `seen_*` producer-suppression sets in an extractor file."""
 def scan_producer_suppression_sites(path: str | Path) -> dict[str, Any];
-
-"""Summarize graph-integrity risks for one JSON graph/extraction dict.
-
-    Missing ``ref_*`` targets are expected external references produced for
-    dependencies outside the scanned corpus. They are counted separately from
-    actionable internal dangling endpoints.
-
-    Non-list node containers contribute no node counts. The original input is
-    still passed to the protected build attempt so its error remains visible.
-    """
 def diagnose_extraction(
     extraction: dict[str, Any],
     *,
@@ -67,15 +52,7 @@ def diagnose_extraction(
     max_examples: int = 5,
     extract_path: str | Path | None = None,
 ) -> dict[str, Any];
-
-"""Read a JSON graph after applying Graphify's graph-load size cap."""
 def _read_json_file(path: str | Path) -> dict[str, Any];
-
-"""Diagnose a graph/extraction JSON file without mutating it.
-
-    When `directed` is None, the JSON's "directed" flag is honored. Raw
-    extraction JSON that has no "directed" flag defaults to directed analysis.
-    """
 def diagnose_file(
     path: str | Path,
     *,

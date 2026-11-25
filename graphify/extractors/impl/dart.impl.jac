@@ -67,7 +67,7 @@ impl extract_dart(path: Path) -> dict {
         ftype: str = "code",
         source_file: str | None = source_file_default_,
         line: int | None = None,
-    ) -> None {
+    ) {
         if nid not in defined {
             nodes.append({
                 "id": nid,
@@ -87,7 +87,7 @@ impl extract_dart(path: Path) -> dict {
         weight: float = 1.0,
         context: str | None = None,
         line: int | None = None,
-    ) -> None {
+    ) {
         `edge: any = {
             "source": src_id,
             "target": tgt_id,

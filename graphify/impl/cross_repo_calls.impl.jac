@@ -18,7 +18,7 @@ impl _parked_entries(data: dict) -> list[dict] {
     return [`entry for `entry in parked if isinstance(`entry, `dict)];
 }
 
-impl _drop_previous_output(merged: "nx.Graph") -> None {
+impl _drop_previous_output(merged: "nx.Graph") {
     stale: any = [
         (u, v)
         for (u, v, data) in merged.edges(data=True)
@@ -167,7 +167,9 @@ impl link_cross_repo_member_calls(merged: "nx.Graph") -> int {
         for (_, data) in parked_nodes
         for `entry in _parked_entries(data),
     ) {
-        CsharpNameResolver: any = importlib.import_module("graphify.extractors.csharp").CsharpNameResolver;
+        CsharpNameResolver: any = importlib.import_module(
+            "graphify.extractors.csharp"
+        ).CsharpNameResolver;
 
         resolver_nodes: any = [`dict(data, id=`node) for (`node, data) in merged.nodes(data=True)];
         resolver_edges: any = [

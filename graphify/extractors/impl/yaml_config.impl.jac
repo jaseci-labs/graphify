@@ -149,7 +149,7 @@ impl extract_yaml(path: Path) -> dict {
     edges = [];
     seen_ids = set[any]();
 
-    def add_node(nid: str, label: str, line: int = 1, file_type: str = "code") -> None {
+    def add_node(nid: str, label: str, line: int = 1, file_type: str = "code") {
         if nid and nid not in seen_ids {
             seen_ids.add(nid);
             nodes.append({
@@ -162,9 +162,7 @@ impl extract_yaml(path: Path) -> dict {
         }
     }
 
-    def add_edge(
-        src: str, tgt: str, relation: str, line: int = 1, context: str | None = None
-    ) -> None {
+    def add_edge(src: str, tgt: str, relation: str, line: int = 1, context: str | None = None) {
         if not src or not tgt or src == tgt {
             return;
         }
@@ -188,7 +186,7 @@ impl extract_yaml(path: Path) -> dict {
 
     pair_count = [0];
 
-    def walk(`node: Any, parent_nid: str, parent_key: str | None, depth: int) -> None {
+    def walk(`node: Any, parent_nid: str, parent_key: str | None, depth: int) {
         if depth > _MAX_DEPTH {
             return;
         }

@@ -39,7 +39,9 @@ impl load_learning_for_report(graph_path) -> dict | None {
     import from pathlib { Path as _Path }
     try {
         gp: any = _Path(graph_path);
-        load_learning_overlay: any = importlib.import_module("graphify.reflect").load_learning_overlay;
+        load_learning_overlay: any = importlib.import_module(
+            "graphify.reflect"
+        ).load_learning_overlay;
         load_memory_docs: any = importlib.import_module("graphify.reflect").load_memory_docs;
         aggregate_lessons: any = importlib.import_module("graphify.reflect").aggregate_lessons;
         overlay: any = load_learning_overlay(gp);
@@ -58,7 +60,7 @@ impl load_learning_for_report(graph_path) -> dict | None {
     }
 }
 
-impl _learning_section(lines: list, learning: dict | None, top_n: int = 10) -> None {
+impl _learning_section(lines: list, learning: dict | None, top_n: int = 10) {
     nid: any;
     e: any;
     if not learning {

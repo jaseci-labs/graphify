@@ -51,7 +51,7 @@ impl _load_manifest -> dict {
     return {"version": 1, "repos": {}};
 }
 
-impl _save_manifest(manifest: dict) -> None {
+impl _save_manifest(manifest: dict) {
     _GLOBAL_DIR.mkdir(parents=True, exist_ok=True);
     write_json_atomic: any = importlib.import_module("graphify.paths").write_json_atomic;
     write_json_atomic(_GLOBAL_MANIFEST, manifest, indent=2);
@@ -59,7 +59,9 @@ impl _save_manifest(manifest: dict) -> None {
 
 impl _load_global_graph -> nx.Graph {
     if _GLOBAL_GRAPH.exists() {
-        check_graph_file_size_cap: any = importlib.import_module("graphify.security").check_graph_file_size_cap;
+        check_graph_file_size_cap: any = importlib.import_module(
+            "graphify.security"
+        ).check_graph_file_size_cap;
         check_graph_file_size_cap(_GLOBAL_GRAPH);
         data: any = json.loads(_GLOBAL_GRAPH.read_text(encoding="utf-8"));
         if "links" not in data and "edges" in data {
@@ -74,7 +76,7 @@ impl _load_global_graph -> nx.Graph {
     return nx.Graph();
 }
 
-impl _save_global_graph(G: nx.Graph) -> None {
+impl _save_global_graph(G: nx.Graph) {
     _GLOBAL_DIR.mkdir(parents=True, exist_ok=True);
     try {
         data: any = _jg.node_link_data(G, edges="links");
@@ -92,7 +94,9 @@ impl _file_hash(path: Path) -> str {
 }
 
 impl global_add(source_path: Path, repo_tag: str) -> dict {
-    prefix_graph_for_global: any = importlib.import_module("graphify.build").prefix_graph_for_global;
+    prefix_graph_for_global: any = importlib.import_module(
+        "graphify.build"
+    ).prefix_graph_for_global;
     prune_repo_from_graph: any = importlib.import_module("graphify.build").prune_repo_from_graph;
 
     if not source_path.exists() {
@@ -119,7 +123,9 @@ impl global_add(source_path: Path, repo_tag: str) -> dict {
             "cross_repo_calls": 0,
         };
     }
-    check_graph_file_size_cap: any = importlib.import_module("graphify.security").check_graph_file_size_cap;
+    check_graph_file_size_cap: any = importlib.import_module(
+        "graphify.security"
+    ).check_graph_file_size_cap;
     check_graph_file_size_cap(source_path);
     data: any = json.loads(source_path.read_text(encoding="utf-8"));
     if "links" not in data and "edges" in data {
@@ -168,7 +174,9 @@ impl global_add(source_path: Path, repo_tag: str) -> dict {
     }
 
     added: any = prefixed.number_of_nodes() - len(remap);
-    link_cross_repo_member_calls: any = importlib.import_module("graphify.cross_repo_calls").link_cross_repo_member_calls;
+    link_cross_repo_member_calls: any = importlib.import_module(
+        "graphify.cross_repo_calls"
+    ).link_cross_repo_member_calls;
 
     cross_repo_calls: any = link_cross_repo_member_calls(G);
     _save_global_graph(G);

@@ -224,7 +224,7 @@ pythonVersion = "3.11"
 typeCheckingMode = "basic"
 
 [test.pypi."."]
-command = ["pytest", "--import-mode=append", "--continue-on-collection-errors", "-q", "-n", "8"]
+command = ["pytest", "--import-mode=append", "-q", "-n", "auto"]
 groups = ["dev"]
 
 [install.pypi."."]

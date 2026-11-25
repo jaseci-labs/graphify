@@ -42,21 +42,18 @@ git remote add upstream https://github.com/Graphify-Labs/graphify.git
 git fetch upstream
 git checkout -b my-feature-branch upstream/v8  # Always branch off upstream v8, never commit directly to v8
 
-# Set up the environment (--all-extras installs the optional grammars and SDKs,
-# matching CI; without it the tests that need them are skipped)
-uv sync --all-extras
-uv run pre-commit install
-
-# Run the test suite to confirm your setup
-uv run pytest tests/ -q
-
-# Run linters and type checkers before pushing
-uv run ruff check .
-uv run pyright
+# The package is written in Jac and built with neojac.
+# jac.toml holds the project's manifests and archwire.jac its module wiring;
+# neojac writes pyproject.toml and graphify/pi/package.json from them.
+neojac install        # dependencies, the dev group and the extras jac.toml names
+neojac check          # names, types and wiring of every module
+neojac test           # builds the package, then runs the pytest suite against it
+neojac build          # dist/graphifyy-<version>-*.whl
 ```
 
-- **Python versions**: 3.11+
-- **uv**: We use `uv` for dependency management.
+- **Language**: the package is Jac (`graphify/**/*.jac`, bodies in `impl/` annexes);
+  the tests stay Python and run against the built package.
+- **Python**: neojac's CPython 3.15 runs it; the wheel's `requires-python` allows 3.15.
 
 ## Working on the Codebase
 - **Use graphify itself**: Before making non-trivial architectural changes, use `graphify query ...` to navigate the codebase rather than blind grepping. Do not use the graph as evidence when the task concerns the graph's own correctness.

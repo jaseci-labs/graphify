@@ -2773,7 +2773,9 @@ impl _build_server(graph_path: str) -> any {
     }
 
     def _tool_graph_stats(_: dict) -> str {
-        confs: any = [d.get("confidence", "EXTRACTED") for (_, _, d) in G.edges(data=True)];
+        confs: any = [
+            e[2].get("confidence", "EXTRACTED") for e in typing.cast(object, G).edges(data=True)
+        ];
         total: any = len(confs) or 1;
         return "Nodes: "
             + format(G.number_of_nodes(), "")
@@ -3084,7 +3086,9 @@ impl _build_server(graph_path: str) -> any {
             }
         }
         if uri_str == "graphify://audit" {
-            confs: any = [d.get("confidence", "EXTRACTED") for (_, _, d) in G.edges(data=True)];
+            confs: any = [
+                e[2].get("confidence", "EXTRACTED") for e in typing.cast(object, G).edges(data=True)
+            ];
             total: any = len(confs) or 1;
             return "Total edges: "
                 + format(total, "")

@@ -42,13 +42,13 @@ impl _is_file_node(G: nx.Graph, node_id: str) -> bool {
 }
 
 impl _is_json_key_node(G: nx.Graph, node_id: str) -> bool {
-    attrs: any = G.nodes[node_id];
-    src: any = (attrs.get("source_file") or "").lower();
+    attrs = typing.cast(object, G).nodes[node_id];
+    src = typing.cast(object, attrs.get("source_file") or "").lower();
     if not src.endswith(".json") {
         return False;
     }
-    label: any = (attrs.get("label") or "").strip().lower();
-    return label in _JSON_NOISE_LABELS;
+    label = typing.cast(object, attrs.get("label") or "").strip().lower();
+    return label in typing.cast(object, _JSON_NOISE_LABELS);
 }
 
 impl god_nodes(
@@ -63,7 +63,7 @@ impl god_nodes(
             hub_threshold = degrees[idx];
         }
     }
-    sorted_nodes: any = sorted(degree.items(), key=lambda (x) -> any { x[1] }, reverse=True);
+    sorted_nodes: any = sorted(degree.items(), key=operator.itemgetter(1), reverse=True);
     result: any = [];
     for (node_id, deg) in sorted_nodes {
         if hub_threshold is not None and deg > hub_threshold {
@@ -163,6 +163,7 @@ impl _surprise_score(
     v_source: str,
     degrees: dict[str, int] | None = None,
 ) -> tuple[int, list[str]] {
+    gx = typing.cast(object, G);
     score: any = 0;
     reasons: list[str] = [];
     conf: any = data.get("confidence", "EXTRACTED");
@@ -186,8 +187,8 @@ impl _surprise_score(
         score += 2;
         reasons.append(f"crosses file types ({cat_u} ↔ {cat_v})");
     }
-    top_u: any = (G.nodes[u].get("repo"), _top_level_dir(u_source));
-    top_v: any = (G.nodes[v].get("repo"), _top_level_dir(v_source));
+    top_u: any = (gx.nodes[u].get("repo"), _top_level_dir(u_source));
+    top_v: any = (gx.nodes[v].get("repo"), _top_level_dir(v_source));
     if top_u != top_v and not _suppress_structural {
         score += 2;
         reasons.append("connects across different repos/directories");
@@ -202,12 +203,12 @@ impl _surprise_score(
         score = `int(score * 1.5);
         reasons.append("semantically similar concepts with no structural link");
     }
-    deg_u: any = degrees[u] if degrees is not None else G.degree(u);
-    deg_v: any = degrees[v] if degrees is not None else G.degree(v);
+    deg_u: any = degrees[u] if degrees is not None else gx.degree(u);
+    deg_v: any = degrees[v] if degrees is not None else gx.degree(v);
     if min(deg_u, deg_v) <= 2 and max(deg_u, deg_v) >= 5 {
         score += 1;
-        peripheral: any = G.nodes[u].get("label", u) if deg_u <= 2 else G.nodes[v].get("label", v);
-        hub: any = G.nodes[v].get("label", v) if deg_u <= 2 else G.nodes[u].get("label", u);
+        peripheral: any = gx.nodes[u].get("label", u) if deg_u <= 2 else gx.nodes[v].get("label", v);
+        hub: any = gx.nodes[v].get("label", v) if deg_u <= 2 else gx.nodes[u].get("label", u);
         reasons.append(f"peripheral node `{peripheral}` unexpectedly reaches hub `{hub}`");
     }
 
@@ -217,11 +218,12 @@ impl _surprise_score(
 impl _cross_file_surprises(
     G: nx.Graph, communities: dict[int, list[str]], top_n: int
 ) -> list[dict] {
+    gx = typing.cast(object, G);
     node_community: any = _node_community_map(communities);
-    degrees: any = `dict(G.degree());
+    degrees: any = `dict(gx.degree());
     candidates: any = [];
 
-    for (u, v, data) in G.edges(data=True) {
+    for (u, v, data) in gx.edges(data=True) {
         relation: any = data.get("relation", "");
         if relation in ("imports", "imports_from", "contains", "method") {
             continue;
@@ -233,8 +235,8 @@ impl _cross_file_surprises(
             continue;
         }
 
-        u_source: any = G.nodes[u].get("source_file", "");
-        v_source: any = G.nodes[v].get("source_file", "");
+        u_source: any = gx.nodes[u].get("source_file", "");
+        v_source: any = gx.nodes[v].get("source_file", "");
 
         if not u_source or not v_source or u_source == v_source {
             continue;
@@ -246,20 +248,20 @@ impl _cross_file_surprises(
             G, u, v, data, node_community, u_source, v_source, degrees
         ) as any;
         src_id: any = data.get("_src", u);
-        if src_id not in G.nodes {
+        if src_id not in gx.nodes {
             src_id = u;
         }
         tgt_id: any = data.get("_tgt", v);
-        if tgt_id not in G.nodes {
+        if tgt_id not in gx.nodes {
             tgt_id = v;
         }
         candidates.append({
             "_score": score,
-            "source": G.nodes[src_id].get("label", src_id),
-            "target": G.nodes[tgt_id].get("label", tgt_id),
+            "source": gx.nodes[src_id].get("label", src_id),
+            "target": gx.nodes[tgt_id].get("label", tgt_id),
             "source_files": [
-                G.nodes[src_id].get("source_file", ""),
-                G.nodes[tgt_id].get("source_file", ""),
+                gx.nodes[src_id].get("source_file", ""),
+                gx.nodes[tgt_id].get("source_file", ""),
             ],
             "confidence": data.get("confidence", "EXTRACTED"),
             "relation": relation,

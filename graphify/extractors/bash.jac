@@ -1,5 +1,6 @@
 """Bash extractor. Moved verbatim from graphify/extract.py."""
 
+import importlib;
 import operator;
 
 import from __future__ { annotations }

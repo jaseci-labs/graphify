@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from collections import deque
+from json import JSONDecodeError
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -526,13 +528,12 @@ def format_affected(
 
 
 def load_graph(path: Path) -> nx.Graph:
-    import json
     from networkx.readwrite import json_graph
 
     try:
         from graphify.paths import consumed, read_graph_json
         raw = read_graph_json(path)
-    except (json.JSONDecodeError, OSError) as exc:
+    except (JSONDecodeError, OSError) as exc:
         raise RuntimeError(
             f"Cannot read graph file {path}: {exc}. "
             "Re-run 'graphify extract' to regenerate it."

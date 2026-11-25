@@ -643,6 +643,173 @@ graph spaces {
 }
 
 graph import {
+    include graphify.detect ++> graphify.analyze { DOC_EXTENSIONS }
+    include graphify.exporters.graphdb ++> graphify.export { push_to_falkordb, push_to_neo4j }
+    include graphify.extractors.base ++> graphify.extractors.resolution {
+        _LANGUAGE_BUILTIN_GLOBALS,
+    }
+    include graphify.extractors.engine ++> graphify.extract {
+        REFERENCE_CONTEXTS,
+        _CSHARP_TYPE_PARAMETER_SCOPE_DECLARATIONS,
+        _C_PRIMITIVE_TYPE_NODES,
+        _JAVA_BUILTIN_TYPES,
+        _JAVA_TYPE_PARAMETER_SCOPE_DECLARATIONS,
+        _JS_FUNCTION_VALUE_TYPES,
+        _JS_SCOPE_BOUNDARY,
+        _PYTHON_ANNOTATION_NOISE,
+        _PYTHON_TYPE_CONTAINERS,
+        _RUBY_CLASS_FACTORIES,
+        _c_collect_type_refs,
+        _cpp_collect_type_refs,
+        _cpp_declarator_name,
+        _cpp_local_var_types,
+        _csharp_attribute_names,
+        _csharp_classify_base,
+        _csharp_collect_type_refs,
+        _csharp_extra_walk,
+        _csharp_namespace_id,
+        _csharp_namespace_name,
+        _csharp_pre_scan_interfaces,
+        _csharp_type_parameters_in_scope,
+        _dynamic_import_js,
+        _find_body,
+        _find_require_call,
+        _java_annotation_names,
+        _java_collect_type_refs,
+        _java_extra_walk,
+        _java_type_parameters_in_scope,
+        _js_collect_pattern_idents,
+        _js_dispatch_value_idents,
+        _js_extra_walk,
+        _js_local_bound_names,
+        _js_member_assignment_target,
+        _js_module_bound_names,
+        _kotlin_collect_type_refs,
+        _kotlin_function_return_type_node,
+        _kotlin_property_type_node,
+        _kotlin_user_type_name,
+        _php_collect_type_refs,
+        _php_method_return_type_node,
+        _php_name_text,
+        _python_collect_assignment_targets,
+        _python_collect_param_refs,
+        _python_collect_type_refs,
+        _python_local_bound_names,
+        _python_module_bound_names,
+        _python_param_names,
+        _read_csharp_type_name,
+        _require_imports_js,
+        _ruby_const_last_name,
+        _ruby_extra_walk,
+        _ruby_local_class_bindings,
+        _ruby_new_class_name,
+        _scala_collect_type_refs,
+        _semantic_reference_edge,
+        _source_location,
+        _swift_classify_base,
+        _swift_collect_type_refs,
+        _swift_constructor_type,
+        _swift_declaration_keyword,
+        _swift_extra_walk,
+        _swift_local_var_types,
+        _swift_pre_scan,
+        _swift_property_name,
+        _swift_property_type_node,
+        _swift_receiver_name,
+        _swift_user_type_name,
+        _ts_decorator_name,
+        _ts_descendant_decorators,
+        _ts_emit_decorator_edges,
+        _ts_extra_walk,
+        _ts_method_name,
+        _ts_receiver_type_table,
+    }
+    include graphify.extractors.fortran ++> graphify.extract { _cpp_preprocess }
+    include graphify.extractors.models ++> graphify.extract {
+        _NamespaceExportFact,
+        _StarExportFact,
+        _SymbolAliasFact,
+        _SymbolDeclarationFact,
+        _SymbolExportFact,
+        _SymbolImportFact,
+        _SymbolUseFact,
+    }
+    include graphify.extractors.models ++> graphify.extractors.resolution { LanguageConfig }
+    include graphify.extractors.objc ++> graphify.extract { _objc_local_var_types }
+    include graphify.extractors.pascal ++> graphify.extract {
+        _PAS_BEGIN_END_TOKEN_RE,
+        _PAS_CALL_RE,
+        _PAS_END_SEMI_RE,
+        _PAS_IMPL_HEADER_RE,
+        _PAS_KEYWORDS,
+        _PAS_METHOD_DECL_RE,
+        _PAS_MODULE_RE,
+        _PAS_TOKEN_RE,
+        _PAS_TYPE_HEADER_RE,
+        _PAS_USES_RE,
+        _extract_pascal_regex,
+        _pascal_find_body,
+        _pascal_split_bases,
+        _pascal_split_sections,
+        _pascal_split_uses,
+        _pascal_strip_comments,
+    }
+    include graphify.extractors.resolution ++> graphify.extract {
+        _DECLDEF_HEADER_SUFFIXES,
+        _DECLDEF_IMPL_SUFFIXES,
+        _EXPORT_CONDITION_PRIORITY,
+        _JS_INDEX_FILES,
+        _JS_PRIMITIVE_TYPES,
+        _JS_RESOLVE_EXTS,
+        _VUE_SCRIPT_LANG_RE,
+        _VUE_SCRIPT_RE,
+        _WORKSPACE_MANIFEST_NAMES,
+        _collect_python_symbol_resolution_facts,
+        _contained_in_package,
+        _decldef_class_stem,
+        _find_workspace_root,
+        _js_call_identifier,
+        _js_default_export_name,
+        _js_default_import_name,
+        _js_export_clause,
+        _js_export_statement_is_star,
+        _js_exported_declaration_names,
+        _js_lexical_aliases,
+        _js_module_specifier,
+        _js_named_specifiers,
+        _js_namespace_export_name,
+        _js_top_level_function_bodies,
+        _load_workspace_packages,
+        _match_tsconfig_alias,
+        _node_disambiguation_source_key,
+        _package_entry_candidates,
+        _parse_js_tree,
+        _parse_python_tree,
+        _pascal_class_stem_cache,
+        _pascal_project_root,
+        _pascal_resolve_class,
+        _pascal_unit_cache,
+        _pnpm_workspace_globs,
+        _python_call_identifier,
+        _python_import_from_module,
+        _python_imported_names,
+        _python_top_level_function_bodies,
+        _read_tsconfig_aliases,
+        _resolve_export_target,
+        _resolve_workspace_import,
+        _strip_jsonc,
+        _ts_collect_type_refs,
+        _ts_heritage_clause_entries,
+        _ts_walk_class_members,
+        _walk_js_tree,
+        _walk_python_tree,
+        _workspace_globs,
+    }
+    include graphify.extractors.resolution ++> graphify.extract {
+        _VUE_SCRIPT_LANG_RE as _SCRIPT_LANG_RE,
+    }
+    include graphify.paths ++> graphify.export { write_text_atomic }
+    include graphify.security ++> graphify.export { sanitize_label }
     graphify.pi.index --> "tests/pi.test" { default }
     graphify.paths --> graphify.__main__ { GRAPHIFY_OUT }
     graphify.install --> graphify.__main__ {
@@ -909,589 +1076,6 @@ graph import {
     graphify.pg_introspect --> graphify.cli { introspect_postgres }
     graphify.cargo_introspect --> graphify.cli { introspect_cargo }
     graphify.semantic_cleanup --> graphify.cli { load_validated_semantic_fragment }
-    graphify.cache --> graphify.extract { load_cached, save_cached }
-    graphify.cargo_introspect --> graphify.extract { package_name }
-    graphify.security --> graphify.extract { redact_secrets, sanitize_metadata }
-    graphify.mcp_ingest --> graphify.extract { extract_mcp_config, is_mcp_config_path }
-    graphify.manifest_ingest --> graphify.extract {
-        extract_package_manifest,
-        is_package_manifest_path,
-    }
-    graphify.resolver_registry --> graphify.extract {
-        LanguageResolver,
-        register,
-        run_language_resolvers,
-    }
-    graphify.ruby_resolution --> graphify.extract { resolve_ruby_member_calls }
-    graphify.csharp_dispatch --> graphify.extract { resolve_csharp_interface_dispatch }
-    graphify.go_dispatch --> graphify.extract { resolve_go_interface_dispatch }
-    graphify.kotlin_dispatch --> graphify.extract { resolve_kotlin_interface_dispatch }
-    graphify.swift_dispatch --> graphify.extract { resolve_swift_protocol_dispatch }
-    graphify.pascal_class_resolution --> graphify.extract { resolve_pascal_base_classes }
-    graphify.dfm_resolution --> graphify.extract { resolve_dfm_handlers }
-    graphify.pascal_resolution --> graphify.extract { resolve_pascal_inherited_calls }
-    graphify.pascal_singleton_resolution --> graphify.extract { resolve_pascal_singleton_calls }
-    graphify.cpp_resolution --> graphify.extract { CppTypeLookup }
-    graphify.markdown_resolution --> graphify.extract {
-        MARKDOWN_MENTION_SUFFIXES,
-        resolve_markdown_mentions,
-    }
-    graphify.rcfile --> graphify.extract {
-        activate_language_overrides,
-        cache_salt,
-        effective_suffix,
-        get_language_overrides,
-        set_language_overrides,
-    }
-    graphify.extractors.engine --> graphify.extract {
-        PYTEST_FIXTURE_UNTYPED,
-        REFERENCE_CONTEXTS,
-        _CSHARP_TYPE_PARAMETER_SCOPE_DECLARATIONS,
-        _C_PRIMITIVE_TYPE_NODES,
-        _JAVA_BUILTIN_TYPES,
-        _JAVA_TYPE_PARAMETER_SCOPE_DECLARATIONS,
-        _JS_FUNCTION_VALUE_TYPES,
-        _JS_SCOPE_BOUNDARY,
-        _PYTHON_ANNOTATION_NOISE,
-        _PYTHON_TYPE_CONTAINERS,
-        _RUBY_CLASS_FACTORIES,
-        _c_collect_type_refs,
-        _cpp_collect_type_refs,
-        _cpp_declarator_name,
-        _cpp_is_header_guard,
-        _cpp_local_var_types,
-        _csharp_attribute_names,
-        _csharp_classify_base,
-        _csharp_collect_type_refs,
-        _csharp_extra_walk,
-        _csharp_namespace_id,
-        _csharp_namespace_name,
-        _csharp_pick_overload,
-        _csharp_pre_scan_interfaces,
-        _csharp_type_parameters_in_scope,
-        _dynamic_import_js,
-        _extract_generic,
-        _find_body,
-        _find_require_call,
-        _get_cpp_func_name,
-        _java_annotation_names,
-        _java_collect_type_refs,
-        _java_extra_walk,
-        _java_type_parameters_in_scope,
-        _js_collect_pattern_idents,
-        _js_dispatch_value_idents,
-        _js_extra_walk,
-        _js_import_is_type_only,
-        _js_local_bound_names,
-        _js_member_assignment_target,
-        _js_module_bound_names,
-        _kotlin_collect_type_refs,
-        _kotlin_function_return_type_node,
-        _kotlin_property_type_node,
-        _kotlin_user_type_name,
-        _php_collect_type_refs,
-        _php_method_return_type_node,
-        _php_name_text,
-        _python_collect_assignment_targets,
-        _python_collect_param_refs,
-        _python_collect_type_refs,
-        _python_local_bound_names,
-        _python_module_bound_names,
-        _python_param_names,
-        _read_csharp_type_name,
-        _require_imports_js,
-        _ruby_const_last_name,
-        _ruby_extra_walk,
-        _ruby_local_class_bindings,
-        _ruby_new_class_name,
-        _scala_collect_type_refs,
-        _semantic_reference_edge,
-        _source_location,
-        _swift_classify_base,
-        _swift_collect_type_refs,
-        _swift_constructor_type,
-        _swift_declaration_keyword,
-        _swift_extra_walk,
-        _swift_local_var_types,
-        _swift_pre_scan,
-        _swift_property_name,
-        _swift_property_type_node,
-        _swift_receiver_name,
-        _swift_user_type_name,
-        _ts_decorator_name,
-        _ts_descendant_decorators,
-        _ts_emit_decorator_edges,
-        _ts_extra_walk,
-        _ts_method_name,
-        _ts_receiver_type_table,
-    }
-    graphify.extractors.base --> graphify.extract {
-        _LANGUAGE_BUILTIN_GLOBALS,
-        _PYTHON_BUILTIN_NAMES,
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_source_text,
-        _read_text,
-        active_scan_root,
-        set_active_scan_root,
-    }
-    graphify.extractors.apex --> graphify.extract { extract_apex }
-    graphify.extractors.bash --> graphify.extract { extract_bash }
-    graphify.extractors.blade --> graphify.extract { extract_blade }
-    graphify.extractors.cobol --> graphify.extract { extract_cobol }
-    graphify.extractors.csharp --> graphify.extract {
-        CsharpNameResolver,
-        _is_cs_file,
-        _is_dotnet_source_file,
-        _resolve_cross_file_csharp_imports,
-        _resolve_csharp_type_references,
-        bare_csharp_method_labels_in_nodes,
-        is_csharp_constructor_node,
-        is_csharp_explicit_interface_node,
-    }
-    graphify.extractors.dart --> graphify.extract { extract_dart }
-    graphify.extractors.dm --> graphify.extract {
-        extract_dm,
-        extract_dmf,
-        extract_dmi,
-        extract_dmm,
-    }
-    graphify.extractors.elixir --> graphify.extract { extract_elixir }
-    graphify.extractors.erlang --> graphify.extract { extract_erlang, resolve_erlang_remote_calls }
-    graphify.extractors.fortran --> graphify.extract { _cpp_preprocess, extract_fortran }
-    graphify.extractors.go --> graphify.extract { _GO_PREDECLARED_FUNCS, extract_go }
-    graphify.extractors.json_config --> graphify.extract { extract_json }
-    graphify.extractors.yaml_config --> graphify.extract { extract_yaml }
-    graphify.extractors.commonlisp --> graphify.extract { extract_commonlisp }
-    graphify.extractors.markdown --> graphify.extract { _MD_LINK_INDEX_CACHE, extract_markdown }
-    graphify.extractors.ocaml --> graphify.extract { extract_ocaml }
-    graphify.extractors.pascal_forms --> graphify.extract {
-        extract_delphi_form,
-        extract_lazarus_form,
-    }
-    graphify.extractors.powershell --> graphify.extract {
-        extract_powershell,
-        extract_powershell_manifest,
-    }
-    graphify.extractors.r --> graphify.extract { extract_r, resolve_r_sourced_calls }
-    graphify.extractors.razor --> graphify.extract { extract_razor }
-    graphify.extractors.robot --> graphify.extract { extract_robot }
-    graphify.extractors.rust --> graphify.extract { extract_rust }
-    graphify.extractors.sln --> graphify.extract { extract_sln }
-    graphify.extractors.solidity --> graphify.extract {
-        extract_solidity,
-        resolve_solidity_inherited_calls,
-        resolve_solidity_type_references,
-    }
-    graphify.extractors.sql --> graphify.extract { _norm_ident, extract_sql }
-    graphify.extractors.terraform --> graphify.extract {
-        extract_terraform,
-        prepare_terraform,
-        resolve_terraform_modules,
-    }
-    graphify.extractors.verilog --> graphify.extract { extract_verilog }
-    graphify.extractors.vbnet --> graphify.extract { extract_vbnet, resolve_vbnet_partial_calls }
-    graphify.extractors.zig --> graphify.extract { extract_zig }
-    graphify.paths --> graphify.extract { disambiguate_ambiguous_candidates }
-    graphify.extractors.models --> graphify.extract {
-        LanguageConfig,
-        _JS_CACHE_BYPASS_SUFFIXES,
-        _NamespaceExportFact,
-        _StarExportFact,
-        _SymbolAliasFact,
-        _SymbolDeclarationFact,
-        _SymbolExportFact,
-        _SymbolImportFact,
-        _SymbolResolutionFacts,
-        _SymbolUseFact,
-        _WORKSPACE_PACKAGE_CACHE,
-    }
-    graphify.extractors.resolution --> graphify.extract {
-        _DECLDEF_HEADER_SUFFIXES,
-        _DECLDEF_IMPL_SUFFIXES,
-        _EXPORT_CONDITION_PRIORITY,
-        _HTML_SCRIPT_TAG_RE,
-        _JS_INDEX_FILES,
-        _JS_PRIMITIVE_TYPES,
-        _JS_RESOLVE_EXTS,
-        _NON_JS_SCRIPT_TYPE_RE,
-        _PACKAGE_IMPORTS_CACHE,
-        _PYTHON_STDLIB_MODULE_NAMES,
-        _SCAN_ROOT_NAMESPACE_CACHE,
-        _TSCONFIG_ALIAS_CACHE,
-        _TSCONFIG_BASEURL_CACHE,
-        _VUE_SCRIPT_LANG_RE,
-        _VUE_SCRIPT_RE,
-        _WORKSPACE_MANIFEST_NAMES,
-        _apply_symbol_resolution_facts,
-        _augment_symbol_resolution_edges,
-        _cached_realpath,
-        _cached_source_key,
-        _collect_js_symbol_resolution_facts,
-        _collect_python_symbol_resolution_facts,
-        _contained_in_package,
-        _cpp_exact_includes,
-        _cpp_include_path,
-        _cpp_reconciliation_paths,
-        _cpp_source_key,
-        _decldef_class_stem,
-        _disambiguate_colliding_node_ids,
-        _find_workspace_root,
-        _go_import_path_for_file,
-        _is_python_package_dir,
-        _is_type_like_definition,
-        _js_call_identifier,
-        _js_default_export_name,
-        _js_default_import_name,
-        _js_export_clause,
-        _js_export_statement_is_star,
-        _js_exported_declaration_names,
-        _js_lexical_aliases,
-        _js_module_specifier,
-        _js_named_specifiers,
-        _js_namespace_export_name,
-        _js_source_path,
-        _js_top_level_function_bodies,
-        _load_tsconfig_aliases,
-        _load_tsconfig_base_url,
-        _load_workspace_packages,
-        _match_tsconfig_alias,
-        _merge_cpp_forward_classes,
-        _merge_cpp_member_declarations,
-        _merge_decl_def_classes,
-        _merge_go_package_types,
-        _node_disambiguation_source_key,
-        _package_entry_candidates,
-        _parse_js_tree,
-        _parse_python_tree,
-        _pascal_class_stem_cache,
-        _pascal_project_root,
-        _pascal_resolve_class,
-        _pascal_resolve_unit,
-        _pascal_unit_cache,
-        _pnpm_workspace_globs,
-        _probe_python_module_candidate,
-        _python_call_identifier,
-        _python_import_from_module,
-        _python_imported_names,
-        _python_top_level_function_bodies,
-        _read_tsconfig_aliases,
-        _resolve_c_include_path,
-        _resolve_cross_file_imports,
-        _resolve_cross_file_java_imports,
-        _resolve_export_target,
-        _resolve_go_type_references,
-        _resolve_java_type_references,
-        _resolve_js_import_path,
-        _resolve_js_import_target,
-        _resolve_js_module_path,
-        _resolve_lua_import_target,
-        _resolve_php_type_references,
-        _resolve_python_module_path,
-        _resolve_python_namespace_dir,
-        _resolve_tsconfig_alias,
-        _resolve_workspace_import,
-        _source_key,
-        _strip_jsonc,
-        _svelte_mask_non_script,
-        _ts_collect_type_refs,
-        _ts_heritage_clause_entries,
-        _ts_walk_class_members,
-        _vue_mask_non_script,
-        _walk_js_tree,
-        _walk_python_tree,
-        _workspace_globs,
-    }
-    graphify.symbol_resolution --> graphify.extract {
-        resolve_bash_source_edges,
-        rust_scoped_call_survivors,
-    }
-    graphify.extractors.pascal --> graphify.extract {
-        _PAS_BEGIN_END_TOKEN_RE,
-        _PAS_CALL_RE,
-        _PAS_END_SEMI_RE,
-        _PAS_IMPL_HEADER_RE,
-        _PAS_KEYWORDS,
-        _PAS_METHOD_DECL_RE,
-        _PAS_MODULE_RE,
-        _PAS_TOKEN_RE,
-        _PAS_TYPE_HEADER_RE,
-        _PAS_USES_RE,
-        _extract_pascal_regex,
-        _pascal_find_body,
-        _pascal_split_bases,
-        _pascal_split_sections,
-        _pascal_split_uses,
-        _pascal_strip_comments,
-        extract_pascal,
-    }
-    graphify.extractors.objc --> graphify.extract {
-        _objc_category_base_stem,
-        _objc_local_var_types,
-        extract_objc,
-    }
-    graphify.extractors.julia --> graphify.extract { extract_julia }
-    graphify.detect --> graphify.extract {
-        CODE_EXTENSIONS,
-        _is_ignored,
-        _is_installed_graphify_file,
-        _is_noise_dir,
-        _load_graphifyignore,
-        _resolves_under_root,
-        _shebang_interpreter,
-    }
-    graphify.build --> graphify.ruby_resolution { _is_file_node_label }
-    graphify.ids --> graphify.build { _file_stem, make_id, normalize_id }
-    graphify.paths --> graphify.build { GRAPHIFY_OUT, default_graph_json, is_absolute_any_platform }
-    graphify.validate --> graphify.build { VALID_CONFIDENCES, validate_extraction }
-    graphify.extractors.csharp --> graphify.build {
-        bare_csharp_method_label,
-        csharp_method_label_reassignments,
-    }
-    graphify.extractors.base --> graphify.build { _file_stem }
-    graphify.extractors.resolution --> graphify.build {
-        C_STANDARD_INCLUDE_NAMES,
-        _PYTHON_STDLIB_MODULE_NAMES,
-    }
-    graphify.extract --> graphify.build { _lang_family }
-    graphify.dedup --> graphify.build { deduplicate_entities }
-    graphify.security --> graphify.build { check_graph_file_size_cap }
-    graphify.extractors.models --> graphify.extractors.resolution {
-        LanguageConfig,
-        _JS_CACHE_BYPASS_SUFFIXES,
-        _NamespaceExportFact,
-        _StarExportFact,
-        _SymbolAliasFact,
-        _SymbolDeclarationFact,
-        _SymbolExportFact,
-        _SymbolImportFact,
-        _SymbolResolutionFacts,
-        _SymbolUseFact,
-        _WORKSPACE_PACKAGE_CACHE,
-    }
-    graphify.extractors.base --> graphify.extractors.resolution {
-        _LANGUAGE_BUILTIN_GLOBALS,
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_source_text,
-        _read_text,
-    }
-    graphify.extractors.python_scope --> graphify.extractors.resolution {
-        _python_param_shadow_checker,
-    }
-    graphify.ids --> graphify.extractors.resolution { normalize_id }
-    graphify.rcfile --> graphify.extractors.resolution { effective_suffix, get_language_overrides }
-    graphify.detect --> graphify.extractors.resolution { _find_vcs_root }
-    graphify.extract --> graphify.extractors.resolution { _lang_family }
-    graphify._minhash --> graphify.dedup { MinHash, MinHashLSH }
-    graphify.ids --> graphify.dedup { normalize_id }
-    graphify.build --> graphify.dedup { _is_abs, _is_ast_tier }
-    graphify.llm --> graphify.dedup {
-        BACKENDS,
-        _call_llm,
-        _format_backend_env_keys,
-        _get_backend_api_key,
-    }
-    graphify.extractors.base --> graphify.llm { _read_source_text }
-    graphify.file_slice --> graphify.llm {
-        FileSlice,
-        bisect_slice,
-        expand_oversized_files,
-        is_complete_slice_coverage,
-        make_full_slice,
-        read_slice_text,
-        unit_path,
-    }
-    graphify.detect --> graphify.llm { extract_pdf_text }
-    graphify.build --> graphify.llm { _coerce_hyperedge_member_refs }
-    graphify.cache --> graphify.llm { save_semantic_cache }
-    graphify.extractors.base --> graphify.extractors.engine {
-        _LANGUAGE_BUILTIN_GLOBALS,
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-    }
-    graphify.ids --> graphify.extractors.engine { DeclIdRegistry, normalize_id }
-    graphify.extractors.models --> graphify.extractors.engine { LanguageConfig }
-    graphify.extractors.python_scope --> graphify.extractors.engine {
-        _python_param_names,
-        _python_param_shadow_checker,
-    }
-    graphify.extractors.resolution --> graphify.extractors.engine { _resolve_js_import_target }
-    graphify.security --> graphify.extractors.engine { sanitize_metadata }
-    graphify.extractors.base --> graphify.extractors.dart {
-        _file_stem,
-        _make_id,
-        _read_source_text,
-    }
-    graphify.extractors.engine --> graphify.extractors.dart { _underscore_salted_nid }
-    graphify.ids --> graphify.extractors.dart { normalize_id }
-    graphify.extractors.base --> graphify.extractors.elixir {
-        _LANGUAGE_BUILTIN_GLOBALS,
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-    }
-    graphify.extractors.engine --> graphify.extractors.elixir { _underscore_salted_nid }
-    graphify.ids --> graphify.extractors.elixir { normalize_id }
-    graphify.ids --> graphify.extractors.go { DeclIdRegistry }
-    graphify.extractors.base --> graphify.extractors.go {
-        _LANGUAGE_BUILTIN_GLOBALS,
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-    }
-    graphify.extractors.resolution --> graphify.extractors.go { _go_import_path_for_file }
-    graphify.extractors.base --> graphify.extractors.json_config {
-        _file_stem,
-        _make_id,
-        _read_text,
-    }
-    graphify.extractors.resolution --> graphify.extractors.json_config {
-        _read_json_config,
-        _resolve_js_module_path,
-    }
-    graphify.ids --> graphify.extractors.json_config { normalize_id }
-    graphify.extractors.base --> graphify.extractors.solidity {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-    }
-    graphify.extractors.engine --> graphify.extractors.solidity { _underscore_salted_nid }
-    graphify.extractors.base --> graphify.extractors.pascal {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_source_text,
-    }
-    graphify.extractors.resolution --> graphify.extractors.pascal {
-        _pascal_resolve_class,
-        _pascal_resolve_unit,
-    }
-    graphify.extractors.base --> graphify.extractors.objc {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-    }
-    graphify.extractors.engine --> graphify.extractors.objc {
-        _cpp_declarator_name,
-        _semantic_reference_edge,
-        _underscore_salted_nid,
-    }
-    graphify.extractors.resolution --> graphify.extractors.objc { _resolve_c_include_path }
-    graphify.security --> graphify.extractors.objc { sanitize_metadata }
-    graphify.ids --> graphify.extractors.julia { DeclIdRegistry }
-    graphify.extractors.base --> graphify.extractors.julia {
-        _file_stem,
-        _make_id,
-        _read_source_bytes,
-        _read_text,
-    }
-    graphify.extractors.engine --> graphify.extractors.julia { _semantic_reference_edge }
-    graphify.security --> graphify.export { check_graph_file_size_cap, sanitize_label }
-    graphify.analyze --> graphify.export { _node_community_map }
-    graphify.build --> graphify.export {
-        _dedup_shrink_allowance,
-        _lost_saved_semantic_nodes,
-        edge_datas,
-        has_parallel_links,
-        take_dedup_remap,
-        take_shrink_accounting,
-    }
-    graphify.paths --> graphify.export {
-        os_replace_with_fallback,
-        stem_filename_budget,
-        write_json_atomic,
-        write_text_atomic,
-        write_text_atomic_if_changed,
-    }
-    graphify.exporters.graphdb --> graphify.export { push_to_falkordb, push_to_neo4j }
-    graphify.exporters.base --> graphify.export { COMMUNITY_COLORS }
-    graphify.exporters.html --> graphify.export { to_html }
-    graphify.build --> graphify.analyze { _is_ast_tier, _is_file_node_label, edge_datas }
-    graphify.extractors.csharp --> graphify.analyze { bare_csharp_method_label }
-    graphify.detect --> graphify.analyze {
-        CODE_EXTENSIONS,
-        DOC_EXTENSIONS,
-        IMAGE_EXTENSIONS,
-        PAPER_EXTENSIONS,
-    }
-    graphify.cluster --> graphify.analyze { cohesion_score }
-    graphify.analyze --> graphify.exporters.graphdb { _node_community_map }
-    graphify.exporters.base --> graphify.exporters.html { COMMUNITY_COLORS }
-    graphify.analyze --> graphify.exporters.html { _node_community_map }
-    graphify.paths --> graphify.exporters.html { GRAPHIFY_OUT_NAME, write_text_atomic }
-    graphify.security --> graphify.exporters.html { sanitize_label }
-    graphify.reflect --> graphify.exporters.html { load_learning_overlay }
-    graphify.paths --> graphify.prs { default_graph_json }
-    graphify.security --> graphify.prs { check_graph_file_size_cap }
-    graphify.llm --> graphify.prs { BACKENDS, _default_model_for_backend, _get_backend_api_key }
-    graphify.paths --> graphify.serve;
-    graphify.paths --> graphify.serve {
-        _is_test_path,
-        consumed,
-        default_graph_json,
-        read_graph_json,
-    }
-    graphify.security --> graphify.serve {
-        _CONTROL_CHAR_RE,
-        check_graph_file_size_cap,
-        sanitize_label,
-    }
-    graphify.build --> graphify.serve {
-        _CONFIDENCE_RANK,
-        edge_datas,
-        edge_evidence,
-        graph_has_legacy_ids,
-        has_parallel_links,
-        legacy_id_source_prefix,
-    }
-    graphify.reflect --> graphify.serve { load_learning_overlay }
-    graphify.affected --> graphify.serve { resolve_seed }
-    graphify.querylog --> graphify.serve;
-    graphify.sections --> graphify.serve {
-        DEFAULT_MAX_CHARS,
-        format_section,
-        is_section_node,
-        read_section,
-        resolve_section_query,
-        section_root,
-    }
-    graphify.analyze --> graphify.serve { god_nodes, suggest_questions, surprising_connections }
-    graphify.export --> graphify.serve { _git_head }
-    graphify.prs --> graphify.serve {
-        _STATUS_ORDER,
-        _detect_default_branch,
-        _gh,
-        _parse_ci,
-        compute_pr_impact,
-        fetch_pr_files,
-        fetch_prs,
-        fetch_worktrees,
-        format_prs_text,
-    }
-    graphify.build --> graphify.affected { _is_file_node_label }
-    graphify.serve --> graphify.affected { _find_node_tiers, find_node_ambiguity }
-    graphify.paths --> graphify.affected { consumed, read_graph_json }
-    graphify.extractors.base --> graphify.sections { _read_source_text }
-    graphify.extractors.markdown --> graphify.sections {
-        _MD_ATX_CLOSING_RE,
-        _MD_ATX_HEADING_RE,
-        _fence_closes,
-        _fence_open,
-        _split_frontmatter,
-    }
-    graphify.security --> graphify.sections { redact_secrets, sanitize_label }
-    graphify.paths --> graphify.sections { GRAPHIFY_OUT, graph_root_for }
-    graphify.serve --> graphify.sections { _resolve_single_node }
-    graphify.build --> graphify.diagnostics { build_from_json }
-    graphify.security --> graphify.diagnostics { check_graph_file_size_cap }
     graphify.paths --> graphify.watch {
         GRAPHIFY_OUT,
         is_absolute_any_platform,
@@ -1574,67 +1158,6 @@ graph import {
     graphify.extractors.terraform --> graphify.watch { refresh_terraform_paths }
     graphify.extractors.resolution --> graphify.watch { _cpp_reconciliation_paths }
     graphify.callflow_html --> graphify.watch { write_callflow_html }
-    graphify.export --> graphify.report { _obsidian_safe_stem }
-    graphify.reflect --> graphify.report {
-        aggregate_lessons,
-        load_learning_overlay,
-        load_memory_docs,
-    }
-    graphify.analyze --> graphify.report {
-        _is_concept_node,
-        _is_contains_only_ast_node,
-        _is_file_node,
-        find_import_cycles,
-    }
-    graphify.build --> graphify.tree_html { _is_file_node_label }
-    graphify.security --> graphify.tree_html { check_graph_file_size_cap }
-    graphify.serve --> graphify.benchmark { _query_graph_text, _read_graph }
-    graphify.paths --> graphify.benchmark { default_graph_json }
-    graphify.paths --> graphify.global_graph { restore_arc_direction, write_json_atomic }
-    graphify.security --> graphify.global_graph { check_graph_file_size_cap }
-    graphify.build --> graphify.global_graph { prefix_graph_for_global, prune_repo_from_graph }
-    graphify.cross_repo_calls --> graphify.global_graph { link_cross_repo_member_calls }
-    graphify.extract --> graphify.pg_introspect { extract_sql }
-    graphify.build --> graphify.semantic_cleanup { _normalize_hyperedge_members }
-    graphify.extractors.apex --> graphify.extractors { extract_apex }
-    graphify.extractors.bash --> graphify.extractors { extract_bash }
-    graphify.extractors.blade --> graphify.extractors { extract_blade }
-    graphify.extractors.cobol --> graphify.extractors { extract_cobol }
-    graphify.extractors.commonlisp --> graphify.extractors { extract_commonlisp }
-    graphify.extractors.dart --> graphify.extractors { extract_dart }
-    graphify.extractors.dm --> graphify.extractors {
-        extract_dm,
-        extract_dmf,
-        extract_dmi,
-        extract_dmm,
-    }
-    graphify.extractors.elixir --> graphify.extractors { extract_elixir }
-    graphify.extractors.erlang --> graphify.extractors { extract_erlang }
-    graphify.extractors.fortran --> graphify.extractors { extract_fortran }
-    graphify.extractors.go --> graphify.extractors { extract_go }
-    graphify.extractors.json_config --> graphify.extractors { extract_json }
-    graphify.extractors.julia --> graphify.extractors { extract_julia }
-    graphify.extractors.markdown --> graphify.extractors { extract_markdown }
-    graphify.extractors.objc --> graphify.extractors { extract_objc }
-    graphify.extractors.pascal --> graphify.extractors { extract_pascal }
-    graphify.extractors.pascal_forms --> graphify.extractors {
-        extract_delphi_form,
-        extract_lazarus_form,
-    }
-    graphify.extractors.powershell --> graphify.extractors {
-        extract_powershell,
-        extract_powershell_manifest,
-    }
-    graphify.extractors.r --> graphify.extractors { extract_r }
-    graphify.extractors.razor --> graphify.extractors { extract_razor }
-    graphify.extractors.rust --> graphify.extractors { extract_rust }
-    graphify.extractors.sln --> graphify.extractors { extract_sln }
-    graphify.extractors.solidity --> graphify.extractors { extract_solidity }
-    graphify.extractors.sql --> graphify.extractors { extract_sql }
-    graphify.extractors.terraform --> graphify.extractors { extract_terraform }
-    graphify.extractors.verilog --> graphify.extractors { extract_verilog }
-    graphify.extractors.vbnet --> graphify.extractors { extract_vbnet }
-    graphify.extractors.zig --> graphify.extractors { extract_zig }
     graphify.extract --> tests.bench_extract { collect_files, extract }
     graphify.cache --> tests.bench_extract { clear_cache }
     graphify.serve --> tests.bench_query_scoring {
@@ -3776,23 +3299,15 @@ graph import {
         GRAPHIFY_OUT as _PATHS_OUT,
         GRAPHIFY_OUT_NAME as _PATHS_OUT_NAME,
     }
-    graphify.paths ++> graphify.cluster { write_json_atomic }
     graphify.paths ++> graphify.transcribe { out_path as _out_path }
-    graphify.security ++> graphify.transcribe { validate_url }
     graphify.security ++> graphify.ingest {
         safe_fetch as _wired_safe_fetch,
         safe_fetch_text as _wired_safe_fetch_text,
         validate_url as _wired_validate_url,
     }
-    graphify.transcribe ++> graphify.ingest { download_audio }
     graphify.ingest ++> graphify.reflect { OUTCOMES }
     graphify.paths ++> graphify.reflect { GRAPHIFY_OUT_NAME }
-    graphify.paths ++> graphify.callflow_html {
-        GRAPHIFY_OUT,
-        GRAPHIFY_OUT_NAME,
-        load_node_link_graph,
-    }
-    graphify.security ++> graphify.callflow_html { check_graph_file_size_cap }
+    graphify.paths ++> graphify.callflow_html { GRAPHIFY_OUT, GRAPHIFY_OUT_NAME }
     graphify.paths ++> graphify.wiki {
         stem_filename_budget as _wired_stem_filename_budget,
         write_text_atomic_if_changed,
@@ -3804,32 +3319,21 @@ graph import {
         stash_preread_bytes as _stash_preread_bytes,
         os_replace_with_fallback as _os_replace_with_fallback,
     }
-    graphify.ids ++> graphify.cache { normalize_id }
     graphify.google_workspace ++> graphify.detect {
         GOOGLE_WORKSPACE_EXTENSIONS,
         convert_google_workspace_file as _wired_convert_google_workspace_file,
         google_workspace_enabled,
     }
-    graphify.paths ++> graphify.detect {
-        GRAPHIFY_OUT,
-        GRAPHIFY_OUT_NAME,
-        os_long_path,
-        out_path,
-        write_json_atomic,
-    }
+    graphify.paths ++> graphify.detect { GRAPHIFY_OUT, GRAPHIFY_OUT_NAME, os_long_path, out_path }
     graphify.rcfile ++> graphify.detect {
         activate_language_overrides,
         cache_salt,
         effective_suffix,
     }
-    graphify.manifest_ingest ++> graphify.detect { is_package_manifest_path }
-    graphify.cache as _cache ++> graphify.detect;
     graphify.ids ++> graphify.extractors.base { make_id }
     include graphify.ids ++> graphify.extractors.base { _file_stem }
     graphify.paths ++> graphify.extractors.base { take_preread_bytes as _take_preread_bytes }
     graphify.extractors.base ++> graphify.file_slice { _read_source_text }
-    graphify.detect ++> graphify.file_slice { extract_pdf_text }
-    graphify.detect ++> graphify.cargo_introspect { _is_noise_dir }
     graphify.rcfile ++> graphify.interface_dispatch { effective_suffix }
     graphify.interface_dispatch ++> graphify.csharp_dispatch {
         DISPATCH_RELATION,
@@ -3856,17 +3360,12 @@ graph import {
     }
     graphify.interface_dispatch ++> graphify.kotlin_dispatch { resolve_interface_dispatch }
     graphify.extractors.base ++> graphify.pascal_singleton_resolution { _make_id }
-    graphify.rcfile ++> graphify.resolver_registry { effective_suffix }
     graphify.interface_dispatch ++> graphify.swift_dispatch { resolve_interface_dispatch }
-    graphify.extractors.csharp ++> graphify.cross_repo_calls { CsharpNameResolver }
-    graphify.rcfile ++> graphify.hooks { load_graphifyrc }
-    graphify.paths ++> graphify.hooks { GRAPHIFY_OUT }
     graphify.paths ++> graphify.install {
         GRAPHIFY_OUT as _PATHS_OUT,
         os_replace_with_fallback as _os_replace_with_fallback,
         write_text_atomic as _write_text_atomic,
     }
-    graphify.hooks ++> graphify.install { uninstall as hook_uninstall }
     include graphify.detect ++> graphify.manifest {
         save_manifest,
         load_manifest,
@@ -3884,7 +3383,6 @@ graph import {
         _read_text,
         active_scan_root,
     }
-    graphify.security ++> graphify.extractors.bash { sanitize_metadata }
     graphify.extractors.base ++> graphify.extractors.cobol { _make_id, _read_source_text }
     graphify.extractors.base ++> graphify.extractors.commonlisp {
         _file_stem,
@@ -3915,8 +3413,6 @@ graph import {
         CODE_EXTENSIONS,
         DOC_EXTENSIONS,
         classify_file,
-        _SKIP_DIRS,
-        ignored_predicate,
     }
     graphify.extractors.base ++> graphify.extractors.markdown {
         _file_stem,
@@ -4006,4 +3502,404 @@ graph import {
     graphify.extractors.base ++> graphify.extractors.yaml_config { _file_stem, _make_id }
     graphify.ids ++> graphify.extractors.yaml_config { normalize_id }
     graphify --> tests.conftest;
+    graphify.ids ++> graphify.build { make_id, normalize_id as _normalize_id }
+    graphify.paths ++> graphify.build {
+        default_graph_json as _default_graph_json,
+        is_absolute_any_platform as _is_abs,
+        GRAPHIFY_OUT,
+    }
+    graphify.validate ++> graphify.build { VALID_CONFIDENCES, validate_extraction }
+    graphify._minhash ++> graphify.dedup { MinHash, MinHashLSH }
+    graphify.ids ++> graphify.dedup { normalize_id }
+    graphify.cache ++> graphify.extract { load_cached, save_cached }
+    graphify.cargo_introspect ++> graphify.extract { package_name }
+    graphify.security ++> graphify.extract { redact_secrets, sanitize_metadata }
+    graphify.mcp_ingest ++> graphify.extract { extract_mcp_config, is_mcp_config_path }
+    graphify.manifest_ingest ++> graphify.extract {
+        extract_package_manifest,
+        is_package_manifest_path,
+    }
+    graphify.resolver_registry ++> graphify.extract {
+        LanguageResolver,
+        register as register_language_resolver,
+        run_language_resolvers,
+    }
+    graphify.ruby_resolution ++> graphify.extract { resolve_ruby_member_calls }
+    graphify.csharp_dispatch ++> graphify.extract { resolve_csharp_interface_dispatch }
+    graphify.go_dispatch ++> graphify.extract { resolve_go_interface_dispatch }
+    graphify.kotlin_dispatch ++> graphify.extract { resolve_kotlin_interface_dispatch }
+    graphify.swift_dispatch ++> graphify.extract { resolve_swift_protocol_dispatch }
+    graphify.pascal_class_resolution ++> graphify.extract { resolve_pascal_base_classes }
+    graphify.dfm_resolution ++> graphify.extract { resolve_dfm_handlers }
+    graphify.pascal_resolution ++> graphify.extract { resolve_pascal_inherited_calls }
+    graphify.pascal_singleton_resolution ++> graphify.extract { resolve_pascal_singleton_calls }
+    graphify.cpp_resolution ++> graphify.extract { CppTypeLookup }
+    graphify.markdown_resolution ++> graphify.extract {
+        MARKDOWN_MENTION_SUFFIXES,
+        resolve_markdown_mentions,
+    }
+    graphify.rcfile ++> graphify.extract {
+        activate_language_overrides,
+        cache_salt,
+        effective_suffix,
+        get_language_overrides,
+        set_language_overrides,
+    }
+    graphify.extractors.engine ++> graphify.extract {
+        _cpp_is_header_guard,
+        _js_import_is_type_only,
+        PYTEST_FIXTURE_UNTYPED,
+        _csharp_pick_overload,
+        _extract_generic,
+        _get_cpp_func_name,
+    }
+    graphify.extractors.base ++> graphify.extract {
+        _LANGUAGE_BUILTIN_GLOBALS,
+        _PYTHON_BUILTIN_NAMES,
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_source_text,
+        _read_text,
+        active_scan_root,
+        set_active_scan_root,
+    }
+    graphify.extractors.apex ++> graphify.extract { extract_apex }
+    graphify.extractors.bash ++> graphify.extract { extract_bash }
+    graphify.extractors.blade ++> graphify.extract { extract_blade }
+    graphify.extractors.cobol ++> graphify.extract { extract_cobol }
+    graphify.extractors.csharp ++> graphify.extract {
+        CsharpNameResolver,
+        _is_cs_file,
+        _is_dotnet_source_file,
+        _resolve_cross_file_csharp_imports,
+        _resolve_csharp_type_references,
+        bare_csharp_method_labels_in_nodes,
+        is_csharp_constructor_node,
+        is_csharp_explicit_interface_node,
+    }
+    graphify.extractors.dart ++> graphify.extract { extract_dart }
+    graphify.extractors.dm ++> graphify.extract {
+        extract_dm,
+        extract_dmf,
+        extract_dmi,
+        extract_dmm,
+    }
+    graphify.extractors.elixir ++> graphify.extract { extract_elixir }
+    graphify.extractors.erlang ++> graphify.extract { extract_erlang, resolve_erlang_remote_calls }
+    graphify.extractors.fortran ++> graphify.extract { extract_fortran }
+    graphify.extractors.go ++> graphify.extract { _GO_PREDECLARED_FUNCS, extract_go }
+    graphify.extractors.json_config ++> graphify.extract { extract_json }
+    graphify.extractors.yaml_config ++> graphify.extract { extract_yaml }
+    graphify.extractors.commonlisp ++> graphify.extract { extract_commonlisp }
+    graphify.extractors.markdown ++> graphify.extract { extract_markdown, _MD_LINK_INDEX_CACHE }
+    graphify.extractors.ocaml ++> graphify.extract { extract_ocaml }
+    graphify.extractors.pascal_forms ++> graphify.extract {
+        extract_delphi_form,
+        extract_lazarus_form,
+    }
+    graphify.extractors.powershell ++> graphify.extract {
+        extract_powershell,
+        extract_powershell_manifest,
+    }
+    graphify.extractors.r ++> graphify.extract { extract_r, resolve_r_sourced_calls }
+    graphify.extractors.razor ++> graphify.extract { extract_razor }
+    graphify.extractors.robot ++> graphify.extract { extract_robot }
+    graphify.extractors.rust ++> graphify.extract { extract_rust }
+    graphify.extractors.sln ++> graphify.extract { extract_sln }
+    graphify.extractors.solidity ++> graphify.extract {
+        extract_solidity,
+        resolve_solidity_inherited_calls,
+        resolve_solidity_type_references,
+    }
+    graphify.extractors.sql ++> graphify.extract { _norm_ident as _sql_norm_ident, extract_sql }
+    graphify.extractors.terraform ++> graphify.extract {
+        extract_terraform,
+        prepare_terraform,
+        resolve_terraform_modules,
+    }
+    graphify.extractors.verilog ++> graphify.extract { extract_verilog }
+    graphify.extractors.vbnet ++> graphify.extract { extract_vbnet, resolve_vbnet_partial_calls }
+    graphify.extractors.zig ++> graphify.extract { extract_zig }
+    graphify.paths ++> graphify.extract { disambiguate_ambiguous_candidates }
+    graphify.extractors.models ++> graphify.extract {
+        LanguageConfig,
+        _JS_CACHE_BYPASS_SUFFIXES,
+        _SymbolResolutionFacts,
+        _WORKSPACE_PACKAGE_CACHE,
+    }
+    graphify.extractors.resolution ++> graphify.extract {
+        _HTML_SCRIPT_TAG_RE,
+        _NON_JS_SCRIPT_TYPE_RE,
+        _PACKAGE_IMPORTS_CACHE,
+        _SCAN_ROOT_NAMESPACE_CACHE,
+        _TSCONFIG_ALIAS_CACHE,
+        _TSCONFIG_BASEURL_CACHE,
+        _apply_symbol_resolution_facts,
+        _augment_symbol_resolution_edges,
+        _cached_realpath,
+        _cached_source_key,
+        _collect_js_symbol_resolution_facts,
+        _disambiguate_colliding_node_ids,
+        _go_import_path_for_file,
+        _is_python_package_dir,
+        _is_type_like_definition,
+        _js_source_path,
+        _load_tsconfig_aliases,
+        _load_tsconfig_base_url,
+        _merge_decl_def_classes,
+        _merge_cpp_forward_classes,
+        _merge_cpp_member_declarations,
+        _cpp_reconciliation_paths,
+        _cpp_source_key,
+        _cpp_exact_includes,
+        _cpp_include_path,
+        _merge_go_package_types,
+        _pascal_resolve_unit,
+        _resolve_c_include_path,
+        _resolve_cross_file_imports,
+        _resolve_cross_file_java_imports,
+        _resolve_go_type_references,
+        _resolve_java_type_references,
+        _resolve_php_type_references,
+        _resolve_js_import_path,
+        _resolve_js_import_target,
+        _resolve_js_module_path,
+        _resolve_lua_import_target,
+        _probe_python_module_candidate,
+        _PYTHON_STDLIB_MODULE_NAMES,
+        _resolve_python_module_path,
+        _resolve_python_namespace_dir,
+        _resolve_tsconfig_alias,
+        _source_key,
+        _svelte_mask_non_script,
+        _vue_mask_non_script,
+    }
+    graphify.symbol_resolution ++> graphify.extract {
+        resolve_bash_source_edges,
+        rust_scoped_call_survivors,
+    }
+    graphify.extractors.pascal ++> graphify.extract { extract_pascal }
+    graphify.extractors.objc ++> graphify.extract { _objc_category_base_stem, extract_objc }
+    graphify.extractors.julia ++> graphify.extract { extract_julia }
+    graphify.extractors.base ++> graphify.extractors.dart {
+        _file_stem,
+        _make_id,
+        _read_source_text,
+    }
+    graphify.extractors.engine ++> graphify.extractors.dart { _underscore_salted_nid }
+    graphify.ids ++> graphify.extractors.dart { normalize_id }
+    graphify.extractors.base ++> graphify.extractors.elixir {
+        _LANGUAGE_BUILTIN_GLOBALS,
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+    }
+    graphify.extractors.engine ++> graphify.extractors.elixir { _underscore_salted_nid }
+    graphify.ids ++> graphify.extractors.elixir { normalize_id }
+    graphify.extractors.base ++> graphify.extractors.engine {
+        _LANGUAGE_BUILTIN_GLOBALS,
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+    }
+    graphify.ids ++> graphify.extractors.engine { DeclIdRegistry, normalize_id }
+    graphify.extractors.models ++> graphify.extractors.engine { LanguageConfig }
+    graphify.extractors.python_scope ++> graphify.extractors.engine {
+        _python_param_names,
+        _python_param_shadow_checker,
+    }
+    graphify.extractors.resolution ++> graphify.extractors.engine { _resolve_js_import_target }
+    graphify.security ++> graphify.extractors.engine { sanitize_metadata }
+    graphify.ids ++> graphify.extractors.go { DeclIdRegistry }
+    graphify.extractors.base ++> graphify.extractors.go {
+        _LANGUAGE_BUILTIN_GLOBALS,
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+    }
+    graphify.extractors.resolution ++> graphify.extractors.go { _go_import_path_for_file }
+    graphify.extractors.base ++> graphify.extractors.json_config {
+        _file_stem,
+        _make_id,
+        _read_text,
+    }
+    graphify.extractors.resolution ++> graphify.extractors.json_config {
+        _read_json_config,
+        _resolve_js_module_path,
+    }
+    graphify.ids ++> graphify.extractors.json_config { normalize_id }
+    graphify.ids ++> graphify.extractors.julia { DeclIdRegistry }
+    graphify.extractors.base ++> graphify.extractors.julia {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+    }
+    graphify.extractors.engine ++> graphify.extractors.julia { _semantic_reference_edge }
+    graphify.extractors.base ++> graphify.extractors.objc {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+    }
+    graphify.extractors.engine ++> graphify.extractors.objc {
+        _cpp_declarator_name,
+        _semantic_reference_edge,
+        _underscore_salted_nid,
+    }
+    graphify.extractors.resolution ++> graphify.extractors.objc { _resolve_c_include_path }
+    graphify.security ++> graphify.extractors.objc { sanitize_metadata }
+    graphify.extractors.base ++> graphify.extractors.pascal {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_source_text,
+    }
+    graphify.extractors.resolution ++> graphify.extractors.pascal {
+        _pascal_resolve_class,
+        _pascal_resolve_unit,
+    }
+    graphify.extractors.models ++> graphify.extractors.resolution {
+        _JS_CACHE_BYPASS_SUFFIXES,
+        _NamespaceExportFact,
+        _StarExportFact,
+        _SymbolAliasFact,
+        _SymbolDeclarationFact,
+        _SymbolExportFact,
+        _SymbolImportFact,
+        _SymbolResolutionFacts,
+        _SymbolUseFact,
+        _WORKSPACE_PACKAGE_CACHE,
+    }
+    graphify.extractors.base ++> graphify.extractors.resolution {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_source_text,
+        _read_text,
+    }
+    graphify.extractors.python_scope ++> graphify.extractors.resolution {
+        _python_param_shadow_checker,
+    }
+    graphify.ids ++> graphify.extractors.resolution { normalize_id }
+    graphify.rcfile ++> graphify.extractors.resolution { effective_suffix, get_language_overrides }
+    graphify.extractors.base ++> graphify.extractors.solidity {
+        _file_stem,
+        _make_id,
+        _read_source_bytes,
+        _read_text,
+    }
+    graphify.extractors.engine ++> graphify.extractors.solidity { _underscore_salted_nid }
+    graphify.extractors.base ++> graphify.llm { _read_source_text }
+    graphify.file_slice ++> graphify.llm {
+        FileSlice,
+        bisect_slice,
+        expand_oversized_files,
+        is_complete_slice_coverage,
+        make_full_slice,
+        read_slice_text,
+        unit_path,
+    }
+    graphify.cache ++> graphify.llm { save_semantic_cache as _scs }
+    graphify.build ++> graphify.ruby_resolution { _is_file_node_label }
+    graphify.build ++> graphify.analyze { edge_datas }
+    graphify.detect ++> graphify.analyze { CODE_EXTENSIONS, PAPER_EXTENSIONS, IMAGE_EXTENSIONS }
+    graphify.cluster ++> graphify.analyze { cohesion_score }
+    graphify.analyze ++> graphify.exporters.graphdb { _node_community_map }
+    graphify.paths ++> graphify.prs { default_graph_json as _default_graph_json }
+    graphify.extract ++> graphify.pg_introspect { extract_sql }
+    graphify.build ++> graphify.semantic_cleanup { _normalize_hyperedge_members }
+    graphify.extractors.apex ++> graphify.extractors { extract_apex }
+    graphify.extractors.bash ++> graphify.extractors { extract_bash }
+    graphify.extractors.blade ++> graphify.extractors { extract_blade }
+    graphify.extractors.cobol ++> graphify.extractors { extract_cobol }
+    graphify.extractors.commonlisp ++> graphify.extractors { extract_commonlisp }
+    graphify.extractors.dart ++> graphify.extractors { extract_dart }
+    graphify.extractors.dm ++> graphify.extractors {
+        extract_dm,
+        extract_dmf,
+        extract_dmi,
+        extract_dmm,
+    }
+    graphify.extractors.elixir ++> graphify.extractors { extract_elixir }
+    graphify.extractors.erlang ++> graphify.extractors { extract_erlang }
+    graphify.extractors.fortran ++> graphify.extractors { extract_fortran }
+    graphify.extractors.go ++> graphify.extractors { extract_go }
+    graphify.extractors.json_config ++> graphify.extractors { extract_json }
+    graphify.extractors.julia ++> graphify.extractors { extract_julia }
+    graphify.extractors.markdown ++> graphify.extractors { extract_markdown }
+    graphify.extractors.objc ++> graphify.extractors { extract_objc }
+    graphify.extractors.pascal ++> graphify.extractors { extract_pascal }
+    graphify.extractors.pascal_forms ++> graphify.extractors {
+        extract_delphi_form,
+        extract_lazarus_form,
+    }
+    graphify.extractors.powershell ++> graphify.extractors {
+        extract_powershell,
+        extract_powershell_manifest,
+    }
+    graphify.extractors.r ++> graphify.extractors { extract_r }
+    graphify.extractors.razor ++> graphify.extractors { extract_razor }
+    graphify.extractors.rust ++> graphify.extractors { extract_rust }
+    graphify.extractors.sln ++> graphify.extractors { extract_sln }
+    graphify.extractors.solidity ++> graphify.extractors { extract_solidity }
+    graphify.extractors.sql ++> graphify.extractors { extract_sql }
+    graphify.extractors.terraform ++> graphify.extractors { extract_terraform }
+    graphify.extractors.verilog ++> graphify.extractors { extract_verilog }
+    graphify.extractors.vbnet ++> graphify.extractors { extract_vbnet }
+    graphify.extractors.zig ++> graphify.extractors { extract_zig }
+    graphify.exporters.base ++> graphify.exporters.html { COMMUNITY_COLORS }
+    graphify.analyze ++> graphify.exporters.html { _node_community_map }
+    graphify.paths ++> graphify.exporters.html { write_text_atomic }
+    graphify.security ++> graphify.exporters.html { sanitize_label }
+    graphify.analyze ++> graphify.export { _node_community_map }
+    graphify.build ++> graphify.export { edge_datas, has_parallel_links }
+    graphify.paths ++> graphify.export {
+        os_replace_with_fallback,
+        stem_filename_budget,
+        write_text_atomic_if_changed,
+        write_json_atomic,
+    }
+    graphify.exporters.base ++> graphify.export { COMMUNITY_COLORS }
+    graphify.exporters.html ++> graphify.export { to_html }
+    graphify.analyze ++> graphify.report {
+        _is_file_node,
+        _is_concept_node,
+        _is_contains_only_ast_node,
+        find_import_cycles,
+    }
+    graphify.extractors.base ++> graphify.sections { _read_source_text }
+    graphify.extractors.markdown ++> graphify.sections {
+        _MD_ATX_CLOSING_RE,
+        _MD_ATX_HEADING_RE,
+        _fence_closes,
+        _fence_open,
+        _split_frontmatter,
+    }
+    graphify.security ++> graphify.sections { redact_secrets, sanitize_label }
+    graphify.paths ++> graphify.serve {
+        consumed,
+        read_graph_json,
+        default_graph_json as _default_graph_json,
+        _is_test_path,
+    }
+    graphify.security ++> graphify.serve {
+        sanitize_label,
+        check_graph_file_size_cap,
+        _CONTROL_CHAR_RE,
+    }
+    graphify.build ++> graphify.serve {
+        _CONFIDENCE_RANK,
+        edge_datas,
+        edge_evidence,
+        has_parallel_links,
+    }
+    graphify.serve ++> graphify.benchmark { _query_graph_text, _read_graph }
+    graphify.paths ++> graphify.benchmark { default_graph_json as _default_graph_json }
+    tests.conftest --> tests.test_backend_env_isolation { jac_source }
+    tests.conftest --> tests.test_multilang { jac_source }
+    tests.conftest --> tests.test_partial_extraction_warning { jac_source }
 }

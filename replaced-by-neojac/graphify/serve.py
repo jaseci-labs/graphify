@@ -3038,7 +3038,7 @@ def _build_server(graph_path: str):
         # AnyUrl (pydantic is an mcp dependency, so this import cannot miss).
         from pydantic import AnyUrl
 
-    from graphify import paths as _paths
+    import graphify.paths as _paths
 
     # Graph contexts comprise one pinned configured default plus a bounded LRU
     # of project_path graphs. This preserves the configured graph's warm index
@@ -3276,7 +3276,7 @@ def _build_server(graph_path: str):
 
     def _tool_query_graph(arguments: dict) -> str:
         import time as _time
-        from graphify import querylog
+        import graphify.querylog as querylog
         question = arguments["question"]
         mode = arguments.get("mode", "bfs")
         depth = min(int(arguments.get("depth", 3)), 6)
@@ -3672,12 +3672,12 @@ def serve(graph_path: str | None = None) -> None:
     asyncio.run(_run_stdio(server, stdio_server))
 
 
-async def _mcp_asgi_call(self, scope, receive, send) -> None:
-    await self._manager.handle_request(scope, receive, send)
+async def _mcp_asgi_call(app, scope, receive, send) -> None:
+    await app._manager.handle_request(scope, receive, send)
 
 
-def _mcp_asgi_init(self, manager) -> None:
-    self._manager = manager
+def _mcp_asgi_init(app, manager) -> None:
+    app._manager = manager
 
 
 # Raw-ASGI wrapper around the Streamable HTTP session manager.
@@ -3691,9 +3691,9 @@ _MCPASGIApp = builtins.type("_MCPASGIApp", (), {
 })
 
 
-async def _api_key_call(self, scope, receive, send) -> None:
+async def _api_key_call(gate, scope, receive, send) -> None:
     if scope["type"] != "http":
-        await self.app(scope, receive, send)
+        await gate.app(scope, receive, send)
         return
     import hmac
     headers = dict(scope.get("headers") or [])
@@ -3704,7 +3704,7 @@ async def _api_key_call(self, scope, receive, send) -> None:
         if scheme.lower() == b"bearer" and token:
             provided = token.strip()
     # Constant-time compare; reject when no key was supplied at all.
-    if provided is None or not hmac.compare_digest(provided, self._expected):
+    if provided is None or not hmac.compare_digest(provided, gate._expected):
         body = b'{"error": "unauthorized"}'
         await send({
             "type": "http.response.start",
@@ -3716,12 +3716,12 @@ async def _api_key_call(self, scope, receive, send) -> None:
         })
         await send({"type": "http.response.body", "body": body})
         return
-    await self.app(scope, receive, send)
+    await gate.app(scope, receive, send)
 
 
-def _api_key_init(self, app, api_key: str) -> None:
-    self.app = app
-    self._expected = api_key.encode("utf-8")
+def _api_key_init(gate, app, api_key: str) -> None:
+    gate.app = app
+    gate._expected = api_key.encode("utf-8")
 
 
 # Pure-ASGI API-key gate for the HTTP transport.

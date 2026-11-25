@@ -2147,7 +2147,7 @@ def dispatch_command(cmd: str) -> None:
         from graphify.serve import _QUERY_NO_MATCH, _is_ambiguity_refusal, _query_graph_text
         from graphify.security import sanitize_label
         from networkx.readwrite import json_graph
-        from graphify import querylog
+        import graphify.querylog as querylog
 
         question = sys.argv[2]
         use_dfs = "--dfs" in sys.argv
@@ -2753,7 +2753,7 @@ def dispatch_command(cmd: str) -> None:
             _summary += f" (weakest of {'256+' if _routes_capped else _n_routes} equal-length routes)"
         if _summary:
             print(_summary)
-        from graphify import querylog
+        import graphify.querylog as querylog
         querylog.log_query(
             kind="path",
             question=f"{sys.argv[2]} -> {sys.argv[3]}",
@@ -2875,7 +2875,7 @@ def dispatch_command(cmd: str) -> None:
                     print(f"    {arrow} {sfile}: {count} {noun}")
                 if len(grouped) > 20:
                     print(f"    ... and {len(grouped) - 20} more files")
-        from graphify import querylog
+        import graphify.querylog as querylog
         querylog.log_query(
             kind="explain",
             question=sys.argv[2],
@@ -2928,7 +2928,7 @@ def dispatch_command(cmd: str) -> None:
             print(reason, file=sys.stderr)
             sys.exit(1)
         print(format_section(section, str(d.get("label", nid))))
-        from graphify import querylog
+        import graphify.querylog as querylog
         querylog.log_query(kind="section", question=label, corpus=str(gp),
                            nodes_returned=1)
         _touch_query_stamp(gp)

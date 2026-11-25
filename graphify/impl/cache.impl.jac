@@ -489,7 +489,7 @@ impl _semantic_entry_matches_path(result: dict, path: Path, `root: Path) -> bool
 }
 
 impl _id_anchor(path_str: str, rel_str: str) -> str {
-    import from graphify.ids { normalize_id }
+    normalize_id: any = importlib.import_module("graphify.ids").normalize_id;
 
     full: any = normalize_id(path_str);
     tail: any = normalize_id(rel_str);
@@ -503,7 +503,7 @@ impl _id_anchor(path_str: str, rel_str: str) -> str {
 impl _portability_anchors(
     path: "str | Path", `root: "str | Path"
 ) -> tuple[list[str], str, list[str], str] {
-    import from graphify.ids { normalize_id }
+    normalize_id: any = importlib.import_module("graphify.ids").normalize_id;
 
     try {
         root_resolved: any = Path(`root).resolve();

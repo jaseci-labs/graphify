@@ -32,6 +32,28 @@ def _lay_built_package() -> None:
 _lay_built_package()
 
 
+def jac_source(module: str, function: str | None = None) -> str:
+    """The Jac source of a graphify module: its declarations and its impl annex.
+
+    The package is Jac, built by neojac, so tests that read source text read it
+    here. ``archwire.jac`` resolves to the project's root even where neojac
+    lays the suite out in a copy. With ``function``, only that ``impl`` body.
+    """
+    root = (Path(__file__).resolve().parent.parent / "archwire.jac").resolve().parent
+    rel = Path(*module.split(".")[1:])
+    stem = rel.name or "__init__"
+    files = [root / "graphify" / rel.parent / f"{stem}.jac",
+             root / "graphify" / rel.parent / "impl" / f"{stem}.impl.jac"]
+    text = "\n".join(f.read_text(encoding="utf-8") for f in files if f.exists())
+    if function is None:
+        return text
+    import re
+
+    start = re.search(rf"\nimpl {re.escape(function)}\b", text).start()
+    end = text.find("\nimpl ", start + 1)
+    return text[start:end if end != -1 else len(text)]
+
+
 @pytest.fixture(scope="session")
 def _can_symlink() -> bool:
     """Whether this machine can create symlinks at all (#2642).

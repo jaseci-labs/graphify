@@ -29,7 +29,7 @@ impl is_url(path: str) -> bool {
 }
 
 impl download_audio(url: str, output_dir: Path) -> Path {
-    import from graphify.security { validate_url }
+    validate_url: any = importlib.import_module("graphify.security").validate_url;
     validate_url(url);
     yt_dlp: any = _get_yt_dlp();
     output_dir.mkdir(parents=True, exist_ok=True);

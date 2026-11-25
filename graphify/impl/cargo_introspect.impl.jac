@@ -39,7 +39,7 @@ impl package_name(manifest: Path) -> str | None {
 }
 
 impl _discover_root_manifest(`root: Path) -> Path | None {
-    import from graphify.detect { _is_noise_dir }
+    _is_noise_dir: any = importlib.import_module("graphify.detect")._is_noise_dir;
 
     found: list[Path] = [];
     for (dirpath, dirnames, filenames) in os.walk(`root) {

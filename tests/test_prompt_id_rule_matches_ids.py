@@ -26,7 +26,7 @@ from graphify.ids import make_id, normalize_id
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FRAGMENT_DIR = REPO_ROOT / "tools" / "skillgen" / "fragments" / "references" / "shared"
-LLM_PROMPT = REPO_ROOT / "graphify" / "llm.py"
+LLM_PROMPT = (REPO_ROOT / "archwire.jac").resolve().parent / "graphify" / "llm.jac"
 
 # Every surface that states the rule to a model.
 PROMPT_SURFACES = [

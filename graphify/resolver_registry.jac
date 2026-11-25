@@ -16,6 +16,7 @@ its own, separate from the multi-thousand-line ``extract`` module.
 
 import from __future__ { annotations }
 
+import importlib;
 import logging;
 
 import from collections.abc { Sequence }

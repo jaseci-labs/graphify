@@ -16,6 +16,7 @@ Usage:
   python3 -m graphify export callflow-html --graph /path/to/graph.json --output docs/architecture.html
 """
 
+import importlib;
 import builtins;
 
 import operator;

@@ -346,7 +346,8 @@ def _load_custom_providers() -> dict[str, dict]:
     return providers
 
 
-BACKENDS.update(_load_custom_providers())
+for _name, _config in _load_custom_providers().items():
+    BACKENDS[_name] = _config
 
 
 def _resolve_max_tokens(default: int) -> int:

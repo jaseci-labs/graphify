@@ -172,93 +172,56 @@ def test_go_method_declaration_emits_refs_only_when_name_present():
     nested inside `if name_node:` or following an early `if not name_node: return`.
     Same for function_declaration and `func_nid`.
     """
-    import ast
-    import inspect
-    from graphify.extract import extract_go
+    import re
 
-    tree = ast.parse(inspect.getsource(extract_go))
+    from tests.conftest import jac_source
 
-    def _find_branch(root: ast.AST, type_literal: str) -> ast.If | None:
-        """Return the `if t == '<type_literal>':` branch inside the walk function."""
-        for child in ast.walk(root):
-            if (isinstance(child, ast.If)
-                    and isinstance(child.test, ast.Compare)
-                    and isinstance(child.test.left, ast.Name)
-                    and child.test.left.id == "t"
-                    and len(child.test.comparators) == 1
-                    and isinstance(child.test.comparators[0], ast.Constant)
-                    and child.test.comparators[0].value == type_literal):
-                return child
+    def _strip_strings(text: str) -> str:
+        return re.sub(r'"(?:\\.|[^"\\])*"', '""', text)
+
+    def _branch(source: str, type_literal: str) -> str | None:
+        """The body of `if t == "<type_literal>" { ... }`, braces balanced."""
+        source = _strip_strings(source.replace(f'"{type_literal}"', "TYPE_LITERAL"))
+        start = source.find("if t == TYPE_LITERAL {")
+        if start == -1:
+            return None
+        depth, i = 0, source.index("{", start)
+        for k in range(i, len(source)):
+            depth += {"{": 1, "}": -1}.get(source[k], 0)
+            if depth == 0:
+                return source[i + 1:k]
         return None
 
-    method_branch = _find_branch(tree, "method_declaration")
-    function_branch = _find_branch(tree, "function_declaration")
-    assert method_branch is not None, "method_declaration branch not found in extract_go"
-    assert function_branch is not None, "function_declaration branch not found in extract_go"
-
-    def _is_early_return_on_falsy_name_node(stmt: ast.AST) -> bool:
-        """True iff `stmt` is `if not name_node: return` (or raise/continue/break)."""
-        if not isinstance(stmt, ast.If):
-            return False
-        test = stmt.test
-        is_falsy_check = (
-            isinstance(test, ast.UnaryOp)
-            and isinstance(test.op, ast.Not)
-            and isinstance(test.operand, ast.Name)
-            and test.operand.id == "name_node"
-        )
-        if not is_falsy_check:
-            return False
-        terminators = (ast.Return, ast.Raise, ast.Continue, ast.Break)
-        return any(isinstance(s, terminators) for s in stmt.body)
-
-    def _guarded_by_name_node(branch: ast.If, var_name: str) -> bool:
-        """True iff every read of `var_name` in `branch` is guarded by a
-        `name_node` truthiness check — either lexically nested under
-        `if name_node:` or after a preceding `if not name_node: return`."""
-        parents: dict[int, ast.AST] = {}
-        for parent in ast.walk(branch):
-            for child in ast.iter_child_nodes(parent):
-                parents[id(child)] = parent
-
-        def _stmt_chain(start: ast.AST) -> list[tuple[ast.stmt, list[ast.stmt]]]:
-            """Walk up to each enclosing statement-list, returning (stmt, siblings)."""
-            chain: list[tuple[ast.stmt, list[ast.stmt]]] = []
-            cur: ast.AST | None = start
-            while cur is not None:
-                parent = parents.get(id(cur))
-                if parent is None:
-                    break
-                if isinstance(cur, ast.stmt):
-                    for attr in ("body", "orelse", "finalbody"):
-                        siblings = getattr(parent, attr, None)
-                        if isinstance(siblings, list) and cur in siblings:
-                            chain.append((cur, siblings))
-                            break
-                cur = parent
-            return chain
-
-        def _is_guarded(use: ast.AST) -> bool:
-            for stmt, siblings in _stmt_chain(use):
-                parent = parents.get(id(stmt))
-                # Case 1: lexically nested under `if name_node:` body
-                if (isinstance(parent, ast.If)
-                        and isinstance(parent.test, ast.Name)
-                        and parent.test.id == "name_node"
-                        and stmt in parent.body):
-                    return True
-                # Case 2: a preceding sibling is `if not name_node: return`
-                idx = siblings.index(stmt)
-                if any(_is_early_return_on_falsy_name_node(s) for s in siblings[:idx]):
-                    return True
-            return False
-
-        for node in ast.walk(branch):
-            if isinstance(node, ast.Name) and node.id == var_name:
-                if not _is_guarded(node):
+    def _guarded_by_name_node(branch: str, var_name: str) -> bool:
+        """True iff every use of `var_name` sits under `if name_node {` or after
+        an `if not name_node { return; }` earlier in the branch."""
+        headers: list[str] = []
+        stmt_start = 0
+        early_return = False
+        for k, ch in enumerate(branch):
+            if ch == "{":
+                headers.append(branch[stmt_start:k].strip())
+                stmt_start = k + 1
+            elif ch == "}":
+                header = headers.pop() if headers else ""
+                block = branch[:k]
+                if header.endswith("if not name_node") and not headers and \
+                        re.search(r"\b(return|raise|continue|break)\b", block[block.rfind("if not name_node"):]):
+                    early_return = True
+                stmt_start = k + 1
+            elif ch == ";":
+                stmt_start = k + 1
+            elif branch.startswith(var_name, k) and not (branch[k - 1].isalnum() or branch[k - 1] == "_"):
+                if not early_return and not any(h.endswith("if name_node") for h in headers):
                     return False
         return True
 
+    source = jac_source("graphify.extractors.go")
+    method_branch = _branch(source, "method_declaration")
+    function_branch = _branch(source, "function_declaration")
+    assert method_branch is not None, "method_declaration branch not found in extract_go"
+    assert function_branch is not None, "function_declaration branch not found in extract_go"
+    assert "method_nid" in method_branch and "func_nid" in function_branch
     assert _guarded_by_name_node(method_branch, "method_nid"), (
         "method_nid use is not guarded by a name_node check in method_declaration branch"
     )
@@ -266,27 +229,24 @@ def test_go_method_declaration_emits_refs_only_when_name_present():
         "func_nid use is not guarded by a name_node check in function_declaration branch"
     )
 
-    # Negative control: confirm the checker would actually reject the buggy
-    # layout the reviewer described. A `method_nid` reference dangling without
-    # any name_node guard must be caught.
-    bad_source = (
-        "def walk(node):\n"
-        "    if t == 'method_declaration':\n"
-        "        name_node = node.child_by_field_name('name')\n"
-        "        if name_node:\n"
-        "            method_nid = make_id('x')\n"
-        "        emit_go_method_refs(node, method_nid, 1)\n"
-        "        return\n"
-    )
-    bad_tree = ast.parse(bad_source)
-    bad_branch = _find_branch(bad_tree, "method_declaration")
+    # Negative control: a `method_nid` reference dangling without any
+    # name_node guard must be caught.
+    bad_source = """
+        if t == "method_declaration" {
+            name_node = node.child_by_field_name("name");
+            if name_node {
+                method_nid = make_id("x");
+            }
+            emit_go_method_refs(node, method_nid, 1);
+            return;
+        }
+    """
+    bad_branch = _branch(bad_source, "method_declaration")
     assert bad_branch is not None
     assert not _guarded_by_name_node(bad_branch, "method_nid"), (
         "checker should reject method_nid used without a name_node guard"
     )
 
-
-# ── Rust ──────────────────────────────────────────────────────────────────────
 
 def test_rust_finds_struct():
     r = extract_rust(FIXTURES / "sample.rs")

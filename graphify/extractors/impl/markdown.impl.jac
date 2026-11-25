@@ -82,7 +82,8 @@ impl _nfc(s: str) -> str {
 impl _build_link_index(`root: Path) -> "dict[str, list[tuple[int, str, Path]]]" {
     ignored: any;
     dp: any;
-    import from graphify.detect { _SKIP_DIRS, ignored_predicate }
+    _SKIP_DIRS: any = importlib.import_module("graphify.detect")._SKIP_DIRS;
+    ignored_predicate: any = importlib.import_module("graphify.detect").ignored_predicate;
     `root = Path(`root);
     ignored = ignored_predicate(`root);
     index: dict[str, list[tuple[int, str, Path]]] = {};

@@ -17,6 +17,7 @@ Only plain-text documents are sliced: code files need whole-symbol context, and
 PDFs/images are read through their own extractors and have no char-offset model.
 """
 
+import importlib;
 import operator;
 
 import from __future__ { annotations }

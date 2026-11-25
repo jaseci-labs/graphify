@@ -33,7 +33,7 @@ impl _detached_launch(rebuild_body: str) -> str {
 }
 
 impl _load_graphifyrc(`root: Path) -> dict {
-    import from graphify.rcfile { load_graphifyrc }
+    load_graphifyrc: any = importlib.import_module("graphify.rcfile").load_graphifyrc;
     return load_graphifyrc(`root);
 }
 
@@ -220,7 +220,7 @@ impl _is_rotating_prefix(path: str) -> bool {
 }
 
 impl _merge_attr_line -> str {
-    import from graphify.paths { GRAPHIFY_OUT }
+    GRAPHIFY_OUT: any = importlib.import_module("graphify.paths").GRAPHIFY_OUT;
     out: any = GRAPHIFY_OUT;
     if not out or Path(out).is_absolute() or "\\" in out {
         out = "graphify-out";

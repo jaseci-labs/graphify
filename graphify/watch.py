@@ -1,5 +1,6 @@
 # monitor a folder and auto-trigger --update when files change
 from __future__ import annotations
+import builtins
 import contextlib
 import errno
 import inspect
@@ -3811,74 +3812,77 @@ def watch(watch_path: Path, debounce: float = 3.0) -> None:
     # recursive schedule, so their handler must not require a `watched` entry.
     manual = sys.platform.startswith("linux")
 
-    class Handler(FileSystemEventHandler):
-        def on_any_event(self, event):
-            nonlocal last_trigger, pending, override_snapshot, config_changed
-            nonlocal ignore_patterns, ignored
-            if event.is_directory:
-                if not manual or _is_read_only_event(event):
-                    return
-                path = Path(os.fsdecode(event.src_path)).resolve()
-                if path.parent not in watched:
-                    return
-                if event.event_type == "created":
-                    add_tree(path, emit_existing=True)
-                elif event.event_type == "deleted":
-                    remove_tree(path)
-                elif event.event_type == "moved":
-                    remove_tree(path)
-                    dest = Path(os.fsdecode(event.dest_path)).resolve()
-                    if under_root(dest):
-                        add_tree(dest, emit_existing=True)
+    def on_any_event(self, event):
+        nonlocal last_trigger, pending, override_snapshot, config_changed
+        nonlocal ignore_patterns, ignored
+        if event.is_directory:
+            if not manual or _is_read_only_event(event):
                 return
-            if _is_read_only_event(event):
+            path = Path(os.fsdecode(event.src_path)).resolve()
+            if path.parent not in watched:
                 return
-            path = Path(os.fsdecode(event.src_path))
-            if manual and (
-                path.parent not in watched or not path.parent.exists()
-            ):
-                return
-            if path.name in {".graphifyignore", ".gitignore"}:
-                ignore_patterns = _load_graphifyignore(
-                    watch_root_for_ignore, gitignore=ignore_gitignore
-                )
-                ignored = ignored_predicate(
-                    watch_root_for_ignore, gitignore=ignore_gitignore
-                )
-                if manual:
-                    remove_tree(watch_root_for_ignore)
-                    add_tree(watch_root_for_ignore, emit_existing=False)
-                return
-            # Atomic replacement reports the new root config in dest_path.
-            dest_raw = getattr(event, "dest_path", None)
-            dest_path = Path(os.fsdecode(dest_raw)) if dest_raw else None
-            if path == root_config_path or dest_path == root_config_path:
-                override_snapshot = activate_language_overrides(watch_root_for_ignore)
-                config_changed = True
-                last_trigger = time.monotonic()
-                pending = True
-                return
-            # Check .graphifyignore BEFORE the extension/dotfile/out filters so
-            # the cheapest short-circuit for users with broad ignore patterns
-            # (node_modules/, .venv/, build/, …) fires first. _is_ignored
-            # tolerates absolute paths outside watch_root via its internal
-            # relative_to guard, so a stray symlinked event won't raise.
-            if ignore_patterns and _is_ignored(path, watch_root_for_ignore, ignore_patterns):
-                return
-            set_language_overrides(override_snapshot)
-            if effective_suffix(path).lower() not in _WATCHED_EXTENSIONS:
-                return
-            try:
-                filter_parts = path.relative_to(watch_root_for_ignore).parts
-            except ValueError:
-                filter_parts = path.parts
-            if any(part.startswith(".") for part in filter_parts):
-                return
-            if _GRAPHIFY_OUT in filter_parts:
-                return
+            if event.event_type == "created":
+                add_tree(path, emit_existing=True)
+            elif event.event_type == "deleted":
+                remove_tree(path)
+            elif event.event_type == "moved":
+                remove_tree(path)
+                dest = Path(os.fsdecode(event.dest_path)).resolve()
+                if under_root(dest):
+                    add_tree(dest, emit_existing=True)
+            return
+        if _is_read_only_event(event):
+            return
+        path = Path(os.fsdecode(event.src_path))
+        if manual and (
+            path.parent not in watched or not path.parent.exists()
+        ):
+            return
+        if path.name in {".graphifyignore", ".gitignore"}:
+            ignore_patterns = _load_graphifyignore(
+                watch_root_for_ignore, gitignore=ignore_gitignore
+            )
+            ignored = ignored_predicate(
+                watch_root_for_ignore, gitignore=ignore_gitignore
+            )
+            if manual:
+                remove_tree(watch_root_for_ignore)
+                add_tree(watch_root_for_ignore, emit_existing=False)
+            return
+        # Atomic replacement reports the new root config in dest_path.
+        dest_raw = getattr(event, "dest_path", None)
+        dest_path = Path(os.fsdecode(dest_raw)) if dest_raw else None
+        if path == root_config_path or dest_path == root_config_path:
+            override_snapshot = activate_language_overrides(watch_root_for_ignore)
+            config_changed = True
             last_trigger = time.monotonic()
             pending = True
-            changed.add(path)
+            return
+        # Check .graphifyignore BEFORE the extension/dotfile/out filters so
+        # the cheapest short-circuit for users with broad ignore patterns
+        # (node_modules/, .venv/, build/, …) fires first. _is_ignored
+        # tolerates absolute paths outside watch_root via its internal
+        # relative_to guard, so a stray symlinked event won't raise.
+        if ignore_patterns and _is_ignored(path, watch_root_for_ignore, ignore_patterns):
+            return
+        set_language_overrides(override_snapshot)
+        if effective_suffix(path).lower() not in _WATCHED_EXTENSIONS:
+            return
+        try:
+            filter_parts = path.relative_to(watch_root_for_ignore).parts
+        except ValueError:
+            filter_parts = path.parts
+        if any(part.startswith(".") for part in filter_parts):
+            return
+        if _GRAPHIFY_OUT in filter_parts:
+            return
+        last_trigger = time.monotonic()
+        pending = True
+        changed.add(path)
+
+    # FileSystemEventHandler is only importable once watchdog is: build the
+    # handler class here, around the closure above.
+    Handler = builtins.type("Handler", (FileSystemEventHandler,), {"on_any_event": on_any_event})
 
     handler = Handler()
     observer = (

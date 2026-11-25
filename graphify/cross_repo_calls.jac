@@ -26,6 +26,7 @@ and revisits the same pairs on every add, and recomputing from the parked entrie
 keeps the result identical whether three repos arrived together or one at a time.
 """
 
+import importlib;
 import operator;
 
 import from __future__ { annotations }

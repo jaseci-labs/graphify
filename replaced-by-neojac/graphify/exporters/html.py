@@ -3,12 +3,15 @@ from __future__ import annotations
 
 from graphify.exporters.base import COMMUNITY_COLORS  # noqa: E402,F401
 from pathlib import Path
-from html import escape as _html_escape
 from graphify.analyze import _node_community_map
 from graphify.paths import write_text_atomic
+import importlib
 import json
 import networkx as nx
 from graphify.security import sanitize_label
+
+# The standard library's html, by name: this module is itself named html.
+_html_escape = importlib.import_module("html").escape
 
 
 MAX_NODES_FOR_VIZ = 5_000

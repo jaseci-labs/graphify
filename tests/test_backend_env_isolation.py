@@ -4,7 +4,6 @@
 conftest.py clears all of them; these tests keep that list complete and prove
 the fixture makes the detection tests immune to ambient keys.
 """
-import inspect
 import os
 import re
 import subprocess
@@ -12,14 +11,15 @@ import sys
 from pathlib import Path
 
 from graphify import llm
+from tests.conftest import jac_source
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
 def test_env_list_covers_every_variable_detect_backend_reads():
     source = (
-        inspect.getsource(llm.detect_backend_with_source)
-        + inspect.getsource(llm._resolve_ollama_base_url)
+        jac_source("graphify.llm", "detect_backend_with_source")
+        + jac_source("graphify.llm", "_resolve_ollama_base_url")
     )
     direct = set(re.findall(r'os\.environ\.get\("([A-Z_]+)"', source))
     builtin_keys = {key for name in llm.BACKENDS for key in llm._backend_env_keys(name)}

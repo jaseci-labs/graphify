@@ -2078,7 +2078,7 @@ impl uninstall_all(project_dir: Path | None = None, purge: bool = False) -> None
     _uninstall_opencode_plugin(_opencode_dir(project=False));
     _uninstall_codex_hook(pd);
     try {
-        import from graphify.hooks { uninstall as hook_uninstall }
+        hook_uninstall: any = importlib.import_module("graphify.hooks").uninstall;
         result: any = hook_uninstall(pd);
         if result {
             print(result);

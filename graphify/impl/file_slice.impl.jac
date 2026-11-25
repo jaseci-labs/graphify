@@ -1,5 +1,5 @@
 impl _pdf_text(path: Path) -> str {
-    import from graphify.detect { extract_pdf_text }
+    extract_pdf_text: any = importlib.import_module("graphify.detect").extract_pdf_text;
     return extract_pdf_text(path);
 }
 

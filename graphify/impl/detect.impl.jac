@@ -267,7 +267,7 @@ impl _shebang_file_type(path: Path) -> FileType | None {
 }
 
 impl classify_file(path: Path) -> FileType | None {
-    import from graphify.manifest_ingest { is_package_manifest_path }
+    is_package_manifest_path: any = importlib.import_module("graphify.manifest_ingest").is_package_manifest_path;
     if is_package_manifest_path(path) {
         return FileType.CODE;
     }
@@ -1595,7 +1595,7 @@ impl detect(
     total_words: any = 0;
 
     def _wc(path: Path) -> int {
-        import graphify.cache as _cache;
+        _cache: any = importlib.import_module("graphify.cache");
         return _cache.cached_word_count(path, `root, count_words, cache_root=cache_root);
     }
 
@@ -2294,7 +2294,7 @@ impl save_manifest(
         } except Exception {}
     }
 
-    import from graphify.paths { write_json_atomic }
+    write_json_atomic: any = importlib.import_module("graphify.paths").write_json_atomic;
     write_json_atomic(manifest_path, manifest, indent=2);
 }
 

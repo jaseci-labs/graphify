@@ -114,7 +114,7 @@ impl extract_bash(path: Path) -> dict {
     function_bodies = [];
     defined_functions = set[any]();
 
-    import from graphify.security { sanitize_metadata }
+    sanitize_metadata: any = importlib.import_module("graphify.security").sanitize_metadata;
 
     def add_node(nid: str, label: str, line: int, kind: str = "code") -> None {
         if nid and nid not in seen_ids {

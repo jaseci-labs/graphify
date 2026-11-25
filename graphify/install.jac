@@ -10,6 +10,7 @@ installers resolve packaged assets via `Path(__file__).parent / "always_on"` and
 `/ "skills"`, which only works from within the graphify/ directory.
 """
 
+import importlib;
 import operator;
 
 import from jaclang.comptime { target as target_ }

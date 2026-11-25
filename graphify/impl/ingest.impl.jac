@@ -291,7 +291,7 @@ impl ingest(
         }
 
         if url_type == "youtube" {
-            import from graphify.transcribe { download_audio }
+            download_audio: any = importlib.import_module("graphify.transcribe").download_audio;
             out = download_audio(url, target_dir);
             print(f"Downloaded audio: {out.name}");
             return out;

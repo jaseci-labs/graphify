@@ -16,7 +16,7 @@ impl run_language_resolvers(
     resolvers: Sequence[LanguageResolver] | None = None,
 ) -> None {
     active: any = _REGISTRY if resolvers is None else resolvers;
-    import from graphify.rcfile { effective_suffix }
+    effective_suffix: any = importlib.import_module("graphify.rcfile").effective_suffix;
     suffixes_present: any = {effective_suffix(p) for p in paths};
     for resolver in active {
         if not resolver.suffixes & suffixes_present {

@@ -7,6 +7,8 @@ import os;
 
 import re;
 
+import typing;
+
 import urllib.error;
 
 import urllib.parse;

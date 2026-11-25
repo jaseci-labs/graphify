@@ -176,19 +176,18 @@ impl _is_test_path(path: str) -> bool {
     if not path {
         return False;
     }
-    norm: any = `str(path).replace("\\", "/");
-    pure: any = PurePosixPath(norm);
-    segments: any = `list(pure.parts);
-    for segment in segments {
+    norm = `str(path).replace("\\", "/");
+    pure = PurePosixPath(norm);
+    for segment in pure.parts {
         if segment.lower() in _TEST_DIR_SEGMENTS {
             return True;
         }
     }
-    filename: any = pure.name;
+    filename = pure.name;
     if not filename {
         return False;
     }
-    for pattern in _TEST_FILENAME_PATTERNS {
+    for pattern in typing.cast(object, _TEST_FILENAME_PATTERNS) {
         if pattern.match(filename) {
             return True;
         }

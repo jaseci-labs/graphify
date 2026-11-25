@@ -245,11 +245,11 @@ impl sanitize_label(text: str | None) -> str {
     if text is None {
         return "";
     }
-    text = _CONTROL_CHAR_RE.sub("", `str(text));
-    if len(text) > _MAX_LABEL_LEN {
-        text = text[:_MAX_LABEL_LEN];
+    clean = typing.cast(object, _CONTROL_CHAR_RE).sub("", `str(text));
+    if len(clean) > _MAX_LABEL_LEN {
+        clean = clean[:_MAX_LABEL_LEN];
     }
-    return text;
+    return clean;
 }
 
 impl _sanitize_metadata_string(value: object) -> str {

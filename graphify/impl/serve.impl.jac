@@ -485,8 +485,9 @@ impl _query_path_weight(terms: list[str], demote_docs: bool = True) -> any {
     keep_docs = not demote_docs or `bool(words & _QUERY_DOC_WORDS);
 
     def weight(data: dict) -> float {
-        path: any = `str(data.get("source_file") or "").replace("\\", "/");
-        parts: any = path.lower().split("/");
+        wdata = typing.cast(object, data);
+        path = `str(wdata.get("source_file") or "").replace("\\", "/");
+        parts = path.lower().split("/");
         if not keep_tests
             and (_is_test_path(path) or "testing" in parts[:-1] or parts[-1] == "conftest.py")
         {
@@ -495,7 +496,7 @@ impl _query_path_weight(terms: list[str], demote_docs: bool = True) -> any {
         if not keep_docs
             and (
                 not path
-                or data.get("file_type") in ("document", "paper", "image")
+                or wdata.get("file_type") in ("document", "paper", "image")
                 or parts[-1].endswith(_QUERY_DOC_SUFFIXES)
                 or `any(p in _QUERY_DOC_DIRS for p in parts[:-1])
             )
@@ -515,13 +516,13 @@ impl _score_nodes(G: nx.Graph, terms: list[str]) -> list[tuple[float, str]] {
 impl _score_query(
     G: nx.Graph, terms: list[str], *, collect_per_term_seeds: bool, path_weight=None
 ) -> _QueryScores {
-    idf: any;
     postings: any;
     nid: any;
     scored: list[tuple[float, str]] = [];
     norm_terms: any = `list(dict.fromkeys(tok for t in terms for tok in _search_tokens(t)));
     n_terms: any = len(norm_terms);
-    idf = _compute_idf(G, norm_terms);
+    idf: any = _compute_idf(G, norm_terms);
+    idf_py = typing.cast(object, idf);
     joined: any = " ".join(norm_terms);
     joined_w: any = max((idf.get(t, 1.0) for t in norm_terms), default=1.0);
     candidate_ids: any = _trigram_candidates(G, norm_terms + ([joined] if joined else []));
@@ -537,21 +538,24 @@ impl _score_query(
             if len(term) < 3 or all(gram in postings for gram in _trigrams(term))
         ];
     }
+    node_view = typing.cast(object, G).nodes;
     node_iter: any = G.nodes(data=True)
         if candidate_ids is None
-        else ((nid, G.nodes[nid]) for nid in candidate_ids);
+        else ((nid, node_view[nid]) for nid in candidate_ids);
     best_by_term: dict[str, tuple[tuple, str]] | None = {} if collect_per_term_seeds else None;
     for (nid, data) in node_iter {
-        norm_label: any = data.get("norm_label")
-            or _strip_diacritics(data.get("label") or "").lower();
-        bare_label: any = norm_label.rstrip("()");
-        label_tokens: any = " ".join(_search_tokens(data.get("label") or ""));
-        source: any = (data.get("source_file") or "").lower();
+        attrs = typing.cast(object, data);
+        norm_label = typing.cast(
+            object, attrs.get("norm_label") or _strip_diacritics(attrs.get("label") or "").lower()
+        );
+        bare_label = norm_label.rstrip("()");
+        label_tokens = typing.cast(object, " ".join(_search_tokens(attrs.get("label") or "")));
+        source = typing.cast(object, attrs.get("source_file") or "").lower();
         rationale: any = _node_rationale_text(data);
         attr_norm: any;
         attr_tokens: any;
         (attr_norm, attr_tokens) = _node_attributes_text(data) as any;
-        nid_lower: any = nid.lower() if joined or collect_per_term_seeds else "";
+        nid_lower = typing.cast(object, nid).lower() if joined or collect_per_term_seeds else "";
         weight: any = path_weight(data) if path_weight is not None else 1.0;
         score: any = 0.0;
         if joined {
@@ -577,7 +581,7 @@ impl _score_query(
         matched: any = 0;
         tiered: any = 0.0;
         for t in scoring_terms {
-            w: any = idf.get(t, 1.0);
+            w: any = idf_py.get(t, 1.0);
             tier_value: any = 0.0;
             substr_value: any = 0.0;
             source_value: any = 0.0;
@@ -793,21 +797,12 @@ impl _filter_graph_by_context(G: nx.Graph, context_filters: list[str] | None) ->
 
     H: any = G.__class__();
     H.add_nodes_from(G.nodes(data=True));
+    # add_edges_from copies each edge's data as add_edge(**data) does; a ** of
+    # the data would convert every edge's dict to dict[str, any] first.
     if isinstance(G, (nx.MultiGraph, nx.MultiDiGraph)) {
-        u: any;
-        v: any;
-        data: any;
-        for (u, v, key, data) in G.edges(keys=True, data=True) {
-            if keep(data) {
-                H.add_edge(u, v, key=key, **data);
-            }
-        }
+        H.add_edges_from([e for e in G.edges(keys=True, data=True) if keep(e[3])]);
     } else {
-        for (u, v, data) in G.edges(data=True) {
-            if keep(data) {
-                H.add_edge(u, v, **data);
-            }
-        }
+        H.add_edges_from([e for e in G.edges(data=True) if keep(e[2])]);
     }
     return H;
 }
@@ -837,8 +832,9 @@ impl _complete_induced_edges(G: nx.Graph, visited: set[str], edges_seen: list[tu
 }
 
 impl _bfs(G: nx.Graph, start_nodes: list[str], depth: int) -> tuple[set[str], list[tuple]] {
+    gx = typing.cast(object, G);
     n: any;
-    degrees: any = [G.degree(n) for n in G.nodes()];
+    degrees: any = [gx.degree(n) for n in gx.nodes()];
     if degrees {
         degrees_sorted: any = sorted(degrees);
         p99_idx: any = `int(len(degrees_sorted) * 0.99);
@@ -853,10 +849,10 @@ impl _bfs(G: nx.Graph, start_nodes: list[str], depth: int) -> tuple[set[str], li
     for _ in range(depth) {
         next_frontier: dict[str, None] = {};
         for n in frontier {
-            if n not in seed_set and G.degree(n) >= hub_threshold {
+            if n not in seed_set and gx.degree(n) >= hub_threshold {
                 continue;
             }
-            for neighbor in G.neighbors(n) {
+            for neighbor in gx.neighbors(n) {
                 if neighbor not in visited {
                     next_frontier[neighbor] = None;
                     edges_seen.append((n, neighbor));
@@ -871,7 +867,8 @@ impl _bfs(G: nx.Graph, start_nodes: list[str], depth: int) -> tuple[set[str], li
 }
 
 impl _dfs(G: nx.Graph, start_nodes: list[str], depth: int) -> tuple[set[str], list[tuple]] {
-    degrees: any = [G.degree(n) for n in G.nodes()];
+    gx = typing.cast(object, G);
+    degrees: any = [gx.degree(n) for n in gx.nodes()];
     if degrees {
         degrees_sorted: any = sorted(degrees);
         p99_idx: any = `int(len(degrees_sorted) * 0.99);
@@ -891,10 +888,10 @@ impl _dfs(G: nx.Graph, start_nodes: list[str], depth: int) -> tuple[set[str], li
             continue;
         }
         visited.add(`node);
-        if `node not in seed_set and G.degree(`node) >= hub_threshold {
+        if `node not in seed_set and gx.degree(`node) >= hub_threshold {
             continue;
         }
-        for neighbor in G.neighbors(`node) {
+        for neighbor in gx.neighbors(`node) {
             if neighbor not in visited {
                 stack.append((neighbor, d + 1));
                 edges_seen.append((`node, neighbor));
@@ -914,22 +911,21 @@ impl _subgraph_to_text(
     seeds: list[str] | None = None,
     scores: dict[str, float] | None = None,
 ) -> str {
-    lines: any;
-    dist: dict[str, int];
     n: any;
     file_rank: any;
     unranked: any;
+    gx = typing.cast(object, G);
     char_budget: any = token_budget * 3;
-    lines = [];
+    lines = builtins.list();
     overlay: any = getattr(G, "graph", {}).get("_learning_overlay", {}) or {};
     seed_set: any = `set(seeds or []);
     seed_hits: any = [n for n in seeds or [] if n in nodes];
     def _adj(n) -> Generator[any, any, any] {
-        if G.is_directed() {
-            yield from G.successors(n);
-            yield from G.predecessors(n);
+        if gx.is_directed() {
+            yield from gx.successors(n);
+            yield from gx.predecessors(n);
         } else {
-            yield from G.neighbors(n);
+            yield from gx.neighbors(n);
         }
     }
     dist = {n: 0 for n in seed_hits};
@@ -954,7 +950,7 @@ impl _subgraph_to_text(
         for n in nodes {
             sc: any = scores.get(n, 0.0);
             if sc > 0 {
-                f: any = `str(G.nodes[n].get("source_file") or "");
+                f: any = `str(gx.nodes[n].get("source_file") or "");
                 if sc > file_best.get(f, 0.0) {
                     file_best[f] = sc;
                 }
@@ -969,10 +965,10 @@ impl _subgraph_to_text(
         unranked = len(file_rank);
 
         def _order(n: str) -> any {
-            f: any = `str(G.nodes[n].get("source_file") or "");
+            f: any = `str(gx.nodes[n].get("source_file") or "");
             sc: any = scores.get(n, 0.0);
             fr: any = file_rank.get(f, unranked) if sc > 0 else unranked;
-            return (fr, -sc, dist.get(n, 1 << 30), -G.degree(n), `str(n));
+            return (fr, -sc, dist.get(n, 1 << 30), -gx.degree(n), `str(n));
         }
 
         seed_hits = sorted(seed_hits, key=_order);
@@ -981,11 +977,11 @@ impl _subgraph_to_text(
         ordered = seed_hits
             + sorted(
                 nodes - seed_set,
-                key=lambda (n) -> any { (dist.get(n, 1 << 30), -G.degree(n), `str(n)) },
+                key=lambda (n) -> any { (dist.get(n, 1 << 30), -gx.degree(n), `str(n)) },
             );
     }
     for nid in ordered {
-        d: any = G.nodes[nid];
+        d = gx.nodes[nid];
         `entry: any = overlay.get(`str(nid));
         learning_suffix: any = "";
         if `entry {
@@ -996,7 +992,7 @@ impl _subgraph_to_text(
                     + format(":stale" if `entry.get("stale") else "", "");
             }
         }
-        attrs: any = d.get("attributes");
+        attrs = d.get("attributes");
         attrs_suffix: any = "";
         if isinstance(attrs, `dict) and attrs {
             pairs: any = [];
@@ -1043,7 +1039,7 @@ impl _subgraph_to_text(
     }
     for (u, v) in edges {
         if u in nodes and v in nodes {
-            for d in edge_datas(G, u, v) {
+            for d in typing.cast(object, edge_datas(G, u, v)) {
                 src: any = d.get("_src", u);
                 tgt: any = d.get("_tgt", v);
                 if {src, tgt} != {u, v} {
@@ -1061,14 +1057,14 @@ impl _subgraph_to_text(
                     if _loc
                     else "";
                 line = "EDGE "
-                    + format(sanitize_label(G.nodes[src].get("label", src)), "")
+                    + format(sanitize_label(gx.nodes[src].get("label", src)), "")
                     + " --"
                     + format(sanitize_label(`str(d.get("relation", ""))), "")
                     + " ["
                     + format(sanitize_label(`str(d.get("confidence", ""))), "")
                     + format(context_suffix, "")
                     + "]--> "
-                    + format(sanitize_label(G.nodes[tgt].get("label", tgt)), "")
+                    + format(sanitize_label(gx.nodes[tgt].get("label", tgt)), "")
                     + format(at_suffix, "");
                 lines.append(line);
             }

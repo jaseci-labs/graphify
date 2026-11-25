@@ -27,7 +27,6 @@ import from pathlib { Path }
 
 import from typing { Any }
 
-# This module's own copy, as a `from` import would bind it.
 glob _GRAPHIFY_OUT: any = _PATHS_OUT;
 
 glob _EXTRACTOR_VERSION: any;
@@ -68,7 +67,6 @@ glob _ROOT_MARKER: any;
 
 glob _CACHED_TARGETS_KEY: any;
 
-# This module's own bindings, as a `from` import makes them: tests patch them here.
 glob _os_long_path: any = _wired_os_long_path;
 
 with entry {

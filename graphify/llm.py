@@ -9,9 +9,12 @@ import hashlib
 import json
 import os
 import re
+import socket
 import subprocess
 import sys
 import time
+from subprocess import SubprocessError
+from typing import Any
 from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, replace
@@ -1953,7 +1956,7 @@ def _claude_cli_supports_json_schema(claude_cmd: str) -> bool:
             **_no_window_kwargs(),
         )
         supported = "--json-schema" in (proc.stdout or "")
-    except (OSError, subprocess.SubprocessError):
+    except (OSError, SubprocessError):
         supported = False
     _JSON_SCHEMA_SUPPORT[claude_cmd] = supported
     return supported
@@ -3524,7 +3527,6 @@ def _ollama_host_is_link_local_or_metadata(host: str) -> bool:
     as metadata: people do run Ollama on trusted LAN boxes, so those only warn.
     """
     import ipaddress
-    import socket
     if host in ("metadata.google.internal", "metadata.google.com", "0.0.0.0", "::", "[::]"):  # nosec B104 - blocklist, not a bind
         return True
     if host.startswith("169.254."):  # link-local literal, includes the metadata IP

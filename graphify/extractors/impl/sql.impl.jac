@@ -1131,7 +1131,6 @@ impl extract_sql(path: Path, content: str | bytes | None = None) -> dict {
         masked_src: any;
         ident_spans: any;
         (masked_src, ident_spans) = _scan_sql(src_text) as any;
-        # True where an offset falls inside a delimited identifier.
         def in_identifier(offset: int) -> bool {
             return `any(s <= offset and offset < e for (s, e) in ident_spans);
         }

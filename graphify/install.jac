@@ -48,7 +48,6 @@ import from pathlib { Path }
 
 import from typing { Any, NoReturn }
 
-# This module's own copy, as a `from` import would bind it.
 glob _GRAPHIFY_OUT: any = _PATHS_OUT;
 
 comptime if target_().os == "windows" {

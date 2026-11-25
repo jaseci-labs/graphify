@@ -2418,8 +2418,8 @@ def dispatch_command(cmd: str) -> None:
         # god_nodes` fell through to "unknown command" (#2004). Wire it as a
         # read-only graph query, mirroring `affected`.
         from graphify.affected import load_graph
-        from graphify.analyze import god_nodes as _god_nodes
-        from graphify.security import sanitize_label as _sanitize_label
+        from graphify.analyze import god_nodes
+        from graphify.security import sanitize_label
         graph_path = _default_graph_path()
         top_n = 10
         gn_exclude_hubs: float | None = None
@@ -2475,13 +2475,13 @@ def dispatch_command(cmd: str) -> None:
         except Exception as exc:
             print(f"error: could not load graph: {exc}", file=sys.stderr)
             sys.exit(1)
-        gods = _god_nodes(G, top_n=top_n, exclude_hubs_percentile=gn_exclude_hubs)
+        gods = god_nodes(G, top_n=top_n, exclude_hubs_percentile=gn_exclude_hubs)
         if as_json:
             print(json.dumps(gods, indent=2))
         else:
             print("God nodes (most connected):")
             for rank, n in enumerate(gods, 1):
-                print(f"  {rank}. {_sanitize_label(str(n['label']))} - {n['degree']} edges")
+                print(f"  {rank}. {sanitize_label(str(n['label']))} - {n['degree']} edges")
     elif cmd == "save-result":
         # graphify save-result --question Q --answer A [--type T] [--nodes N1 N2 ...]
         #                      [--outcome useful|dead_end|corrected] [--correction TEXT]
@@ -2802,11 +2802,11 @@ def dispatch_command(cmd: str) -> None:
         # graph.json. No line when the node has no overlay entry.
         try:
             from graphify.reflect import load_learning_overlay as _llo
-            from graphify.security import sanitize_label as _sl
+            from graphify.security import sanitize_label
             _overlay = _llo(gp)
             _entry = _overlay.get(str(nid))
             if _entry:
-                _status = _sl(str(_entry.get("status", "")))
+                _status = sanitize_label(str(_entry.get("status", "")))
                 if _status == "contested":
                     _line = (f"  Lesson: contested (useful {_entry.get('uses', 0)} / "
                              f"dead-end {_entry.get('neg', 0)})")
@@ -3166,9 +3166,9 @@ def dispatch_command(cmd: str) -> None:
         # Solution 3 (#1019): don't hard-exit on an oversized graph.json here.
         # Core outputs (graph.json + GRAPH_REPORT.md) still get written. The
         # visualization policy below uses its own node-count limit.
-        from graphify.security import check_graph_file_size_cap as _check_cap
+        from graphify.security import check_graph_file_size_cap
         try:
-            _check_cap(graph_json)
+            check_graph_file_size_cap(graph_json)
         except ValueError:
             try:
                 _over_cap_bytes = graph_json.stat().st_size
@@ -3448,18 +3448,18 @@ def dispatch_command(cmd: str) -> None:
         # sidecar absent lets a later run generate real labels instead of reading
         # back "Community N" as authoritative (#2073).
         if not placeholder_only:
-            from graphify.paths import write_json_atomic as _wja, write_text_atomic as _wta
-            _wja(labels_path, {str(k): v for k, v in labels.items()}, ensure_ascii=False)
+            from graphify.paths import write_json_atomic, write_text_atomic
+            write_json_atomic(labels_path, {str(k): v for k, v in labels.items()}, ensure_ascii=False)
             # Membership signatures beside the labels so a later cluster-only can
             # detect which communities changed and avoid reusing a stale label
             # (see reuse above). Written atomically and AFTER the labels, matching
             # _rebuild_code: a torn sidecar would be unparseable, and a sidecar
             # that ran ahead of its labels would describe the new clustering
             # beside old names, which the reuse guard reads as "nothing changed".
-            from graphify.cluster import community_member_sigs as _cms
-            _wta(
+            from graphify.cluster import community_member_sigs
+            write_text_atomic(
                 labels_path.parent / (labels_path.name + ".sig"),
-                json.dumps({str(k): v for k, v in _cms(communities).items()}))
+                json.dumps({str(k): v for k, v in community_member_sigs(communities).items()}))
 
         # Mirror watch.py pattern: gate to_html so core outputs (graph.json +
         # GRAPH_REPORT.md) always land. Honor --no-viz explicitly; otherwise
@@ -3781,7 +3781,7 @@ def dispatch_command(cmd: str) -> None:
                     previous_community[_n["id"]] = _n["community"]
         import networkx as _nx
         from networkx.readwrite import json_graph as _jg
-        from graphify.build import prefix_graph_for_global as _prefix, distinct_repo_tags as _repo_tags
+        from graphify.build import prefix_graph_for_global as _prefix, distinct_repo_tags
         graphs = []
         for gp in graph_paths:
             if not gp.exists():
@@ -3839,7 +3839,7 @@ def dispatch_command(cmd: str) -> None:
         # unique across inputs (src/graphify-out and frontend/src/graphify-out both
         # → "src"), which collides same-stem node ids and silently merges unrelated
         # entities (#1729). distinct_repo_tags guarantees a distinct prefix per graph.
-        repo_tags = _repo_tags(graph_paths)
+        repo_tags = distinct_repo_tags(graph_paths)
         naive_tags = [gp.parent.parent.name for gp in graph_paths]
         if len(set(naive_tags)) != len(naive_tags):
             print(f"  note: repo dir names collide; using distinct tags: {', '.join(repo_tags)}")
@@ -3925,8 +3925,8 @@ def dispatch_command(cmd: str) -> None:
         # dual-slot shape so every writer agrees.
         out_data["hyperedges"] = merged.graph.get("hyperedges", [])
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        from graphify.paths import write_json_atomic as _wja
-        _wja(out_path, out_data, compact=True)
+        from graphify.paths import write_json_atomic
+        write_json_atomic(out_path, out_data, compact=True)
         unified = input_node_total - merged.number_of_nodes()
         if unified > 0:
             print(f"  unified {unified} external node(s) shared across repos")
@@ -4106,8 +4106,8 @@ def dispatch_command(cmd: str) -> None:
             sys.exit(0)
 
         from networkx.readwrite import json_graph as _jg
-        from graphify.build import build_from_json as _bfj
-        from graphify.security import check_graph_file_size_cap as _check_cap
+        from graphify.build import build_from_json
+        from graphify.security import check_graph_file_size_cap
 
         # Solution 3 (#1019): for the HTML view, an oversized graph.json should
         # not be a hard error. Detect the over-cap condition here and fall back
@@ -4115,7 +4115,7 @@ def dispatch_command(cmd: str) -> None:
         # exiting 1. All other subcommands keep the hard cap.
         _over_cap = False
         try:
-            _check_cap(graph_path)
+            check_graph_file_size_cap(graph_path)
         except ValueError as _cap_err:
             if subcmd == "html":
                 _over_cap = True
@@ -4209,9 +4209,9 @@ def dispatch_command(cmd: str) -> None:
                     file=sys.stderr,
                 )
                 communities = reconstructed
-                from graphify.cluster import score_all as _score_all_export
-                from graphify.analyze import god_nodes as _god_nodes_export
-                cohesion = _score_all_export(G, communities)
+                from graphify.cluster import score_all
+                from graphify.analyze import god_nodes
+                cohesion = score_all(G, communities)
                 # god_nodes ranks purely by graph degree, independent of the
                 # community partition, so recompute it directly here instead
                 # of clearing it to an empty list and relying on the wiki
@@ -4219,7 +4219,7 @@ def dispatch_command(cmd: str) -> None:
                 # further down — that fallback happens to cover the only
                 # current consumer, but silently drops real data for any
                 # future one that reads gods_data without the same guard.
-                gods_data = _god_nodes_export(G)
+                gods_data = god_nodes(G)
 
         labels: dict[int, str] = {}
         if labels_path.exists():
@@ -4228,7 +4228,7 @@ def dispatch_command(cmd: str) -> None:
         out_dir = graph_path.parent
 
         if subcmd == "html":
-            from graphify.export import to_html as _to_html
+            from graphify.export import to_html
             if no_viz:
                 html_target = out_dir / "graph.html"
                 if html_target.exists():
@@ -4238,7 +4238,7 @@ def dispatch_command(cmd: str) -> None:
                 # Over-cap fallback (#1019): force the community-aggregation
                 # path so the oversized graph still renders a usable artifact.
                 _effective_node_limit = 5000 if _over_cap else node_limit
-                _to_html(G, communities, str(out_dir / "graph.html"),
+                to_html(G, communities, str(out_dir / "graph.html"),
                          community_labels=labels or None, node_limit=_effective_node_limit)
                 if G.number_of_nodes() <= _effective_node_limit:
                     print(f"graph.html written - open in any browser, no server needed")
@@ -4257,7 +4257,7 @@ def dispatch_command(cmd: str) -> None:
 
         elif subcmd == "wiki":
             from graphify.wiki import to_wiki as _to_wiki
-            from graphify.analyze import god_nodes as _god_nodes
+            from graphify.analyze import god_nodes
             if not communities:
                 print(
                     "error: .graphify_analysis.json is missing or empty — refusing to export wiki to prevent data loss.\n"
@@ -4266,7 +4266,7 @@ def dispatch_command(cmd: str) -> None:
                 )
                 sys.exit(1)
             if not gods_data:
-                gods_data = _god_nodes(G)
+                gods_data = god_nodes(G)
             n = _to_wiki(G, communities, str(out_dir / "wiki"),
                          community_labels=labels or None, cohesion=cohesion or None,
                          god_nodes_data=gods_data)
@@ -4917,7 +4917,7 @@ def dispatch_command(cmd: str) -> None:
         # needs one. A code-only corpus is pure local AST and must not require
         # an API key; the key is enforced below only when there's LLM work.
         from graphify.llm import (
-            BACKENDS as _BACKENDS,
+            BACKENDS,
             detect_backend_with_source as _detect_backend_with_source,
             backend_disabled_by_env as _backend_disabled_by_env,
             estimate_cost as _estimate_cost,
@@ -4952,10 +4952,10 @@ def dispatch_command(cmd: str) -> None:
                     "--backend or set GRAPHIFY_BACKEND to choose explicitly, or "
                     "GRAPHIFY_BACKEND=none to disable LLM work."
                 )
-        if backend is not None and backend not in _BACKENDS:
+        if backend is not None and backend not in BACKENDS:
             print(
                 f"error: unknown backend '{backend}'. "
-                f"Available: {', '.join(sorted(_BACKENDS))}",
+                f"Available: {', '.join(sorted(BACKENDS))}",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -4983,7 +4983,7 @@ def dispatch_command(cmd: str) -> None:
                 sys.exit(1)
             if backend == "ollama":
                 from graphify.llm import _validate_ollama_base_url
-                _oll_url = os.environ.get("OLLAMA_BASE_URL", _BACKENDS["ollama"].get("base_url", ""))
+                _oll_url = os.environ.get("OLLAMA_BASE_URL", BACKENDS["ollama"].get("base_url", ""))
                 try:
                     _validate_ollama_base_url(_oll_url, warn=False)
                 except ValueError as exc:
@@ -4995,7 +4995,7 @@ def dispatch_command(cmd: str) -> None:
                     from urllib.parse import urlparse
                     ollama_url = os.environ.get(
                         "OLLAMA_BASE_URL",
-                        _BACKENDS["ollama"].get("base_url", ""),
+                        BACKENDS["ollama"].get("base_url", ""),
                     )
                     try:
                         host = (urlparse(ollama_url).hostname or "").lower()
@@ -5084,9 +5084,9 @@ def dispatch_command(cmd: str) -> None:
                 try:
                     from graphify.build import _is_ast_tier as _ctx_is_ast_tier
                     from graphify.security import (
-                        check_graph_file_size_cap as _ctx_size_cap,
+                        check_graph_file_size_cap,
                     )
-                    _ctx_size_cap(existing_graph_path)
+                    check_graph_file_size_cap(existing_graph_path)
                     _ctx_graph = json.loads(
                         existing_graph_path.read_text(encoding="utf-8")
                     )
@@ -5262,7 +5262,7 @@ def dispatch_command(cmd: str) -> None:
 
         # Semantic extraction on docs/papers/images. Check cache first.
         from graphify.cache import (
-            check_semantic_cache as _check_semantic_cache,
+            check_semantic_cache,
             prune_semantic_cache as _prune_semantic_cache,
             save_semantic_cache as _save_semantic_cache,
             scope_semantic_result as _scope_semantic_result,
@@ -5302,7 +5302,7 @@ def dispatch_command(cmd: str) -> None:
                 uncached_paths = list(sem_paths_str)
             else:
                 cached_nodes, cached_edges, cached_hyperedges, uncached_paths = (
-                    _check_semantic_cache(sem_paths_str, root=target, cache_root=out_root,
+                    check_semantic_cache(sem_paths_str, root=target, cache_root=out_root,
                                           mode=sem_cache_mode, prompt=sem_prompt)
                 )
             sem_cache_hits = len(semantic_files) - len(uncached_paths)
@@ -5799,9 +5799,9 @@ def dispatch_command(cmd: str) -> None:
             # to_json, so replicate the shrink check against the existing file and
             # exit before the write/manifest unless --allow-partial is set.
             if _extraction_incomplete and not cli_allow_partial:
-                from graphify.export import MALFORMED_GRAPH as _MALFORMED_GRAPH
+                from graphify.export import MALFORMED_GRAPH as _shrink_malformed
                 _existing_n = _existing_graph_node_count(graph_json_path)
-                _malformed = _existing_n is _MALFORMED_GRAPH
+                _malformed = _existing_n is _shrink_malformed
                 _shrinks = isinstance(_existing_n, int) and len(merged["nodes"]) < _existing_n
                 if _malformed or _shrinks:
                     _detail = (
@@ -5821,11 +5821,11 @@ def dispatch_command(cmd: str) -> None:
                     sys.exit(1)
             _backup(graphify_out)
             _invalidate_file_manifest_for_db_graph()
-            from graphify.paths import write_json_atomic as _write_json_atomic
+            from graphify.paths import write_json_atomic
             from graphify.extract import RUN_ONLY_EXTRACTION_KEYS as _RUN_ONLY_KEYS
             # merge_raw_extraction above has consumed them; graph.json must not
             # carry this run's absolute input paths.
-            _write_json_atomic(
+            write_json_atomic(
                 graph_json_path,
                 {k: v for k, v in merged.items() if k not in _RUN_ONLY_KEYS},
                 compact=True,
@@ -5883,12 +5883,12 @@ def dispatch_command(cmd: str) -> None:
         # Build graph + cluster + score + write.
         from graphify.build import (
             build as _build,
-            build_from_json as _build_from_json,
+            build_from_json,
             build_merge as _build_merge,
         )
-        from graphify.cluster import cluster as _cluster, score_all as _score_all
-        from graphify.export import to_json as _to_json
-        from graphify.analyze import god_nodes as _god_nodes, surprising_connections as _surprising
+        from graphify.cluster import cluster, score_all
+        from graphify.export import to_json
+        from graphify.analyze import god_nodes, surprising_connections
         dedup_backend = backend if dedup_llm else None
         if merge_existing_graph:
             # Prune everything the current scan no longer covers: genuinely
@@ -5953,18 +5953,18 @@ def dispatch_command(cmd: str) -> None:
             )
             sys.exit(1)
 
-        communities = _cluster(G, resolution=cli_resolution, exclude_hubs_percentile=cli_exclude_hubs,
+        communities = cluster(G, resolution=cli_resolution, exclude_hubs_percentile=cli_exclude_hubs,
                                 cache_dir=graphify_out)
         stages.mark("cluster")
-        cohesion = _score_all(G, communities)
+        cohesion = score_all(G, communities)
         try:
             # The percentile that suppressed hubs in cluster() above suppresses
             # them in the ranking too (#3205).
-            gods = _god_nodes(G, exclude_hubs_percentile=cli_exclude_hubs)
+            gods = god_nodes(G, exclude_hubs_percentile=cli_exclude_hubs)
         except Exception:
             gods = []
         try:
-            surprises = _surprising(G, communities)
+            surprises = surprising_connections(G, communities)
         except Exception:
             surprises = []
         stages.mark("analyze")
@@ -6026,9 +6026,9 @@ def dispatch_command(cmd: str) -> None:
         # GRAPH_REPORT.md (#2534 keeps the extract-time stamp by design). Same
         # cwd-anchoring mistake #2316 fixed for watch/update, surviving in the
         # extract path.
-        from graphify.watch import _git_head as _gh_target
-        _wrote = _to_json(G, communities, str(graph_json_path), force=_force_write,
-                          built_at_commit=_gh_target(cwd=Path(target).resolve()))
+        from graphify.watch import _git_head as _gh
+        _wrote = to_json(G, communities, str(graph_json_path), force=_force_write,
+                          built_at_commit=_gh(cwd=Path(target).resolve()))
         if not _wrote:
             # The shrink guard refused: this partial build is smaller than the
             # existing graph. Exit before writing the manifest/marker below, which
@@ -6080,8 +6080,8 @@ def dispatch_command(cmd: str) -> None:
                 "output": merged["output_tokens"],
             },
         }
-        from graphify.paths import write_json_atomic as _wja
-        _wja(analysis_path, analysis, indent=2)
+        from graphify.paths import write_json_atomic
+        write_json_atomic(analysis_path, analysis, indent=2)
         try:
             if has_path:
                 _save_manifest(_manifest_files, manifest_path=str(manifest_path), kind="both", root=target, scan_corpus=_scan_corpus, clear_semantic=_cleared_semantic, clear_ast=_cleared_ast or None, ast_empty=_ast_empty_sources or None)
@@ -6256,8 +6256,8 @@ def dispatch_command(cmd: str) -> None:
             )
             sys.exit(1)
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        from graphify.paths import write_json_atomic as _wja
-        _wja(out_path, merged, ensure_ascii=False)
+        from graphify.paths import write_json_atomic
+        write_json_atomic(out_path, merged, ensure_ascii=False)
         chunk_summary = (
             f"{valid_chunks} chunks"
             if valid_chunks == len(chunk_files)
@@ -6306,8 +6306,8 @@ def dispatch_command(cmd: str) -> None:
             "hyperedges": cached_data.get("hyperedges", []) + new_data.get("hyperedges", []),
         }
         out_path2.parent.mkdir(parents=True, exist_ok=True)
-        from graphify.paths import write_json_atomic as _wja
-        _wja(out_path2, merged2, ensure_ascii=False)
+        from graphify.paths import write_json_atomic
+        write_json_atomic(out_path2, merged2, ensure_ascii=False)
         print(f"Merged: {len(merged2['nodes'])} nodes, {len(merged2['edges'])} edges")
 
     elif Path(cmd).exists() or cmd in (".", "..") or cmd.startswith(("./", "../", "/", "~")):

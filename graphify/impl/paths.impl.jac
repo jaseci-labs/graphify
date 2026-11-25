@@ -445,7 +445,6 @@ impl load_node_link_graph(path_or_data) -> any {
     owned: any = not isinstance(data, `dict);
     if owned {
         p: any = Path(data);
-        # Loaded here, by name: security imports this module.
         importlib.import_module("graphify.security").check_graph_file_size_cap(p);
         data = read_graph_json(p);
     }

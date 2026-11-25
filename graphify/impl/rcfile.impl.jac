@@ -16,7 +16,6 @@ impl parse_language_value(value: str) -> str {
         if len(ext) < 2 or `any(ch.isspace() for ch in ext) {
             raise ValueError(f"{value!r} is not an extension");
         }
-        # Loaded here, by name: detect imports this module.
         detect: any = importlib.import_module("graphify.detect");
         if ext not in detect.CODE_EXTENSIONS and ext not in detect.DOC_EXTENSIONS {
             raise ValueError(f"unknown extension {value!r}");

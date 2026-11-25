@@ -17,7 +17,6 @@ glob _UNSAFE_SLUG_CHARS: any;
 
 glob _INDEX_LINK: any;
 
-# This module's own bindings, as a `from` import makes them: tests patch them here.
 glob stem_filename_budget: any = _wired_stem_filename_budget;
 
 with entry {

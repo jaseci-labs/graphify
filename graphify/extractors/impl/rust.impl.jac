@@ -461,7 +461,6 @@ impl extract_rust(path: Path) -> dict {
 
     impl_bare_names = {};
     _scan_type_items(`root);
-    # True where every item of that id with that name is a type.
     def only_types(item_nid: str, type_name: str) -> bool {
         return all(is_type for (is_type, item_name) in items_by_id[item_nid] if item_name == type_name);
     }

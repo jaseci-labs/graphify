@@ -2146,34 +2146,22 @@ def test_post_commit_changed_list_matches_real_non_ascii_files(tmp_path):
     assert all((tmp_path / g).is_file() for g in got)
 
 
-def _watch_fn(name):
-    import graphify.watch as watch_mod
-
-    tree = ast.parse(Path(watch_mod.__file__).read_text(encoding="utf-8"))
-    return next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == name)
-
-
 def test_watch_rebuild_timeout_arms_a_timer_without_sigalrm():
     """`graphify watch` had no rebuild timeout at all, and the SIGALRM one the
     hooks use is a no-op on Windows (#2173). Same shape as the hook test: the
     Timer fallback sits in the else-branch of the SIGALRM check and kills
     workers before os._exit, and the watch loop actually runs rebuilds in it."""
-    fn = _watch_fn("_rebuild_timeout")
-    fallbacks = [
-        node.orelse
-        for node in ast.walk(fn)
-        if isinstance(node, ast.If) and "'SIGALRM'" in ast.dump(node.test) and node.orelse
-    ]
-    assert fallbacks, "_rebuild_timeout has no else-branch for the missing-SIGALRM case (#2173)"
-    dumped = "".join(ast.dump(stmt) for stmt in fallbacks[0])
-    assert "attr='Timer'" in dumped and "attr='_exit'" in dumped
-    bail = next(n for n in ast.walk(fn) if isinstance(n, ast.FunctionDef) and n.name == "_bail")
-    # statement position is execution order; ast.walk is breadth-first
-    order = [ast.dump(stmt) for stmt in bail.body]
-    kill_at = next(i for i, d in enumerate(order) if "attr='kill'" in d)
-    exit_at = next(i for i, d in enumerate(order) if "attr='_exit'" in d)
-    assert kill_at < exit_at, "_bail exits before killing workers"
-    loop = ast.dump(_watch_fn("watch"))
+    from tests.conftest import jac_source
+
+    fn = jac_source("graphify.watch", "_rebuild_timeout")
+    sigalrm_check = fn.index('hasattr(signal, "SIGALRM")')
+    else_at = fn.find("} else {", sigalrm_check)
+    assert else_at != -1, "_rebuild_timeout has no else-branch for the missing-SIGALRM case (#2173)"
+    fallback = fn[else_at:]
+    assert "threading.Timer(" in fallback and "os._exit(" in fallback
+    bail = fallback[fallback.index("def _bail"):]
+    assert bail.index(".kill()") < bail.index("os._exit("), "_bail exits before killing workers"
+    loop = jac_source("graphify.watch", "watch")
     assert "_rebuild_timeout" in loop, "watch() does not wrap its rebuild in _rebuild_timeout (#2173)"
 
 

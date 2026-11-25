@@ -256,7 +256,7 @@ edition = "2021"
 [wheel."."]
 files = [
     "graphify/__init__.jac",
-    "graphify/__main__.py",
+    "graphify/__main__.jac",
     "graphify/_minhash.jac",
     "graphify/affected.jac",
     "graphify/always_on/agents-md.md",
@@ -271,7 +271,7 @@ files = [
     "graphify/cache.jac",
     "graphify/callflow_html.jac",
     "graphify/cargo_introspect.jac",
-    "graphify/cli.py",
+    "graphify/cli.jac",
     "graphify/cluster.jac",
     "graphify/command-kilo.md",
     "graphify/cpp_resolution.jac",
@@ -494,7 +494,7 @@ files = [
     "graphify/transcribe.jac",
     "graphify/tree_html.jac",
     "graphify/validate.jac",
-    "graphify/watch.py",
+    "graphify/watch.jac",
     "graphify/wiki.jac",
 ]
 

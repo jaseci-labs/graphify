@@ -297,7 +297,7 @@ def test_load_report_token_cost_missing_or_malformed_is_zero(tmp_path):
 
 def test_watch_rebuild_passes_cost_json_totals_to_the_report():
     """#5154: graphify update used to hard-code {0, 0} at the generate() call."""
-    from pathlib import Path as _P
-    source = _P("graphify/watch.py").read_text(encoding="utf-8")
+    from tests.conftest import jac_source
+    source = jac_source("graphify.watch")
     assert '{"input": 0, "output": 0}' not in source
     assert "load_report_token_cost" in source

@@ -643,6 +643,7 @@ graph spaces {
 }
 
 graph import {
+    graphify.paths ++> graphify.__main__ { GRAPHIFY_OUT as _GRAPHIFY_OUT }
     include graphify.detect ++> graphify.analyze { DOC_EXTENSIONS }
     include graphify.exporters.graphdb ++> graphify.export { push_to_falkordb, push_to_neo4j }
     include graphify.extractors.base ++> graphify.extractors.resolution {
@@ -811,353 +812,6 @@ graph import {
     include graphify.paths ++> graphify.export { write_text_atomic }
     include graphify.security ++> graphify.export { sanitize_label }
     graphify.pi.index --> "tests/pi.test" { default }
-    graphify.paths --> graphify.__main__ { GRAPHIFY_OUT }
-    graphify.install --> graphify.__main__ {
-        _AGENTS_MD_MARKER,
-        _ANTIGRAVITY_RULES_PATH,
-        _ANTIGRAVITY_WORKFLOW,
-        _ANTIGRAVITY_WORKFLOW_PATH,
-        _CLAUDE_MD_MARKER,
-        _CODEBUDDY_MD_MARKER,
-        _CURSOR_RULE,
-        _CURSOR_RULE_PATH,
-        _DEVIN_RULES,
-        _DEVIN_RULES_PATH,
-        _GEMINI_MD_MARKER,
-        _KILO_CONFIG_JSONC_PATH,
-        _KILO_CONFIG_JSON_PATH,
-        _KILO_PLUGIN_JS,
-        _KILO_PLUGIN_PATH,
-        _OPENCODE_CONFIG_PATH,
-        _OPENCODE_PLUGIN_HEADER,
-        _OPENCODE_PLUGIN_JS,
-        _OPENCODE_PLUGIN_PATH,
-        _PLATFORM_ALIASES,
-        _PLATFORM_CONFIG,
-        _VSCODE_INSTRUCTIONS_MARKER,
-        _agents_install,
-        _agents_platform_install,
-        _agents_platform_uninstall,
-        _agents_uninstall,
-        _always_on,
-        _amp_install,
-        _amp_legacy_cleanup,
-        _amp_uninstall,
-        _antigravity_finalize,
-        _antigravity_install,
-        _antigravity_uninstall,
-        _canonical_platform,
-        _claude_pretooluse_hooks,
-        _copy_skill_file,
-        _cursor_install,
-        _cursor_uninstall,
-        _devin_rules_install,
-        _devin_rules_uninstall,
-        _drop_opencode_config_entry,
-        _gemini_hook,
-        _install_claude_hook,
-        _install_codebuddy_hook,
-        _install_codex_hook,
-        _install_gemini_hook,
-        _install_kilo_plugin,
-        _install_opencode_plugin,
-        _install_skill_references,
-        _kilo_config_path,
-        _kilo_config_write_path,
-        _kilo_install,
-        _kilo_uninstall,
-        _kilo_uninstall_global,
-        _kiro_install,
-        _kiro_uninstall,
-        _load_json_like,
-        _opencode_config_names_plugin,
-        _opencode_dir,
-        _opencode_plugin_is_v1_only,
-        _packaged_skill_refs_dir,
-        _platform_skill_destination,
-        _print_banner,
-        _print_install_usage,
-        _print_project_git_add_hint,
-        _project_install,
-        _project_scope_root,
-        _project_uninstall,
-        _project_uninstall_all,
-        _remove_claude_skill_registration,
-        _remove_skill_file,
-        _replace_or_append_section,
-        _resolve_graphify_exe,
-        _skill_lock,
-        _skill_registration,
-        _strip_graphify_hook,
-        _strip_graphify_md_section,
-        _strip_json_comments,
-        _uninstall_claude_hook,
-        _uninstall_codebuddy_hook,
-        _uninstall_codex_hook,
-        _uninstall_gemini_hook,
-        _uninstall_kilo_plugin,
-        _uninstall_opencode_plugin,
-        _vscode_skill_destination,
-        claude_install,
-        claude_uninstall,
-        codebuddy_install,
-        codebuddy_uninstall,
-        dispatch_install_cli,
-        gemini_install,
-        gemini_uninstall,
-        install,
-        uninstall_all,
-        vscode_install,
-        vscode_uninstall,
-    }
-    graphify.cli --> graphify.__main__ {
-        _GEMINI_NUDGE_TEXT,
-        _HOOK_SOURCE_EXTS,
-        _READ_NUDGE,
-        _SEARCH_NUDGE,
-        _StageTimer,
-        _clone_repo,
-        _default_graph_path,
-        _enforce_graph_size_cap_or_exit,
-        _run_hook_guard,
-        dispatch_command,
-    }
-    graphify.paths --> graphify.cli {
-        GRAPHIFY_OUT,
-        GRAPHIFY_OUT_NAME,
-        consumed,
-        consumed_graph_rows,
-        graph_root_for,
-        load_node_link_graph,
-        nfc,
-        out_path,
-        read_graph_json,
-        restore_arc_direction,
-        write_json_atomic,
-        write_text_atomic,
-    }
-    graphify.cache --> graphify.cli {
-        check_semantic_cache,
-        file_hash,
-        mark_semantic_cache_partial,
-        prune_semantic_cache,
-        save_semantic_cache,
-        scope_semantic_result,
-    }
-    graphify.detect --> graphify.cli {
-        _is_sensitive,
-        _md5_file,
-        _nfc,
-        detect,
-        detect_incremental,
-        load_manifest,
-        save_manifest,
-    }
-    graphify.extract --> graphify.cli { RUN_ONLY_EXTRACTION_KEYS, _get_extractor, extract }
-    graphify.export --> graphify.cli {
-        MALFORMED_GRAPH,
-        attach_hyperedges,
-        backup_if_protected,
-        existing_graph_node_count,
-        existing_graph_node_counts_by_source,
-        push_to_falkordb,
-        push_to_neo4j,
-        to_canvas,
-        to_cypher,
-        to_graphml,
-        to_html,
-        to_json,
-        to_obsidian,
-        to_svg,
-    }
-    graphify.security --> graphify.cli { check_graph_file_size_cap, sanitize_label }
-    graphify.__main__ --> graphify.cli { main }
-    graphify.llm --> graphify.cli {
-        BACKENDS,
-        _custom_providers_path,
-        _extraction_system,
-        _format_backend_env_keys,
-        _get_backend_api_key,
-        _partial_source_files,
-        _stamp_semantic_origin,
-        _strip_partial_markers,
-        _validate_ollama_base_url,
-        backend_disabled_by_env,
-        detect_backend_with_source,
-        estimate_cost,
-        extract_corpus_parallel,
-        generate_community_labels,
-        provider_base_url_ok,
-    }
-    graphify.prs --> graphify.cli { cmd_prs }
-    graphify.hooks --> graphify.cli { install, status, uninstall }
-    graphify.serve --> graphify.cli {
-        _QUERY_NO_MATCH,
-        _ambiguity_message,
-        _confidence_tag,
-        _is_ambiguity_refusal,
-        _path_confidence_line,
-        _query_graph_text,
-        _resolve_path_endpoint,
-        _resolve_single_node,
-        _weakest_shortest_path,
-    }
-    graphify.querylog --> graphify.cli;
-    graphify.build --> graphify.cli {
-        _is_ast_tier,
-        build,
-        build_from_json,
-        build_merge,
-        dedupe_edges,
-        dedupe_nodes,
-        disambiguate_file_labels_in_nodes,
-        distinct_repo_tags,
-        edge_datas,
-        edge_evidence,
-        finalize_raw_graph_endpoints,
-        graph_has_legacy_ids,
-        has_parallel_links,
-        legacy_id_source_prefix,
-        merge_raw_extraction,
-        prefix_graph_for_global,
-        qualify_csharp_method_labels_in_nodes,
-        take_shrink_accounting,
-    }
-    graphify.rcfile --> graphify.cli { RC_FILENAME, load_graphifyrc }
-    graphify.affected --> graphify.cli {
-        DEFAULT_AFFECTED_RELATIONS,
-        format_affected,
-        load_graph,
-        resolve_seed_outcome,
-    }
-    graphify.analyze --> graphify.cli { god_nodes, suggest_questions, surprising_connections }
-    graphify.ingest --> graphify.cli { ingest, save_query_result }
-    graphify.reflect --> graphify.cli { lessons_fresh, load_learning_overlay, reflect }
-    graphify.sections --> graphify.cli {
-        DEFAULT_MAX_CHARS,
-        format_section,
-        read_section,
-        resolve_section_query,
-        section_root,
-    }
-    graphify.diagnostics --> graphify.cli {
-        diagnose_file,
-        format_diagnostic_json,
-        format_diagnostic_report,
-    }
-    graphify.watch --> graphify.cli {
-        _git_head,
-        _read_build_excludes,
-        _read_build_gitignore,
-        _rebuild_code,
-        _write_build_config,
-        check_update,
-        watch,
-    }
-    graphify.cluster --> graphify.cli {
-        cluster,
-        community_member_sigs,
-        label_communities_by_hub,
-        label_still_applies,
-        remap_communities_to_previous,
-        score_all,
-    }
-    graphify.report --> graphify.cli { generate, load_learning_for_report }
-    graphify.exporters.html --> graphify.cli { _HTML_STALE_MARKER, _viz_node_limit }
-    graphify.tree_html --> graphify.cli { DEFAULT_MAX_CHILDREN, write_tree_html }
-    graphify.cross_repo_types --> graphify.cli { link_shared_type_declarations }
-    graphify.cross_repo_calls --> graphify.cli { link_cross_repo_member_calls }
-    graphify.callflow_html --> graphify.cli { write_callflow_html }
-    graphify.wiki --> graphify.cli { to_wiki }
-    graphify.benchmark --> graphify.cli { print_benchmark, run_benchmark }
-    graphify.global_graph --> graphify.cli { global_add, global_list, global_path, global_remove }
-    graphify.extractors.terraform --> graphify.cli { refresh_terraform_paths }
-    graphify.extractors.resolution --> graphify.cli { _cpp_reconciliation_paths }
-    graphify.pg_introspect --> graphify.cli { introspect_postgres }
-    graphify.cargo_introspect --> graphify.cli { introspect_cargo }
-    graphify.semantic_cleanup --> graphify.cli { load_validated_semantic_fragment }
-    graphify.paths --> graphify.watch {
-        GRAPHIFY_OUT,
-        is_absolute_any_platform,
-        load_node_link_graph,
-        nfc,
-        os_long_path,
-        os_replace_with_fallback,
-        write_text_atomic,
-    }
-    graphify.detect --> graphify.watch {
-        CODE_EXTENSIONS,
-        DOC_EXTENSIONS,
-        IMAGE_EXTENSIONS,
-        PAPER_EXTENSIONS,
-        _is_ignored,
-        _load_graphifyignore,
-        classify_manifest_deletions,
-        classify_manifest_files,
-        detect,
-        ignored_predicate,
-        is_resolution_input,
-        load_manifest,
-        save_manifest,
-    }
-    graphify.rcfile --> graphify.watch {
-        RC_FILENAME,
-        activate_language_overrides,
-        effective_suffix,
-        set_language_overrides,
-    }
-    graphify.build --> graphify.watch {
-        _backfill_origin,
-        _has_independent_semantic_evidence,
-        _is_ast_tier,
-        _is_external_stub,
-        _load_existing_graph,
-        _lost_saved_semantic_nodes,
-        _norm_source_file,
-        build_from_json,
-        dedupe_edges,
-        dedupe_nodes,
-        disambiguate_file_labels_in_nodes,
-        finalize_raw_graph_endpoints,
-        has_parallel_links,
-        qualify_csharp_method_labels_in_nodes,
-    }
-    graphify.extract --> graphify.watch {
-        RUN_ONLY_EXTRACTION_KEYS,
-        _file_node_id,
-        _get_extractor,
-        _safe_extract_with_xaml_root,
-        extract,
-    }
-    graphify.extractors.base --> graphify.watch { _make_id }
-    graphify.extractors.markdown --> graphify.watch { extract_markdown }
-    graphify.markdown_resolution --> graphify.watch { MARKDOWN_MENTION_SUFFIXES, _is_file_node }
-    graphify.dedup --> graphify.watch { _namespace_reference_stub_collisions }
-    graphify.cache --> graphify.watch {
-        _AST_CACHE_SCHEMA,
-        _EXTRACTOR_VERSION,
-        _grammar_fingerprint,
-    }
-    graphify.exporters.html --> graphify.watch { _HTML_STALE_MARKER, _viz_node_limit }
-    graphify.export --> graphify.watch { backup_if_protected, to_html, to_json }
-    graphify.cluster --> graphify.watch {
-        cluster,
-        community_member_sigs,
-        label_communities_by_hub,
-        label_still_applies,
-        remap_communities_to_previous,
-        score_all,
-    }
-    graphify.analyze --> graphify.watch { god_nodes, suggest_questions, surprising_connections }
-    graphify.report --> graphify.watch {
-        generate,
-        load_learning_for_report,
-        load_report_token_cost,
-    }
-    graphify.security --> graphify.watch { check_graph_file_size_cap }
-    graphify.extractors.terraform --> graphify.watch { refresh_terraform_paths }
-    graphify.extractors.resolution --> graphify.watch { _cpp_reconciliation_paths }
-    graphify.callflow_html --> graphify.watch { write_callflow_html }
     graphify.extract --> tests.bench_extract { collect_files, extract }
     graphify.cache --> tests.bench_extract { clear_cache }
     graphify.serve --> tests.bench_query_scoring {
@@ -2109,7 +1763,6 @@ graph import {
         vscode_install,
     }
     graphify --> tests.test_install;
-    graphify.cli --> tests.test_install;
     graphify.install --> tests.test_install_hook_identity;
     graphify.install --> tests.test_install_line_endings;
     graphify --> tests.test_install_references;
@@ -3902,4 +3555,142 @@ graph import {
     tests.conftest --> tests.test_backend_env_isolation { jac_source }
     tests.conftest --> tests.test_multilang { jac_source }
     tests.conftest --> tests.test_partial_extraction_warning { jac_source }
+    graphify.paths ++> graphify.watch {
+        GRAPHIFY_OUT as _PATHS_OUT,
+        is_absolute_any_platform,
+        os_replace_with_fallback,
+        write_text_atomic,
+    }
+    graphify.detect ++> graphify.watch {
+        CODE_EXTENSIONS,
+        DOC_EXTENSIONS,
+        PAPER_EXTENSIONS,
+        IMAGE_EXTENSIONS,
+        _load_graphifyignore,
+        _is_ignored,
+        ignored_predicate,
+    }
+    graphify.rcfile ++> graphify.watch {
+        RC_FILENAME,
+        activate_language_overrides,
+        effective_suffix,
+        set_language_overrides,
+    }
+    graphify.install ++> graphify.__main__ {
+        dispatch_install_cli,
+        _always_on,
+        _copy_skill_file,
+        _install_opencode_plugin,
+        _platform_skill_destination,
+        _print_banner,
+        _vscode_skill_destination,
+        _OPENCODE_PLUGIN_PATH,
+        _OPENCODE_CONFIG_PATH,
+        _OPENCODE_PLUGIN_HEADER,
+        _drop_opencode_config_entry,
+        _opencode_config_names_plugin,
+        _opencode_dir,
+        _opencode_plugin_is_v1_only,
+        _PLATFORM_CONFIG,
+        _skill_lock,
+        _agents_install,
+        _agents_platform_install,
+        _agents_platform_uninstall,
+        _agents_uninstall,
+        _amp_install,
+        _amp_legacy_cleanup,
+        _amp_uninstall,
+        _antigravity_finalize,
+        _antigravity_install,
+        _antigravity_uninstall,
+        _canonical_platform,
+        _claude_pretooluse_hooks,
+        _cursor_install,
+        _cursor_uninstall,
+        _devin_rules_install,
+        _devin_rules_uninstall,
+        _gemini_hook,
+        _install_claude_hook,
+        _install_codebuddy_hook,
+        _install_codex_hook,
+        _install_gemini_hook,
+        _install_kilo_plugin,
+        _install_skill_references,
+        _kilo_config_path,
+        _kilo_config_write_path,
+        _kilo_install,
+        _kilo_uninstall,
+        _kilo_uninstall_global,
+        _kiro_install,
+        _kiro_uninstall,
+        _load_json_like,
+        _packaged_skill_refs_dir,
+        _print_install_usage,
+        _print_project_git_add_hint,
+        _project_install,
+        _project_scope_root,
+        _project_uninstall,
+        _project_uninstall_all,
+        _remove_claude_skill_registration,
+        _remove_skill_file,
+        _replace_or_append_section,
+        _resolve_graphify_exe,
+        _skill_registration,
+        _strip_graphify_hook,
+        _strip_graphify_md_section,
+        _strip_json_comments,
+        _uninstall_claude_hook,
+        _uninstall_codebuddy_hook,
+        _uninstall_codex_hook,
+        _uninstall_gemini_hook,
+        _uninstall_kilo_plugin,
+        _uninstall_opencode_plugin,
+        claude_install,
+        claude_uninstall,
+        codebuddy_install,
+        codebuddy_uninstall,
+        gemini_install,
+        gemini_uninstall,
+        install,
+        uninstall_all,
+        vscode_install,
+        vscode_uninstall,
+        _PLATFORM_ALIASES,
+        _CLAUDE_MD_MARKER,
+        _CODEBUDDY_MD_MARKER,
+        _AGENTS_MD_MARKER,
+        _GEMINI_MD_MARKER,
+        _VSCODE_INSTRUCTIONS_MARKER,
+        _ANTIGRAVITY_RULES_PATH,
+        _ANTIGRAVITY_WORKFLOW_PATH,
+        _ANTIGRAVITY_WORKFLOW,
+        _CURSOR_RULE_PATH,
+        _CURSOR_RULE,
+        _DEVIN_RULES_PATH,
+        _DEVIN_RULES,
+        _KILO_PLUGIN_JS,
+        _KILO_PLUGIN_PATH,
+        _KILO_CONFIG_JSON_PATH,
+        _KILO_CONFIG_JSONC_PATH,
+        _OPENCODE_PLUGIN_JS,
+    }
+    graphify.cli ++> graphify.__main__ {
+        dispatch_command,
+        _StageTimer,
+        _clone_repo,
+        _default_graph_path,
+        _enforce_graph_size_cap_or_exit,
+        _run_hook_guard,
+        _SEARCH_NUDGE,
+        _READ_NUDGE,
+        _HOOK_SOURCE_EXTS,
+        _GEMINI_NUDGE_TEXT,
+    }
+    graphify.paths ++> graphify.cli {
+        GRAPHIFY_OUT as _GRAPHIFY_OUT,
+        graph_root_for as _graph_root_for,
+    }
+    tests.conftest --> tests.test_hooks { jac_source }
+    tests.conftest --> tests.test_install { jac_source }
+    tests.conftest --> tests.test_report { jac_source }
 }

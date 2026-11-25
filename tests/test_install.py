@@ -1714,9 +1714,9 @@ def _cli_dispatched_commands() -> set[str]:
     written by an installer is not a stale/renamed subcommand (#2165).
     """
     import re
-    from graphify import cli
+    from tests.conftest import jac_source
 
-    source = Path(cli.__file__).read_text(encoding="utf-8")
+    source = jac_source("graphify.cli")
     names = set(re.findall(r'cmd\s*==\s*"([a-z0-9][a-z0-9-]*)"', source))
     names |= {
         m

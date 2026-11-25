@@ -2580,6 +2580,7 @@ def dispatch_command(cmd: str) -> None:
             sys.exit(1)
         from graphify.serve import _confidence_tag, _is_ambiguity_refusal, _resolve_path_endpoint
         from networkx.readwrite import json_graph
+        from networkx import NetworkXNoPath, NodeNotFound
         import networkx as _nx
 
         source_label = sys.argv[2]
@@ -2700,7 +2701,9 @@ def dispatch_command(cmd: str) -> None:
                 ))
                 path_nodes, _n_routes, _routes_capped = _weakest_shortest_path(
                     _dg, G, src_nid, tgt_nid)
-        except (_nx.NetworkXNoPath, _nx.NodeNotFound):
+        except Exception as exc:
+            if not isinstance(exc, (NetworkXNoPath, NodeNotFound)):
+                raise
             if undirected:
                 print(f"No path found between '{source_label}' and '{target_label}'.")
             else:
@@ -4300,8 +4303,8 @@ def dispatch_command(cmd: str) -> None:
 
         elif subcmd == "falkordb":
             if push_uri:
-                from graphify.export import push_to_falkordb as _push
-                result = _push(G, uri=push_uri, user=push_user,
+                from graphify.export import push_to_falkordb as _push_falkordb
+                result = _push_falkordb(G, uri=push_uri, user=push_user,
                                password=push_password, communities=communities)
                 print(f"Pushed to FalkorDB: {result['nodes']} nodes, {result['edges']} edges")
             else:

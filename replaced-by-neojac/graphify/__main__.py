@@ -779,7 +779,7 @@ def _pin_hash_seed_if_needed() -> None:
         # file" -- every command this function touches (#3779).
         _reexec(
             [sys.executable, "-m", "graphify", *sys.argv[1:]],
-            {**os.environ, "PYTHONHASHSEED": "0"},
+            dict(os.environ, PYTHONHASHSEED="0"),
         )
     except OSError:
         pass
@@ -823,7 +823,7 @@ def main() -> None:
     except OSError as exc:
         # Windows surfaces a write to a closed pipe as OSError(EINVAL) rather than
         # BrokenPipeError; EPIPE is the POSIX form when it slips past the above.
-        if getattr(exc, "errno", None) in (errno.EPIPE, errno.EINVAL):
+        if exc.errno in (errno.EPIPE, errno.EINVAL):
             _silence_broken_pipe()
         else:
             raise

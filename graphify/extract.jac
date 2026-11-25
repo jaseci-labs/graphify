@@ -240,7 +240,6 @@ with entry {
     });
 }
 
-def _resolve_name(`node, source: bytes, config: LanguageConfig) -> str | None;
 def _python_import_bindings(`node, source: bytes) -> list[tuple[str, str]];
 def _missing_relative_module_name(attempted: Path, `root: Path, raw: str) -> str;
 def _python_under_type_checking(`node, source: bytes) -> bool;
@@ -1164,9 +1163,6 @@ with entry {
 def _node_label_key(`node: dict, fold: bool = False) -> str;
 def _is_top_level_function_definition(`node: dict) -> bool;
 def _rewire_unique_stub_nodes(nodes: list[dict], edges: list[dict], `root: Path | None = None);
-def _augment_js_reexport_edges(
-    paths: list[Path], nodes: list[dict], edges: list[dict], `root: Path
-);
 def _remap_objc_field_tables(per_file: list, mapping: dict);
 def _merge_swift_extensions(per_file: list[dict], all_nodes: list[dict], all_edges: list[dict]);
 def _merge_csharp_partial_class_nodes(

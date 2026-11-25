@@ -836,10 +836,6 @@ impl build_section_node_map(sections: list, comm_idx: dict) -> dict {
     return section_nodes;
 }
 
-impl node_in_section(node_id: str, section_node_ids: set) -> bool {
-    return node_id in section_node_ids;
-}
-
 impl classify_edges(edges: list, section_nodes_map: dict) -> dict {
     node_section: any = {};
     for (sid, nodes) in section_nodes_map.items() {

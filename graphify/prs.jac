@@ -71,8 +71,6 @@ def bold(t: str) -> str;
 
 def dim(t: str) -> str;
 
-def magenta(t: str) -> str;
-
 with entry {
     _ANSI_RE = re.compile("\\033\\[[0-9;]*m");
 }

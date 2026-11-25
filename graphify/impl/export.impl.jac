@@ -439,18 +439,6 @@ impl to_json(
     return True;
 }
 
-impl prune_dangling_edges(graph_data: dict) -> tuple[dict, int] {
-    node_ids: any = {n["id"] for n in graph_data["nodes"]};
-    links_key: any = "links" if "links" in graph_data else "edges";
-    before: any = len(graph_data[links_key]);
-    graph_data[links_key] = [
-        e
-        for e in graph_data[links_key]
-        if e["source"] in node_ids and e["target"] in node_ids
-    ];
-    return (graph_data, before - len(graph_data[links_key]));
-}
-
 impl _cypher_escape(s: str) -> str {
     s = "".join(ch for ch in s if ch >= " " or ch == "\t");
     return s.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n").replace("\r", "\\r");

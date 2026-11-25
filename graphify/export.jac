@@ -88,7 +88,6 @@ def to_json(
     community_labels: dict[int, str] | None = None,
     original_links: "list[dict] | None" = None,
 ) -> bool;
-def prune_dangling_edges(graph_data: dict) -> tuple[dict, int];
 def _cypher_escape(s: str) -> str;
 
 with entry {

@@ -468,7 +468,6 @@ def _docx_children(parent, tag: str) -> Generator[any, any, any];
 def _docx_cell_markdown(tc) -> str;
 def docx_to_markdown(path: Path) -> str;
 def xlsx_to_markdown(path: Path) -> str;
-def xlsx_extract_structure(path: Path) -> dict;
 def convert_office_file(path: Path, out_dir: Path, `root: "Path | None" = None) -> Path | None;
 
 def count_words(path: Path) -> int;
@@ -669,7 +668,6 @@ def _is_scan_ignored(
 def ignored_predicate(
     `root: Path, *, extra_excludes: list[str] | None = None, gitignore: bool = True
 ) -> Callable[[Path], bool];
-def _auto_follow_symlinks(`root: Path) -> bool;
 def _resolves_under_root(path: Path, `root: Path) -> bool;
 
 def detect(

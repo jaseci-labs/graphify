@@ -211,8 +211,6 @@ def _node_community_map(graph_data: dict) -> dict[str, int];
 
 def _canonical_graph_for_compare(graph_data: dict) -> dict;
 
-def _canonical_topology_for_compare(graph_data: dict) -> dict;
-
 with entry {
     _SKIP = object();
 }

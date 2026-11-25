@@ -29,10 +29,6 @@ impl dim(t: str) -> str {
     return _c("2", t);
 }
 
-impl magenta(t: str) -> str {
-    return _c("35", t);
-}
-
 impl _pad(s: str, width: int) -> str {
     visible_len: any = len(_ANSI_RE.sub("", s));
     return s + " " * max(0, width - visible_len);

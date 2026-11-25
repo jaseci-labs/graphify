@@ -597,22 +597,6 @@ impl _repoint_python_sys_path_imports(per_file, all_nodes, all_edges, `root) {
     }
 }
 
-impl _resolve_name(`node, source: bytes, config: LanguageConfig) -> str | None {
-    if config.resolve_function_name_fn is not None {
-        return None;
-    }
-    n: any = `node.child_by_field_name(config.name_field);
-    if n {
-        return _read_text(n, source);
-    }
-    for child in `node.children {
-        if child.type in config.name_fallback_child_types {
-            return _read_text(child, source);
-        }
-    }
-    return None;
-}
-
 impl _python_import_bindings(`node, source: bytes) -> list[tuple[str, str]] {
     bindings: list[tuple[str, str]] = [];
     past_import: any = False;
@@ -4265,14 +4249,6 @@ impl _rewire_unique_stub_nodes(nodes: list[dict], edges: list[dict], `root: Path
     referenced: any = {x for e in edges for x in (e.get("source"), e.get("target"))};
     drop_ids: any = {stub_id for stub_id in remap if stub_id not in referenced};
     nodes[:] = [`node for `node in nodes if `node.get("id") not in drop_ids];
-}
-
-impl _augment_js_reexport_edges(
-    paths: list[Path], nodes: list[dict], edges: list[dict], `root: Path
-) {
-    facts: any = _SymbolResolutionFacts();
-    _collect_js_symbol_resolution_facts(paths, facts);
-    _apply_symbol_resolution_facts(paths, nodes, edges, `root, facts);
 }
 
 impl _remap_objc_field_tables(per_file: list, mapping: dict) {

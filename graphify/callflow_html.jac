@@ -238,7 +238,6 @@ def derive_sections_from_communities(
     nodes: list, labels: dict, lang: str, max_sections: int
 ) -> list;
 def build_section_node_map(sections: list, comm_idx: dict) -> dict;
-def node_in_section(node_id: str, section_node_ids: set) -> bool;
 def classify_edges(edges: list, section_nodes_map: dict) -> dict;
 def should_include_edge(`edge: dict) -> bool;
 def node_degree_scores(edges: list) -> Counter;

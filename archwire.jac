@@ -3779,7 +3779,11 @@ graph import {
     graphify.paths ++> graphify.cluster { write_json_atomic }
     graphify.paths ++> graphify.transcribe { out_path as _out_path }
     graphify.security ++> graphify.transcribe { validate_url }
-    graphify.security ++> graphify.ingest { safe_fetch, safe_fetch_text, validate_url }
+    graphify.security ++> graphify.ingest {
+        safe_fetch as _wired_safe_fetch,
+        safe_fetch_text as _wired_safe_fetch_text,
+        validate_url as _wired_validate_url,
+    }
     graphify.transcribe ++> graphify.ingest { download_audio }
     graphify.ingest ++> graphify.reflect { OUTCOMES }
     graphify.paths ++> graphify.reflect { GRAPHIFY_OUT_NAME }
@@ -3789,18 +3793,21 @@ graph import {
         load_node_link_graph,
     }
     graphify.security ++> graphify.callflow_html { check_graph_file_size_cap }
-    graphify.paths ++> graphify.wiki { stem_filename_budget, write_text_atomic_if_changed }
+    graphify.paths ++> graphify.wiki {
+        stem_filename_budget as _wired_stem_filename_budget,
+        write_text_atomic_if_changed,
+    }
     graphify.security ++> graphify.scip_ingest { sanitize_metadata }
     graphify.paths ++> graphify.cache {
         GRAPHIFY_OUT as _PATHS_OUT,
-        os_long_path as _os_long_path,
+        os_long_path as _wired_os_long_path,
         stash_preread_bytes as _stash_preread_bytes,
         os_replace_with_fallback as _os_replace_with_fallback,
     }
     graphify.ids ++> graphify.cache { normalize_id }
     graphify.google_workspace ++> graphify.detect {
         GOOGLE_WORKSPACE_EXTENSIONS,
-        convert_google_workspace_file,
+        convert_google_workspace_file as _wired_convert_google_workspace_file,
         google_workspace_enabled,
     }
     graphify.paths ++> graphify.detect {

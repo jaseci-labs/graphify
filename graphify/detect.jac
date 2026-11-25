@@ -159,6 +159,9 @@ glob _PARSED_PATTERN_CACHE_MAX: any;
 
 glob _CASEFOLD_PATHS: any;
 
+# This module's own bindings, as a `from` import makes them: tests patch them here.
+glob convert_google_workspace_file: any = _wired_convert_google_workspace_file;
+
 glob _os_path: any;
 
 glob _DRIVE_LETTER_RE: any;

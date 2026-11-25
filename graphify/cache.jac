@@ -68,6 +68,9 @@ glob _ROOT_MARKER: any;
 
 glob _CACHED_TARGETS_KEY: any;
 
+# This module's own bindings, as a `from` import makes them: tests patch them here.
+glob _os_long_path: any = _wired_os_long_path;
+
 with entry {
     try {
         import from importlib.metadata { version as _pkg_version }

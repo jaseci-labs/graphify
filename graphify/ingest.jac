@@ -112,6 +112,11 @@ glob out: any;
 
 glob argparse: any;
 
+# This module's own bindings, as a `from` import makes them: tests patch them here.
+glob safe_fetch: any = _wired_safe_fetch;
+glob safe_fetch_text: any = _wired_safe_fetch_text;
+glob validate_url: any = _wired_validate_url;
+
 with entry:__main__ {
     import argparse;
     parser = argparse.ArgumentParser(description="Fetch a URL into a graphify /raw folder");

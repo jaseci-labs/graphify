@@ -38,7 +38,7 @@ impl _python_collect_type_refs(`node, source: bytes, generic: bool, out: list[tu
     t: any = `node.type;
     if t == "type" {
         c: any;
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _python_collect_type_refs(c, source, generic, out);
             }
@@ -60,7 +60,7 @@ impl _python_collect_type_refs(`node, source: bytes, generic: bool, out: list[tu
         return;
     }
     if t == "generic_type" {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.type == "identifier" {
                 container: any = _read_text(c, source);
                 if container
@@ -70,7 +70,7 @@ impl _python_collect_type_refs(`node, source: bytes, generic: bool, out: list[tu
                     out.append((container, "generic_arg" if generic else "type"));
                 }
             } elif c.type == "type_parameter" {
-                for sub in c.children {
+                for sub in typing.cast(object, c).children {
                     if sub.is_named {
                         _python_collect_type_refs(sub, source, True, out);
                     }
@@ -84,7 +84,7 @@ impl _python_collect_type_refs(`node, source: bytes, generic: bool, out: list[tu
         if value is not None {
             _python_collect_type_refs(value, source, generic, out);
         }
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c == value or not c.is_named {
                 continue;
             }
@@ -93,7 +93,7 @@ impl _python_collect_type_refs(`node, source: bytes, generic: bool, out: list[tu
         return;
     }
     if `node.is_named {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _python_collect_type_refs(c, source, generic, out);
             }
@@ -123,9 +123,9 @@ impl _csharp_pre_scan_interfaces(root_node, source: bytes) -> set[str] {
 impl _csharp_type_name_for_id(`node, class_name: str) -> str {
     arity: any = sum(
         1
-        for c in `node.children
+        for c in typing.cast(object, `node).children
         if c.type == "type_parameter_list"
-        for _p in c.children
+        for _p in typing.cast(object, c).children
         if _p.type in ("type_parameter", "identifier"),
     );
     return f"{class_name}`{arity}" if arity else class_name;
@@ -161,9 +161,9 @@ impl _csharp_method_signature(`node, source: bytes, params=None) -> tuple[str, d
     }
     type_param_nodes: any = [
         p
-        for c in `node.children
+        for c in typing.cast(object, `node).children
         if c.type == "type_parameter_list"
-        for p in c.children
+        for p in typing.cast(object, c).children
         if p.type in ("type_parameter", "identifier")
     ];
     type_param_names: any = {"".join(_read_text(p, source).split()) for p in type_param_nodes};
@@ -173,7 +173,7 @@ impl _csharp_method_signature(`node, source: bytes, params=None) -> tuple[str, d
     children: any = params.children if params is not None else [];
     for (i, c) in enumerate(children) {
         if c.type == "parameter" {
-            mods: any = [_read_text(m, source) for m in c.children if m.type == "modifier"];
+            mods: any = [_read_text(m, source) for m in typing.cast(object, c).children if m.type == "modifier"];
             type_node: any = c.child_by_field_name("type");
             type_text: any = "".join(_read_text(type_node, source).split())
                 if type_node is not None
@@ -189,13 +189,13 @@ impl _csharp_method_signature(`node, source: bytes, params=None) -> tuple[str, d
                         1
                         for ch in (type_node.children if type_node is not None else [])
                         if ch.type == "type_argument_list"
-                        for a in ch.children
+                        for a in typing.cast(object, ch).children
                         if a.is_named,
                     );
                 }
                 extended_is_type_param = `bool(extended_type and extended_type in type_param_names);
             }
-            if not `any(operator.eq(x.type, "=") for x in c.children) {
+            if not `any(operator.eq(x.type, "=") for x in typing.cast(object, c).children) {
                 required += 1;
             }
         } elif c.type == "params" {
@@ -249,7 +249,7 @@ impl _csharp_argc(call_node) -> int | None {
 impl _csharp_creation_argc(`node) -> int {
     args: any = `node.child_by_field_name("arguments");
     if args is None {
-        args = next((c for c in `node.children if c.type == "argument_list"), None);
+        args = next((c for c in typing.cast(object, `node).children if c.type == "argument_list"), None);
     }
     return sum(1 for c in args.children if c.type == "argument") if args is not None else 0;
 }
@@ -284,7 +284,7 @@ impl _csharp_pre_scan_name_collisions(
 
     def _visit(n, ns: list[str], owners: tuple[str, ...] = ()) {
         scoped: any = `list(ns);
-        for c in n.children {
+        for c in typing.cast(object, n).children {
             if c.type == "namespace_declaration" {
                 ns_name: any = _csharp_namespace_name(c, source);
                 body: any = c.child_by_field_name("body");
@@ -338,7 +338,7 @@ impl _csharp_pre_scan_name_collisions(
     }
 
     def _members(n, type_nid: str) {
-        for c in n.children {
+        for c in typing.cast(object, n).children {
             if c.type in ("method_declaration", "property_declaration", "enum_member_declaration") {
                 name_node: any = c.child_by_field_name("name");
                 name: any = _read_text(name_node, source) if name_node is not None else "";
@@ -375,14 +375,14 @@ impl _csharp_type_parameters_in_scope(`node, source: bytes) -> frozenset[str] {
     scope: any = `node;
     while scope is not None {
         if scope.type in _CSHARP_TYPE_PARAMETER_SCOPE_DECLARATIONS {
-            for child in scope.children {
+            for child in typing.cast(object, scope).children {
                 if child.type != "type_parameter_list" {
                     continue;
                 }
-                for param in child.children {
+                for param in typing.cast(object, child).children {
                     if param.type == "type_parameter" {
                         name_node: any = next(
-                            (sub for sub in param.children if sub.type == "identifier"), None
+                            (sub for sub in typing.cast(object, param).children if sub.type == "identifier"), None
                         );
                         if name_node is not None {
                             name: any = _read_text(name_node, source);
@@ -443,7 +443,7 @@ impl _csharp_collect_type_refs(
         name_child: any = `node.child_by_field_name("name");
         if name_child is None {
             sub: any;
-            for sub in `node.children {
+            for sub in typing.cast(object, `node).children {
                 if sub.type == "identifier" {
                     name_child = sub;
                     break;
@@ -462,9 +462,9 @@ impl _csharp_collect_type_refs(
                 ));
             }
         }
-        for sub in `node.children {
+        for sub in typing.cast(object, `node).children {
             if sub.type == "type_argument_list" {
-                for arg in sub.children {
+                for arg in typing.cast(object, sub).children {
                     if arg.is_named {
                         _csharp_collect_type_refs(arg, source, True, out, `skip);
                     }
@@ -475,7 +475,7 @@ impl _csharp_collect_type_refs(
     }
     if t in ("nullable_type", "array_type", "pointer_type", "ref_type") {
         c: any;
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _csharp_collect_type_refs(c, source, generic, out, `skip);
             }
@@ -483,7 +483,7 @@ impl _csharp_collect_type_refs(
         return;
     }
     if t == "tuple_type" {
-        for el in `node.children {
+        for el in typing.cast(object, `node).children {
             if el.type == "tuple_element" {
                 type_child: any = el.child_by_field_name("type");
                 if type_child is not None {
@@ -494,7 +494,7 @@ impl _csharp_collect_type_refs(
         return;
     }
     if `node.is_named {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _csharp_collect_type_refs(c, source, generic, out, `skip);
             }
@@ -505,17 +505,17 @@ impl _csharp_collect_type_refs(
 impl _csharp_attribute_names(method_node, source: bytes) -> list[tuple[str, bool, str]] {
     names: list[tuple[str, bool, str]] = [];
     `skip: any = _csharp_type_parameters_in_scope(method_node, source);
-    for child in method_node.children {
+    for child in typing.cast(object, method_node).children {
         if child.type != "attribute_list" {
             continue;
         }
-        for attr in child.children {
+        for attr in typing.cast(object, child).children {
             if attr.type != "attribute" {
                 continue;
             }
             name_node: any = attr.child_by_field_name("name");
             if name_node is None {
-                for sub in attr.children {
+                for sub in typing.cast(object, attr).children {
                     if sub.type in ("identifier", "qualified_name") {
                         name_node = sub;
                         break;
@@ -544,12 +544,12 @@ impl _java_type_parameters_in_scope(`node, source: bytes) -> frozenset[str] {
         if scope.type in _JAVA_TYPE_PARAMETER_SCOPE_DECLARATIONS {
             params: any = scope.child_by_field_name("type_parameters");
             if params is not None {
-                for param in params.children {
+                for param in typing.cast(object, params).children {
                     if param.type != "type_parameter" {
                         continue;
                     }
                     name_node: any = next(
-                        (child for child in param.children if child.type == "type_identifier"), None
+                        (child for child in typing.cast(object, param).children if child.type == "type_identifier"), None
                     );
                     if name_node is not None {
                         names.add(_read_text(name_node, source));
@@ -598,7 +598,7 @@ impl _java_collect_type_refs(
     }
     if t == "generic_type" {
         c: any;
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.type in ("type_identifier", "scoped_type_identifier") {
                 raw = _read_text(c, source);
                 simple = raw.rsplit(".", 1)[-1];
@@ -612,9 +612,9 @@ impl _java_collect_type_refs(
                 break;
             }
         }
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.type == "type_arguments" {
-                for arg in c.children {
+                for arg in typing.cast(object, c).children {
                     if arg.is_named {
                         _java_collect_type_refs(arg, source, True, out, `skip, preserve_qualified);
                     }
@@ -624,7 +624,7 @@ impl _java_collect_type_refs(
         return;
     }
     if t == "array_type" {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _java_collect_type_refs(c, source, generic, out, `skip, preserve_qualified);
             }
@@ -632,7 +632,7 @@ impl _java_collect_type_refs(
         return;
     }
     if `node.is_named {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _java_collect_type_refs(c, source, generic, out, `skip, preserve_qualified);
             }
@@ -652,7 +652,7 @@ impl _java_receiver_type_name(type_node, source: bytes) -> str | None {
     } elif t == "generic_type" {
         base: any = next(
             (child
-            for child in type_node.children
+            for child in typing.cast(object, type_node).children
             if child.type in ("type_identifier", "scoped_type_identifier")),
             None,
         );
@@ -675,7 +675,7 @@ impl _java_receiver_chain(`node, source: bytes, depth: int = 0) -> list | None {
     }
     t: any = `node.type;
     if t == "parenthesized_expression" {
-        inner: any = [c for c in `node.named_children if c.type != "comment"];
+        inner: any = [c for c in typing.cast(object, `node).named_children if c.type != "comment"];
         return _java_receiver_chain(inner[0], source, depth + 1) if len(inner) == 1 else None;
     }
     if t in ("object_creation_expression", "cast_expression") {
@@ -766,7 +766,7 @@ impl _java_type_chain_leaf(
 
 impl _java_declarator_names(declaration_node, source: bytes) -> list[str] {
     names: list[str] = [];
-    for child in declaration_node.children {
+    for child in typing.cast(object, declaration_node).children {
         if child.type != "variable_declarator" {
             continue;
         }
@@ -798,7 +798,7 @@ impl _java_bound_names(method_node, source: bytes) -> set[str] {
                 names.add(_read_text(name_node, source));
             }
         } elif `node.type in _JAVA_LISTED_BINDINGS {
-            names.update(_read_text(c, source) for c in `node.children if c.type == "identifier");
+            names.update(_read_text(c, source) for c in typing.cast(object, `node).children if c.type == "identifier");
         } elif `node.type == "lambda_expression" {
             params: any = `node.child_by_field_name("parameters");
             if params is not None and params.type == "identifier" {
@@ -821,12 +821,12 @@ impl _java_lambda_parameters(lambda_node, source: bytes) -> list[tuple[str, str 
     if parameters.type == "inferred_parameters" {
         return [
             (_read_text(child, source), None)
-            for child in parameters.children
+            for child in typing.cast(object, parameters).children
             if child.type == "identifier"
         ];
     }
     bindings: list[tuple[str, str | None]] = [];
-    for parameter in parameters.children {
+    for parameter in typing.cast(object, parameters).children {
         if parameter.type not in ("formal_parameter", "spread_parameter") {
             continue;
         }
@@ -864,7 +864,7 @@ impl _java_method_receiver_types(
 
     params: any = method_node.child_by_field_name("parameters");
     if params is not None {
-        for param in params.children {
+        for param in typing.cast(object, params).children {
             if param.type not in ("formal_parameter", "spread_parameter") {
                 continue;
             }
@@ -927,9 +927,9 @@ impl _java_method_receiver_types(
 }
 
 impl _java_has_modifier(declaration_node, modifier: str) -> bool {
-    for child in declaration_node.children {
+    for child in typing.cast(object, declaration_node).children {
         if child.type == "modifiers" {
-            return `any(operator.eq(mod.type, modifier) for mod in child.children);
+            return `any(operator.eq(mod.type, modifier) for mod in typing.cast(object, child).children);
         }
     }
     return False;
@@ -937,7 +937,7 @@ impl _java_has_modifier(declaration_node, modifier: str) -> bool {
 
 impl _java_annotation_nodes(declaration_node) -> list {
     modifiers: any = None;
-    for child in declaration_node.children {
+    for child in typing.cast(object, declaration_node).children {
         if child.type == "modifiers" {
             modifiers = child;
             break;
@@ -948,7 +948,7 @@ impl _java_annotation_nodes(declaration_node) -> list {
     }
     return [
         child
-        for child in modifiers.children
+        for child in typing.cast(object, modifiers).children
         if child.type in ("marker_annotation", "annotation")
     ];
 }
@@ -958,7 +958,7 @@ impl _java_annotation_names(declaration_node, source: bytes) -> list[tuple[str, 
     for anno in _java_annotation_nodes(declaration_node) {
         name_node: any = anno.child_by_field_name("name");
         if name_node is None {
-            for sub in anno.children {
+            for sub in typing.cast(object, anno).children {
                 if sub.type in ("identifier", "scoped_identifier", "type_identifier") {
                     name_node = sub;
                     break;
@@ -988,14 +988,14 @@ impl _java_annotation_class_literal_refs(declaration_node, source: bytes) -> lis
             current: any = stack.pop();
             if current.type == "class_literal" {
                 type_node: any = next(
-                    (child for child in current.children if child.is_named), None
+                    (child for child in typing.cast(object, current).children if child.is_named), None
                 );
                 refs: list[tuple[str, str]] = [];
                 _java_collect_type_refs(type_node, source, False, refs, preserve_qualified=True);
                 names.extend(name for (name, _role) in refs);
                 continue;
             }
-            stack.extend(child for child in current.children if child.is_named);
+            stack.extend(child for child in typing.cast(object, current).children if child.is_named);
         }
     }
     return names;
@@ -1018,7 +1018,7 @@ impl _php_collect_type_refs(`node, source: bytes, generic: bool, out: list[tuple
     }
     if t == "named_type" {
         c: any;
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.type in ("name", "qualified_name") {
                 text: any = _php_name_text(c, source);
                 if text {
@@ -1037,7 +1037,7 @@ impl _php_collect_type_refs(`node, source: bytes, generic: bool, out: list[tuple
         return;
     }
     if t in ("nullable_type", "union_type", "intersection_type", "optional_type") {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _php_collect_type_refs(c, source, generic, out);
             }
@@ -1045,7 +1045,7 @@ impl _php_collect_type_refs(`node, source: bytes, generic: bool, out: list[tuple
         return;
     }
     if `node.is_named {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _php_collect_type_refs(c, source, generic, out);
             }
@@ -1058,7 +1058,7 @@ impl _php_declared_type_name(`node, source: bytes) -> str | None {
         return None;
     }
     if `node.type == "optional_type" {
-        `node = next((c for c in `node.children if c.is_named), None);
+        `node = next((c for c in typing.cast(object, `node).children if c.is_named), None);
         if `node is None {
             return None;
         }
@@ -1067,7 +1067,7 @@ impl _php_declared_type_name(`node, source: bytes) -> str | None {
         return None;
     }
     return next(
-        (_php_name_text(c, source) for c in `node.children if c.type in ("name", "qualified_name")),
+        (_php_name_text(c, source) for c in typing.cast(object, `node).children if c.type in ("name", "qualified_name")),
         None,
     );
 }
@@ -1076,12 +1076,12 @@ impl _php_variable_text(`node, source: bytes) -> str | None {
     if `node is None or `node.type != "variable_name" {
         return None;
     }
-    return next((_read_text(c, source) for c in `node.children if c.type == "name"), None);
+    return next((_read_text(c, source) for c in typing.cast(object, `node).children if c.type == "name"), None);
 }
 
 impl _php_first_declared_type(`node, source: bytes) -> str | None {
     return next(
-        (name for name in (_php_declared_type_name(c, source) for c in `node.children) if name),
+        (name for name in (_php_declared_type_name(c, source) for c in typing.cast(object, `node).children) if name),
         None,
     );
 }
@@ -1093,13 +1093,13 @@ impl _php_receiver_type_table(`root, source: bytes, table: dict[str, str]) {
         t: any = n.type;
         if t == "property_declaration" {
             type_name: any = _php_first_declared_type(n, source);
-            for element in n.children if type_name else () {
+            for element in n.children if type_name else [] {
                 if element.type != "property_element" {
                     continue;
                 }
                 name: any = next(
                     (_php_variable_text(c, source)
-                    for c in element.children
+                    for c in typing.cast(object, element).children
                     if c.type == "variable_name"),
                     None,
                 );
@@ -1110,7 +1110,7 @@ impl _php_receiver_type_table(`root, source: bytes, table: dict[str, str]) {
         } elif t in ("property_promotion_parameter", "simple_parameter") {
             type_name = _php_first_declared_type(n, source);
             name = next(
-                (_php_variable_text(c, source) for c in n.children if c.type == "variable_name"),
+                (_php_variable_text(c, source) for c in typing.cast(object, n).children if c.type == "variable_name"),
                 None,
             );
             if name and type_name and name not in table {
@@ -1122,7 +1122,7 @@ impl _php_receiver_type_table(`root, source: bytes, table: dict[str, str]) {
                 name = _php_variable_text(n.child_by_field_name("left"), source);
                 type_name = next(
                     (_php_name_text(c, source)
-                    for c in right.children
+                    for c in typing.cast(object, right).children
                     if c.type in ("name", "qualified_name")),
                     None,
                 );
@@ -1137,7 +1137,7 @@ impl _php_receiver_type_table(`root, source: bytes, table: dict[str, str]) {
 
 impl _php_method_return_type_node(method_node) -> any {
     saw_params: any = False;
-    for c in method_node.children {
+    for c in typing.cast(object, method_node).children {
         if c.type == "formal_parameters" {
             saw_params = True;
             continue;
@@ -1165,14 +1165,14 @@ impl _kotlin_user_type_name(user_type_node, source: bytes) -> str | None {
         return None;
     }
     name: str | None = None;
-    for c in user_type_node.children {
+    for c in typing.cast(object, user_type_node).children {
         if c.type in ("type_identifier", "identifier") {
             text: any = _read_text(c, source);
             if text {
                 name = text;
             }
         } elif c.type == "simple_user_type" {
-            for sub in c.children {
+            for sub in typing.cast(object, c).children {
                 if sub.type in ("identifier", "type_identifier") {
                     text = _read_text(sub, source);
                     if text {
@@ -1192,7 +1192,7 @@ impl _kotlin_annotation_names(declaration_node, source: bytes) -> list[tuple[str
     if declaration_node is None {
         return names;
     }
-    for child in declaration_node.children {
+    for child in typing.cast(object, declaration_node).children {
         if child.type == "modifiers" {
             modifiers = child;
             break;
@@ -1201,16 +1201,16 @@ impl _kotlin_annotation_names(declaration_node, source: bytes) -> list[tuple[str
     if modifiers is None {
         return names;
     }
-    for anno in modifiers.children {
+    for anno in typing.cast(object, modifiers).children {
         if anno.type != "annotation" {
             continue;
         }
-        for sub in anno.children {
+        for sub in typing.cast(object, anno).children {
             user_type_node: any = None;
             if sub.type == "user_type" {
                 user_type_node = sub;
             } elif sub.type == "constructor_invocation" {
-                for inner in sub.children {
+                for inner in typing.cast(object, sub).children {
                     if inner.type == "user_type" {
                         user_type_node = inner;
                         break;
@@ -1235,7 +1235,7 @@ impl _kotlin_annotation_class_literal_refs(declaration_node, source: bytes) -> l
         return names;
     }
     modifiers: any = None;
-    for child in declaration_node.children {
+    for child in typing.cast(object, declaration_node).children {
         if child.type == "modifiers" {
             modifiers = child;
             break;
@@ -1245,17 +1245,17 @@ impl _kotlin_annotation_class_literal_refs(declaration_node, source: bytes) -> l
         return names;
     }
     seen: set[str] = set[any]();
-    for anno in modifiers.children {
+    for anno in typing.cast(object, modifiers).children {
         if anno.type != "annotation" {
             continue;
         }
-        for sub in anno.children {
+        for sub in typing.cast(object, anno).children {
             ci: any = sub if sub.type == "constructor_invocation" else None;
             if ci is None {
                 continue;
             }
             args_node: any = None;
-            for c in ci.children {
+            for c in typing.cast(object, ci).children {
                 if c.type == "value_arguments" {
                     args_node = c;
                     break;
@@ -1271,7 +1271,7 @@ impl _kotlin_annotation_class_literal_refs(declaration_node, source: bytes) -> l
                     has_double_colon: any = False;
                     rhs_is_class: any = False;
                     lhs_node: any = None;
-                    for ch in curr.children {
+                    for ch in typing.cast(object, curr).children {
                         ch_text: any = _read_text(ch, source);
                         if ch.type == "::" or ch_text == "::" {
                             has_double_colon = True;
@@ -1298,7 +1298,7 @@ impl _kotlin_annotation_class_literal_refs(declaration_node, source: bytes) -> l
                         continue;
                     }
                 }
-                stack.extend(child for child in curr.children if child.is_named);
+                stack.extend(child for child in typing.cast(object, curr).children if child.is_named);
             }
         }
     }
@@ -1309,15 +1309,15 @@ impl _kotlin_type_parameters_in_scope(`node, source: bytes) -> frozenset[str] {
     names: set[str] = set[any]();
     scope: any = `node;
     while scope is not None {
-        for child in scope.children {
+        for child in typing.cast(object, scope).children {
             if child.type != "type_parameters" {
                 continue;
             }
-            for param in child.children {
+            for param in typing.cast(object, child).children {
                 if param.type != "type_parameter" {
                     continue;
                 }
-                for sub in param.children {
+                for sub in typing.cast(object, param).children {
                     if sub.type in ("identifier", "type_identifier") {
                         name: any = _read_text(sub, source);
                         if name {
@@ -1352,7 +1352,7 @@ impl _kotlin_collect_type_refs(
     }
     if t == "user_type" {
         c: any;
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.type in ("identifier", "type_identifier") {
                 text: any = _read_text(c, source);
                 if text
@@ -1366,7 +1366,7 @@ impl _kotlin_collect_type_refs(
             }
             if c.type == "simple_user_type" {
                 sub: any;
-                for sub in c.children {
+                for sub in typing.cast(object, c).children {
                     if sub.type in ("identifier", "type_identifier") {
                         text = _read_text(sub, source);
                         if text
@@ -1382,11 +1382,11 @@ impl _kotlin_collect_type_refs(
                 break;
             }
         }
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.type == "type_arguments" {
-                for arg in c.children {
+                for arg in typing.cast(object, c).children {
                     if arg.type == "type_projection" {
-                        for sub in arg.children {
+                        for sub in typing.cast(object, arg).children {
                             if sub.is_named {
                                 _kotlin_collect_type_refs(sub, source, True, out, `skip);
                             }
@@ -1411,7 +1411,7 @@ impl _kotlin_collect_type_refs(
         return;
     }
     if t in ("nullable_type", "parenthesized_type", "type_reference") {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _kotlin_collect_type_refs(c, source, generic, out, `skip);
             }
@@ -1419,7 +1419,7 @@ impl _kotlin_collect_type_refs(
         return;
     }
     if `node.is_named {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _kotlin_collect_type_refs(c, source, generic, out, `skip);
             }
@@ -1428,9 +1428,9 @@ impl _kotlin_collect_type_refs(
 }
 
 impl _kotlin_property_type_node(property_node) -> any {
-    for c in property_node.children {
+    for c in typing.cast(object, property_node).children {
         if c.type == "variable_declaration" {
-            for sub in c.children {
+            for sub in typing.cast(object, c).children {
                 if sub.type in ("user_type", "nullable_type", "type_reference") {
                     return sub;
                 }
@@ -1446,7 +1446,7 @@ impl _kotlin_property_type_node(property_node) -> any {
 impl _kotlin_function_return_type_node(func_node) -> any {
     saw_params: any = False;
     saw_colon: any = False;
-    for c in func_node.children {
+    for c in typing.cast(object, func_node).children {
         if c.type == "function_value_parameters" {
             saw_params = True;
             continue;
@@ -1465,7 +1465,7 @@ impl _kotlin_function_return_type_node(func_node) -> any {
 }
 
 impl _swift_declaration_keyword(`node) -> str | None {
-    for c in `node.children {
+    for c in typing.cast(object, `node).children {
         if not c.is_named and c.type in ("class", "struct", "enum", "extension", "actor") {
             return c.type;
         }
@@ -1615,7 +1615,7 @@ impl _js_member_nid(
     groups: any = groups_cache.get(key);
     if groups is None {
         names: dict[str, set[str]] = {};
-        for c in body.children {
+        for c in typing.cast(object, body).children {
             if c.type in _JS_MEMBER_METHOD_TYPES {
                 name_node: any = c.child_by_field_name("name");
             } elif c.type in ("field_definition", "public_field_definition") {
@@ -1652,7 +1652,7 @@ impl _php_member_nid(
     groups: any = groups_cache.get(key);
     if groups is None {
         names: dict[str, set[str]] = {};
-        for c in body.children {
+        for c in typing.cast(object, body).children {
             if c.type != "method_declaration" {
                 continue;
             }
@@ -1712,7 +1712,7 @@ impl _java_lombok_getters(field_node, source: bytes) -> list[str] {
     is_boolean: any = type_node is not None
         and operator.eq(_read_text(type_node, source), "boolean");
     declared: any = set[any]();
-    for c in body.children {
+    for c in typing.cast(object, body).children {
         if c.type != "method_declaration" {
             continue;
         }
@@ -1721,7 +1721,7 @@ impl _java_lombok_getters(field_node, source: bytes) -> list[str] {
         if name_node is not None
             and params is not None
             and not `any(
-                p.type in ("formal_parameter", "spread_parameter") for p in params.children
+                p.type in ("formal_parameter", "spread_parameter") for p in typing.cast(object, params).children
             )
         {
             declared.add(_read_text(name_node, source).lower());
@@ -1752,7 +1752,7 @@ impl _java_member_nid(
     groups: any = groups_cache.get(key);
     if groups is None {
         names: dict[str, set[str]] = {};
-        for c in body.children {
+        for c in typing.cast(object, body).children {
             if c.type not in _JAVA_MEMBER_CALLABLE_TYPES {
                 continue;
             }
@@ -1794,21 +1794,21 @@ impl _java_type_var_bounds(`node, source: bytes) -> dict[str, str] {
     }
     bounds: dict[str, str] = {};
     for owner in reversed(scopes) {
-        tparams: any = next((c for c in owner.children if c.type == "type_parameters"), None);
+        tparams: any = next((c for c in typing.cast(object, owner).children if c.type == "type_parameters"), None);
         if tparams is None {
             continue;
         }
         local: dict[str, str] = {};
-        for tp in tparams.children {
+        for tp in typing.cast(object, tparams).children {
             if tp.type != "type_parameter" {
                 continue;
             }
-            name_node: any = next((c for c in tp.children if c.type == "type_identifier"), None);
+            name_node: any = next((c for c in typing.cast(object, tp).children if c.type == "type_identifier"), None);
             if name_node is None {
                 continue;
             }
-            bound: any = next((c for c in tp.children if c.type == "type_bound"), None);
-            first: any = next((c for c in bound.children if c.is_named), None)
+            bound: any = next((c for c in typing.cast(object, tp).children if c.type == "type_bound"), None);
+            first: any = next((c for c in typing.cast(object, bound).children if c.is_named), None)
                 if bound is not None
                 else None;
             erased: any = _java_erase_type(_read_text(first, source))
@@ -1858,7 +1858,7 @@ impl _java_method_signature(`node, source: bytes) -> tuple[str, dict] {
         } elif c.type == "spread_parameter" {
             type_node = next(
                 (x
-                for x in c.children
+                for x in typing.cast(object, c).children
                 if x.is_named and x.type not in ("modifiers", "variable_declarator")),
                 None,
             );
@@ -1882,7 +1882,7 @@ impl _java_argc(call_node) -> int | None {
     }
     args: any = call_node.child_by_field_name("arguments");
     return sum(
-        1 for c in args.children if c.is_named and c.type not in ("line_comment", "block_comment")
+        1 for c in typing.cast(object, args).children if c.is_named and c.type not in ("line_comment", "block_comment")
     )
         if args is not None
         else 0;
@@ -1891,7 +1891,7 @@ impl _java_argc(call_node) -> int | None {
 impl _kotlin_function_name(`node, source: bytes) -> str {
     name_node: any = `node.child_by_field_name("name");
     if name_node is None {
-        name_node = next((c for c in `node.children if c.type == "simple_identifier"), None);
+        name_node = next((c for c in typing.cast(object, `node).children if c.type == "simple_identifier"), None);
     }
     return _read_text(name_node, source) if name_node is not None else "";
 }
@@ -1925,7 +1925,7 @@ impl _kotlin_member_nid(
                         );
                     }
                 } elif c.type == "companion_object" {
-                    bodies.extend(b for b in c.children if b.type in _KOTLIN_MEMBER_BODY_TYPES);
+                    bodies.extend(b for b in typing.cast(object, c).children if b.type in _KOTLIN_MEMBER_BODY_TYPES);
                 }
             }
         }
@@ -1938,7 +1938,7 @@ impl _kotlin_member_nid(
 impl _swift_type_decl_name(decl, source: bytes) -> str {
     name_node: any = decl.child_by_field_name("name");
     if name_node is None {
-        name_node = next((c for c in decl.children if c.type in _SWIFT_TYPE_NAME_TYPES), None);
+        name_node = next((c for c in typing.cast(object, decl).children if c.type in _SWIFT_TYPE_NAME_TYPES), None);
     }
     return _read_text(name_node, source) if name_node is not None else "";
 }
@@ -1973,7 +1973,7 @@ impl _swift_member_nid(
                     name_node: any = n.child_by_field_name("name");
                     if name_node is None {
                         name_node = next(
-                            (c for c in n.children if c.type == "simple_identifier"), None
+                            (c for c in typing.cast(object, n).children if c.type == "simple_identifier"), None
                         );
                     }
                     text: any = _read_text(name_node, source) if name_node is not None else "";
@@ -1987,7 +1987,7 @@ impl _swift_member_nid(
                 if n.type in _SWIFT_TYPE_DECL_TYPES {
                     decl = n;
                 }
-                stack.extend((c, decl) for c in n.children);
+                stack.extend((c, decl) for c in typing.cast(object, n).children);
             }
             groups_cache[None] = by_owner;
         }
@@ -2084,7 +2084,7 @@ impl _scala_member_nid(
     groups: any = groups_cache.get(key);
     if groups is None {
         names: dict[str, set[str]] = {};
-        for decl in scope.children {
+        for decl in typing.cast(object, scope).children {
             if decl.type not in _SCALA_OWNER_TYPES {
                 continue;
             }
@@ -2094,11 +2094,11 @@ impl _scala_member_nid(
             {
                 continue;
             }
-            for b in decl.children {
+            for b in typing.cast(object, decl).children {
                 if b.type not in ("template_body", "enum_body", "with_template_body") {
                     continue;
                 }
-                for c in b.children {
+                for c in typing.cast(object, b).children {
                     if c.type not in _SCALA_MEMBER_CALLABLE_TYPES {
                         continue;
                     }
@@ -2121,7 +2121,7 @@ impl _scala_member_nid(
 impl _cpp_is_method_declarator(decl) -> bool {
     return operator.eq(decl.type, "function_declarator")
         or decl.type in ("pointer_declarator", "reference_declarator")
-            and `any(operator.eq(c.type, "function_declarator") for c in decl.children);
+            and `any(operator.eq(c.type, "function_declarator") for c in typing.cast(object, decl).children);
 }
 
 impl _cpp_member_nid(
@@ -2188,7 +2188,7 @@ impl _swift_pre_scan(root_node, source: bytes) -> tuple[set[str], set[str]] {
         if n.type == "protocol_declaration" {
             name_node: any = n.child_by_field_name("name");
             if name_node is None {
-                for c in n.children {
+                for c in typing.cast(object, n).children {
                     if c.type == "type_identifier" {
                         name_node = c;
                         break;
@@ -2237,7 +2237,7 @@ impl _swift_user_type_name(user_type_node, source: bytes) -> str | None {
     if user_type_node is None {
         return None;
     }
-    for c in user_type_node.children {
+    for c in typing.cast(object, user_type_node).children {
         if c.type == "type_identifier" {
             text: any = _read_text(c, source);
             return text or None;
@@ -2254,13 +2254,13 @@ impl _swift_receiver_type_name(`node, source: bytes) -> str | None {
     if `node.type == "user_type" {
         names: any = [
             _read_text(child, source)
-            for child in `node.children
+            for child in typing.cast(object, `node).children
             if child.type == "type_identifier"
         ];
         return ".".join(names) or None;
     }
     if `node.type in ("type_annotation", "optional_type", "implicitly_unwrapped_optional_type") {
-        for child in `node.named_children {
+        for child in typing.cast(object, `node).named_children {
             if name := _swift_receiver_type_name(child, source) {
                 return name;
             }
@@ -2273,15 +2273,15 @@ impl _swift_type_parameters_in_scope(`node, source: bytes) -> frozenset[str] {
     names: set[str] = set[any]();
     scope: any = `node;
     while scope is not None {
-        for child in scope.children {
+        for child in typing.cast(object, scope).children {
             if child.type != "type_parameters" {
                 continue;
             }
-            for param in child.children {
+            for param in typing.cast(object, child).children {
                 if param.type != "type_parameter" {
                     continue;
                 }
-                for sub in param.children {
+                for sub in typing.cast(object, param).children {
                     if sub.type == "type_identifier" {
                         name: any = _read_text(sub, source);
                         if name {
@@ -2313,7 +2313,7 @@ impl _swift_collect_type_refs(
     t: any = `node.type;
     if t == "type_annotation" {
         c: any;
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _swift_collect_type_refs(c, source, generic, out, `skip);
             }
@@ -2321,7 +2321,7 @@ impl _swift_collect_type_refs(
         return;
     }
     if t == "user_type" {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.type == "type_identifier" {
                 text: any = _read_text(c, source);
                 if text and text != "Self" and text not in `skip {
@@ -2330,9 +2330,9 @@ impl _swift_collect_type_refs(
                 break;
             }
         }
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.type == "type_arguments" {
-                for arg in c.children {
+                for arg in typing.cast(object, c).children {
                     if arg.is_named {
                         _swift_collect_type_refs(arg, source, True, out, `skip);
                     }
@@ -2357,7 +2357,7 @@ impl _swift_collect_type_refs(
             "tuple_type",
         )
     {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _swift_collect_type_refs(c, source, generic, out, `skip);
             }
@@ -2365,7 +2365,7 @@ impl _swift_collect_type_refs(
         return;
     }
     if `node.is_named {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _swift_collect_type_refs(c, source, generic, out, `skip);
             }
@@ -2374,7 +2374,7 @@ impl _swift_collect_type_refs(
 }
 
 impl _swift_property_type_node(property_node) -> any {
-    for c in property_node.children {
+    for c in typing.cast(object, property_node).children {
         if c.type == "type_annotation" {
             return c;
         }
@@ -2383,23 +2383,23 @@ impl _swift_property_type_node(property_node) -> any {
 }
 
 impl _swift_attribute_type_name(property_node, source: bytes) -> str | None {
-    for c in property_node.children {
+    for c in typing.cast(object, property_node).children {
         if c.type != "modifiers" {
             continue;
         }
-        for attr in c.children {
+        for attr in typing.cast(object, c).children {
             if attr.type != "attribute" {
                 continue;
             }
-            head: any = next((a for a in attr.children if a.type == "user_type"), None);
+            head: any = next((a for a in typing.cast(object, attr).children if a.type == "user_type"), None);
             if head is None or _read_text(head, source) != "Environment" {
                 continue;
             }
-            arg: any = next((a for a in attr.children if a.type == "navigation_expression"), None);
+            arg: any = next((a for a in typing.cast(object, attr).children if a.type == "navigation_expression"), None);
             if arg is None {
                 continue;
             }
-            named: any = [a for a in arg.children if a.is_named];
+            named: any = [a for a in typing.cast(object, arg).children if a.is_named];
             if len(named) != 2 {
                 continue;
             }
@@ -2426,7 +2426,7 @@ impl _swift_factory_call(call_node, source: bytes) -> tuple[str, str] | None {
     if first is None or first.type != "navigation_expression" {
         return None;
     }
-    named: any = [c for c in first.children if c.is_named];
+    named: any = [c for c in typing.cast(object, first).children if c.is_named];
     if len(named) != 2 {
         return None;
     }
@@ -2441,7 +2441,7 @@ impl _swift_factory_call(call_node, source: bytes) -> tuple[str, str] | None {
         return None;
     }
     mname: any = next(
-        (_read_text(sc, source) for sc in suffix.children if sc.type == "simple_identifier"), None
+        (_read_text(sc, source) for sc in typing.cast(object, suffix).children if sc.type == "simple_identifier"), None
     );
     if not mname {
         return None;
@@ -2450,9 +2450,9 @@ impl _swift_factory_call(call_node, source: bytes) -> tuple[str, str] | None {
 }
 
 impl _swift_property_name(property_node, source: bytes) -> str | None {
-    for c in property_node.children {
+    for c in typing.cast(object, property_node).children {
         if c.type == "pattern" {
-            for sc in c.children {
+            for sc in typing.cast(object, c).children {
                 if sc.type == "simple_identifier" {
                     return _read_text(sc, source);
                 }
@@ -2511,9 +2511,9 @@ impl _swift_receiver_name(recv_node, source: bytes) -> str | None {
             return _read_text(head, source);
         }
         if head is not None and head.type == "self_expression" {
-            for child in recv_node.children {
+            for child in typing.cast(object, recv_node).children {
                 if child.type == "navigation_suffix" {
-                    for sc in child.children {
+                    for sc in typing.cast(object, child).children {
                         if sc.type == "simple_identifier" {
                             return _read_text(sc, source);
                         }
@@ -2565,7 +2565,7 @@ impl _c_collect_type_refs(`node, source: bytes, generic: bool, out: list[tuple[s
             "abstract_array_declarator",
         )
     {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _c_collect_type_refs(c, source, generic, out);
             }
@@ -2583,19 +2583,19 @@ impl _cpp_type_parameters_in_scope(`node, source: bytes) -> frozenset[str] {
     );
     scope: any = `node;
     while scope is not None {
-        for child in scope.children {
+        for child in typing.cast(object, scope).children {
             if child.type != "template_parameter_list" {
                 continue;
             }
             param: any;
-            for param in child.children {
+            for param in typing.cast(object, child).children {
                 if param.type == "template_template_parameter_declaration" {
-                    param = next((c for c in param.children if c.type in parameter_types), None);
+                    param = next((c for c in typing.cast(object, param).children if c.type in parameter_types), None);
                 }
                 if param is None or param.type not in parameter_types {
                     continue;
                 }
-                for sub in param.children {
+                for sub in typing.cast(object, param).children {
                     if sub.type == "type_identifier" {
                         name: any = _read_text(sub, source);
                         if name {
@@ -2658,7 +2658,7 @@ impl _cpp_collect_type_refs(
                 args_node: any = name_node.child_by_field_name("arguments");
                 if args_node is not None {
                     c: any;
-                    for c in args_node.children {
+                    for c in typing.cast(object, args_node).children {
                         if c.is_named {
                             _cpp_collect_type_refs(c, source, True, out, `skip, dialect_quals);
                         }
@@ -2682,7 +2682,7 @@ impl _cpp_collect_type_refs(
         }
         args_node = `node.child_by_field_name("arguments");
         if args_node is not None {
-            for c in args_node.children {
+            for c in typing.cast(object, args_node).children {
                 if c.is_named {
                     _cpp_collect_type_refs(c, source, True, out, `skip, dialect_quals);
                 }
@@ -2702,7 +2702,7 @@ impl _cpp_collect_type_refs(
             "abstract_array_declarator",
         )
     {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _cpp_collect_type_refs(c, source, generic, out, `skip, dialect_quals);
             }
@@ -2711,12 +2711,12 @@ impl _cpp_collect_type_refs(
 }
 
 impl _scala_given_synthetic_name(`node, source: bytes) -> str | None {
-    for c in `node.children {
+    for c in typing.cast(object, `node).children {
         base: any = None;
         if c.type == "generic_type" {
             base = next(
                 (cc
-                for cc in c.children
+                for cc in typing.cast(object, c).children
                 if cc.type in ("type_identifier", "stable_type_identifier", "identifier")),
                 None,
             );
@@ -2737,18 +2737,18 @@ impl _scala_type_parameters_in_scope(`node, source: bytes) -> frozenset[str] {
     names: set[str] = set[any]();
     scope: any = `node;
     while scope is not None {
-        for child in scope.children {
+        for child in typing.cast(object, scope).children {
             if child.type != "type_parameters" {
                 continue;
             }
-            for param in child.children {
+            for param in typing.cast(object, child).children {
                 if param.type in ("identifier", "type_identifier") {
                     name: any = _read_text(param, source);
                     if name {
                         names.add(name);
                     }
                 } elif param.type in ("covariant_type_parameter", "contravariant_type_parameter") {
-                    for sub in param.children {
+                    for sub in typing.cast(object, param).children {
                         if sub.type in ("identifier", "type_identifier") {
                             name = _read_text(sub, source);
                             if name {
@@ -2790,7 +2790,7 @@ impl _scala_collect_type_refs(
         base: any = `node.child_by_field_name("type");
         if base is None {
             c: any;
-            for c in `node.children {
+            for c in typing.cast(object, `node).children {
                 if c.type == "type_identifier" {
                     base = c;
                     break;
@@ -2803,9 +2803,9 @@ impl _scala_collect_type_refs(
                 out.append((text, "generic_arg" if generic else "type"));
             }
         }
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.type == "type_arguments" {
-                for arg in c.children {
+                for arg in typing.cast(object, c).children {
                     if arg.is_named {
                         _scala_collect_type_refs(arg, source, True, out, `skip);
                     }
@@ -2826,14 +2826,14 @@ impl _scala_collect_type_refs(
             "lazy_parameter_type",
         )
     {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _scala_collect_type_refs(c, source, generic, out, `skip);
             }
         }
     }
     if t in ("match_type", "type_case_clause") {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _scala_collect_type_refs(c, source, generic, out, `skip);
             }
@@ -2845,7 +2845,7 @@ impl _scala_collect_context_bounds(tp_node, source: bytes, out: list[tuple[str, 
     if tp_node is None {
         return;
     }
-    for c in tp_node.children {
+    for c in typing.cast(object, tp_node).children {
         if c.type == "type_parameters" {
             _scala_collect_context_bounds(c, source, out);
         } elif c.type == "context_bound" {
@@ -2862,7 +2862,7 @@ impl _python_collect_param_refs(params_node, source: bytes) -> list[tuple[str, s
     if params_node is None {
         return out;
     }
-    for child in params_node.children {
+    for child in typing.cast(object, params_node).children {
         if child.type in ("typed_parameter", "typed_default_parameter") {
             type_node: any = child.child_by_field_name("type");
             _python_collect_type_refs(type_node, source, False, out);
@@ -2876,7 +2876,7 @@ impl _python_is_pytest_fixture(func_node, source: bytes) -> bool {
     if parent is None or parent.type != "decorated_definition" {
         return False;
     }
-    for dec in parent.children {
+    for dec in typing.cast(object, parent).children {
         if dec.type != "decorator" {
             continue;
         }
@@ -2908,9 +2908,9 @@ impl _python_annotation_class(type_node, source: bytes) -> str | None {
     }
     if `node.type == "generic_type" {
         head: any = next(
-            (c for c in `node.named_children if c.type in ("identifier", "attribute")), None
+            (c for c in typing.cast(object, `node).named_children if c.type in ("identifier", "attribute")), None
         );
-        params: any = next((c for c in `node.named_children if c.type == "type_parameter"), None);
+        params: any = next((c for c in typing.cast(object, `node).named_children if c.type == "type_parameter"), None);
         if head is None or params is None {
             return None;
         }
@@ -2976,7 +2976,7 @@ impl _python_untouched_params(func_node, source: bytes) -> set[str] {
     params: any = func_node.child_by_field_name("parameters");
     names: set[str] = set[any]();
     if params is not None {
-        for child in params.children {
+        for child in typing.cast(object, params).children {
             if child.type == "identifier" {
                 names.add(_read_text(child, source));
             }
@@ -3027,7 +3027,7 @@ impl _python_collect_assignment_targets(`node, source: bytes, out: set[str]) {
         return;
     }
     if `node.type in ("pattern_list", "tuple_pattern", "list_pattern") {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             _python_collect_assignment_targets(c, source, out);
         }
     }
@@ -3173,7 +3173,7 @@ impl _python_local_bound_names(func_def_node, source: bytes) -> set[str] {
     bound |= _python_param_names(func_def_node.child_by_field_name("parameters"), source);
 
     def walk(n) {
-        for child in n.children {
+        for child in typing.cast(object, n).children {
             t: any = child.type;
             if t in ("function_definition", "class_definition", "lambda") {
                 continue;
@@ -3187,9 +3187,9 @@ impl _python_local_bound_names(func_def_node, source: bytes) -> set[str] {
                     child.child_by_field_name("left"), source, bound
                 );
             } elif t == "with_statement" {
-                for item in child.children {
+                for item in typing.cast(object, child).children {
                     if item.type == "with_clause" {
-                        for wi in item.children {
+                        for wi in typing.cast(object, item).children {
                             if wi.type == "with_item" {
                                 alias: any = wi.child_by_field_name("alias");
                                 _python_collect_assignment_targets(alias, source, bound);
@@ -3218,7 +3218,7 @@ impl _python_module_bound_names(`root, source: bytes) -> set[str] {
     bound = set[any]();
 
     def walk(n) {
-        for child in n.children {
+        for child in typing.cast(object, n).children {
             t: any = child.type;
             if t in ("function_definition", "class_definition", "lambda") {
                 continue;
@@ -3280,7 +3280,7 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
             "as_pattern_target",
         }
         {
-            return all(target_names(c, names) for c in `node.named_children);
+            return all(target_names(c, names) for c in typing.cast(object, `node).named_children);
         }
         if `node.type in {"attribute", "subscript"} {
             return target_names(
@@ -3293,7 +3293,7 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
     def import_names(`node) -> list[str] | None {
         names: list[str] = [];
         past_import: any = False;
-        for item in `node.children {
+        for item in typing.cast(object, `node).children {
             if item.type == "import" {
                 past_import = True;
                 continue;
@@ -3348,7 +3348,7 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
         }
 
         def walk(`node) {
-            for child in `node.named_children {
+            for child in typing.cast(object, `node).named_children {
                 kind: any = child.type;
                 if kind in {"function_definition", "class_definition"} {
                     name: any = child.child_by_field_name("name");
@@ -3417,7 +3417,7 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
                         unsafe = True;
                     }
                 } elif kind == "delete_statement" {
-                    for item in child.named_children {
+                    for item in typing.cast(object, child).named_children {
                         if not target_names(item, bound) {
                             unsafe = True;
                         }
@@ -3471,7 +3471,7 @@ impl _python_receiver_shadow_checker(`root, source: bytes, *, module_bindings=No
 impl _python_module_instance_types(`root, source: bytes) -> any {
     declarations: dict[str, list[tuple[str, Node]]] = {};
     assignments: any = [];
-    for statement in `root.named_children {
+    for statement in typing.cast(object, `root).named_children {
         if statement.type == "class_definition" {
             name: any = _read_text(statement.child_by_field_name("name"), source);
             declarations.setdefault(name, []).append((name, statement));
@@ -3490,7 +3490,7 @@ impl _python_module_instance_types(`root, source: bytes) -> any {
                 }
             }
         } elif statement.type == "expression_statement" {
-            assignments.extend(c for c in statement.named_children if c.type == "assignment");
+            assignments.extend(c for c in typing.cast(object, statement).named_children if c.type == "assignment");
         }
     }
 
@@ -3530,7 +3530,7 @@ impl _python_is_property(func_node, source: bytes) -> bool {
     if parent is None or parent.type != "decorated_definition" {
         return False;
     }
-    for dec in parent.children {
+    for dec in typing.cast(object, parent).children {
         if dec.type != "decorator" {
             continue;
         }
@@ -3718,7 +3718,7 @@ impl _js_collect_pattern_idents(`node, source: bytes, bound: set) {
         }
         return;
     }
-    for c in `node.children {
+    for c in typing.cast(object, `node).children {
         if c.is_named {
             _js_collect_pattern_idents(c, source, bound);
         }
@@ -3738,7 +3738,7 @@ impl _js_local_bound_names(func_node, source: bytes) -> set[str] {
     }
 
     def walk(n) {
-        for c in n.children {
+        for c in typing.cast(object, n).children {
             if c.type in _JS_SCOPE_BOUNDARY {
                 continue;
             }
@@ -3748,7 +3748,7 @@ impl _js_local_bound_names(func_node, source: bytes) -> set[str] {
                     _js_collect_pattern_idents(name, source, bound);
                 }
             } elif c.type == "for_in_statement"
-                and `any(operator.eq(gc.type, "var") for gc in c.children)
+                and `any(operator.eq(gc.type, "var") for gc in typing.cast(object, c).children)
             {
                 left: any = c.child_by_field_name("left");
                 if left is not None {
@@ -3768,11 +3768,11 @@ impl _js_local_bound_names(func_node, source: bytes) -> set[str] {
 
 impl _js_direct_lexical_names(`node, source: bytes) -> frozenset[str] {
     names: set[str] = set[any]();
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type != "lexical_declaration" {
             continue;
         }
-        for declarator in child.children {
+        for declarator in typing.cast(object, child).children {
             if declarator.type == "variable_declarator" {
                 val: any = declarator.child_by_field_name("value");
                 if val is not None and val.type == "call_expression" {
@@ -3841,7 +3841,7 @@ impl _js_receiver_shadowed(
             }
             if scope.type in ("program", "statement_block", "for_statement") {
                 bound.update(_js_direct_lexical_names(scope, source));
-                for child in scope.named_children {
+                for child in typing.cast(object, scope).named_children {
                     if child.type
                         in (
                             "function_declaration",
@@ -3880,7 +3880,7 @@ impl _js_module_bound_names(`root, source: bytes) -> set[str] {
     bound = set[any]();
 
     def walk(n) {
-        for c in n.children {
+        for c in typing.cast(object, n).children {
             if c.type in _JS_SCOPE_BOUNDARY {
                 continue;
             }
@@ -3920,21 +3920,21 @@ impl _js_external_import_names(`root, source: bytes, str_path: str) -> set[str] 
     bound = set[any]();
 
     def _clause_names(clause) {
-        for c in clause.children {
+        for c in typing.cast(object, clause).children {
             if c.type == "identifier" {
                 bound.add(_read_text(c, source));
             } elif c.type == "namespace_import" {
-                for ident in c.children {
+                for ident in typing.cast(object, c).children {
                     if ident.type == "identifier" {
                         bound.add(_read_text(ident, source));
                     }
                 }
             } elif c.type == "named_imports" {
-                for spec in c.children {
+                for spec in typing.cast(object, c).children {
                     if spec.type != "import_specifier" {
                         continue;
                     }
-                    idents: any = [g for g in spec.children if g.type == "identifier"];
+                    idents: any = [g for g in typing.cast(object, spec).children if g.type == "identifier"];
                     if idents {
                         bound.add(_read_text(idents[-1], source));
                     }
@@ -3944,13 +3944,13 @@ impl _js_external_import_names(`root, source: bytes, str_path: str) -> set[str] 
     }
 
     def walk(n) {
-        for c in n.children {
+        for c in typing.cast(object, n).children {
             if c.type == "import_statement" {
                 src_node: any = c.child_by_field_name("source");
                 if src_node is not None {
                     raw: any = _read_text(src_node, source).strip("\"'`");
                     if _js_import_binds_external(raw, str_path) {
-                        for child in c.children {
+                        for child in typing.cast(object, c).children {
                             if child.type == "import_clause" {
                                 _clause_names(child);
                             }
@@ -3969,7 +3969,7 @@ impl _js_external_import_names(`root, source: bytes, str_path: str) -> set[str] 
 
 impl _js_dispatch_value_idents(coll_node) -> Generator[any, any, any] {
     if coll_node.type == "object" {
-        for c in coll_node.children {
+        for c in typing.cast(object, coll_node).children {
             if c.type == "pair" {
                 val: any = c.child_by_field_name("value");
                 if val is not None and val.type == "identifier" {
@@ -3980,7 +3980,7 @@ impl _js_dispatch_value_idents(coll_node) -> Generator[any, any, any] {
             }
         }
     } else {
-        for el in coll_node.children {
+        for el in typing.cast(object, coll_node).children {
             if el.type == "identifier" {
                 yield el;
             }
@@ -3993,7 +3993,7 @@ impl _find_body(`node, config: LanguageConfig) -> any {
     if b {
         return b;
     }
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type in config.body_fallback_child_types {
             return child;
         }
@@ -4043,9 +4043,9 @@ impl _dynamic_import_js(
     if args is None {
         return True;
     }
-    for arg in args.children {
+    for arg in typing.cast(object, args).children {
         if arg.type == "template_string" {
-            if `any(operator.eq(c.type, "template_substitution") for c in arg.children) {
+            if `any(operator.eq(c.type, "template_substitution") for c in typing.cast(object, arg).children) {
                 break;
             }
             raw: any = _read_text(arg, source).strip("`");
@@ -4102,7 +4102,7 @@ impl _get_cpp_func_name(`node, source: bytes) -> str | None {
     if decl {
         return _get_cpp_func_name(decl, source);
     }
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type == "identifier" {
             return _read_text(child, source);
         }
@@ -4121,7 +4121,7 @@ impl _cpp_declarator_name(`node, source: bytes) -> str | None {
     if t in ("pointer_declarator", "reference_declarator", "init_declarator") {
         inner: any = `node.child_by_field_name("declarator");
         if inner is None {
-            for c in `node.children {
+            for c in typing.cast(object, `node).children {
                 if c.type
                     in (
                         "identifier",
@@ -4161,7 +4161,7 @@ impl _cpp_parameter_types(body_node, source: bytes, table: dict[str, str]) {
     if params is None {
         return;
     }
-    for p in params.children {
+    for p in typing.cast(object, params).children {
         if p.type != "parameter_declaration" {
             continue;
         }
@@ -4211,7 +4211,7 @@ impl _cpp_is_header_guard(`node, source: bytes) -> bool {
         return False;
     }
     siblings: any = [n for n in `node.parent.named_children if n.type != "comment"];
-    contents: any = [n for n in `node.named_children if n.type != "comment"];
+    contents: any = [n for n in typing.cast(object, `node).named_children if n.type != "comment"];
     if siblings != [`node]
         or len(contents) < 2
         or contents[1].type != "preproc_def"
@@ -4268,14 +4268,14 @@ impl _cpp_member_record(`node, declarator, name: str, source: bytes) -> dict {
         function = function.child_by_field_name("declarator")
             or next(
                 (n
-                for n in function.named_children
+                for n in typing.cast(object, function).named_children
                 if n.type in {"function_declarator", "pointer_declarator", "reference_declarator"}),
                 None,
             );
     }
     parameters: any = function.child_by_field_name("parameters") if function is not None else None;
     zero_args: any = parameters is not None
-        and not `any(operator.ne(n.type, "comment") for n in parameters.named_children);
+        and not `any(operator.ne(n.type, "comment") for n in typing.cast(object, parameters).named_children);
     qualified: any = _cpp_qualified_name(`node, name, source);
     record: dict = {
         "qualified": qualified,
@@ -4312,12 +4312,12 @@ impl _cpp_member_record(`node, declarator, name: str, source: bytes) -> dict {
     }
     suffix: any = [
         n
-        for n in function.named_children
+        for n in typing.cast(object, function).named_children
         if n.start_byte >= parameters.end_byte and n.type != "comment"
     ];
     prefix: any = [
         n
-        for n in `node.named_children
+        for n in typing.cast(object, `node).named_children
         if n.end_byte <= declarator.start_byte and n != type_node
     ];
     if `any(n.type not in {"type_qualifier", "ref_qualifier", "noexcept"} for n in suffix)
@@ -4347,12 +4347,12 @@ impl _cpp_plain_template_parameters(`node, source: bytes) -> list[str] {
     if `node is None or `node.type != "template_declaration" {
         return [];
     }
-    if len([c for c in `node.named_children if c.type != "comment"]) != 2 {
+    if len([c for c in typing.cast(object, `node).named_children if c.type != "comment"]) != 2 {
         return [];
     }
     parameters: any = `node.child_by_field_name("parameters");
     names: any = [];
-    for parameter in parameters.named_children if parameters is not None else () {
+    for parameter in parameters.named_children if parameters is not None else [] {
         if parameter.type != "type_parameter_declaration"
             or len(parameter.named_children) != 1
             or parameter.named_children[0].type != "type_identifier"
@@ -4373,7 +4373,7 @@ impl _cpp_zero_arg_member_signature(`node, source: bytes) -> tuple | None {
         or declarator.type != "function_declarator"
         or `any(
             c.type not in {"primitive_type", "function_declarator", "compound_statement", "comment"}
-            for c in `node.named_children,
+            for c in typing.cast(object, `node).named_children,
         )
     {
         return None;
@@ -4383,7 +4383,7 @@ impl _cpp_zero_arg_member_signature(`node, source: bytes) -> tuple | None {
     if name is None or parameters is None or parameters.named_children {
         return None;
     }
-    suffix: any = [c for c in declarator.named_children if c != name];
+    suffix: any = [c for c in typing.cast(object, declarator).named_children if c != name];
     if `any(
         c.type not in {"parameter_list", "type_qualifier", "ref_qualifier", "noexcept"}
             or operator.eq(c.type, "noexcept") and c.named_children
@@ -4421,7 +4421,7 @@ impl _cpp_primary_template_function_name(`node, source: bytes, classes: dict) ->
     if owner_name is None or owner_name.type != "type_identifier" or arguments is None {
         return None;
     }
-    if ["".join(_read_text(c, source).split()) for c in arguments.named_children] != parameters {
+    if ["".join(_read_text(c, source).split()) for c in typing.cast(object, arguments).named_children] != parameters {
         return None;
     }
     name: any = _read_text(owner_name, source);
@@ -4447,7 +4447,7 @@ impl _cpp_primary_template_function_name(`node, source: bytes, classes: dict) ->
     }
     method: any = _read_text(member, source);
     declarations: any = [];
-    for child in body.named_children {
+    for child in typing.cast(object, body).named_children {
         declaration: any = child;
         while declaration.type == "template_declaration" {
             declaration = declaration.named_children[-1];
@@ -4516,7 +4516,7 @@ impl _cpp_declared_receiver_type(`node, declarator, source: bytes) -> str {
         inner: any = declarator.child_by_field_name("declarator");
         if inner is None and declarator.type == "reference_declarator" {
             inner = next(
-                (c for c in declarator.named_children if c.type != "type_qualifier"), None
+                (c for c in typing.cast(object, declarator).named_children if c.type != "type_qualifier"), None
             );
         }
         declarator = inner;
@@ -4758,10 +4758,10 @@ impl _cpp_class_lookup_facts(`node, source: bytes) -> dict {
     members: any;
     signatures: any;
     (bases, members, signatures) = ([], set[any](), {});
-    clause: any = next((c for c in `node.named_children if c.type == "base_class_clause"), None);
+    clause: any = next((c for c in typing.cast(object, `node).named_children if c.type == "base_class_clause"), None);
     if clause is not None {
         virtual: any = False;
-        for child in clause.children {
+        for child in typing.cast(object, clause).children {
             if child.type == "virtual" {
                 virtual = True;
             } elif child.type == "," {
@@ -4776,13 +4776,13 @@ impl _cpp_class_lookup_facts(`node, source: bytes) -> dict {
         }
     }
     body: any = `node.child_by_field_name("body");
-    pending: any = [(child, False) for child in body.named_children] if body is not None else [];
+    pending: any = [(child, False) for child in typing.cast(object, body).named_children] if body is not None else [];
     while pending {
         member: any;
         unsupported: any;
         (member, unsupported) = pending.pop() as any;
         if member.type.startswith("preproc_") or member.type == "template_declaration" {
-            pending.extend((child, True) for child in member.named_children);
+            pending.extend((child, True) for child in typing.cast(object, member).named_children);
             continue;
         }
         name: any = member.child_by_field_name("name");
@@ -4818,13 +4818,13 @@ impl _cpp_class_lookup_facts(`node, source: bytes) -> dict {
         {
             union_body: any = union.child_by_field_name("body");
             if union_body is not None {
-                pending.extend((child, True) for child in union_body.named_children);
+                pending.extend((child, True) for child in typing.cast(object, union_body).named_children);
             }
         }
         `enum: any = member if member.type == "enum_specifier" else nested_type;
         if `enum is not None
             and `enum.type == "enum_specifier"
-            and not `any(c.type in {"class", "struct"} for c in `enum.children)
+            and not `any(c.type in {"class", "struct"} for c in typing.cast(object, `enum).children)
         {
             enum_body: any = `enum.child_by_field_name("body");
             for enumerator in enum_body.named_children if enum_body is not None else [] {
@@ -4856,7 +4856,7 @@ impl _cpp_class_lookup_facts(`node, source: bytes) -> dict {
                 {
                     inner = next(
                         (child
-                        for child in current.named_children
+                        for child in typing.cast(object, current).named_children
                         if child.type != "type_qualifier"),
                         None,
                     );
@@ -4887,7 +4887,7 @@ impl _cpp_class_fields(`node, source: bytes, positions: dict[str, int]) -> dict[
     fields: dict[str, str] = {};
     body: any = `node.child_by_field_name("body");
     if body is not None {
-        for field in body.named_children {
+        for field in typing.cast(object, body).named_children {
             if field.type != "field_declaration" {
                 continue;
             }
@@ -4990,7 +4990,7 @@ impl _cpp_local_var_types(body_node, source: bytes, table: dict[str, str]) {
                 type_name: any = _read_text(type_node, source).split("::")[-1].strip();
                 declarators: any = [
                     c
-                    for c in n.children
+                    for c in typing.cast(object, n).children
                     if c.type
                         in (
                             "identifier",
@@ -5007,7 +5007,7 @@ impl _cpp_local_var_types(body_node, source: bytes, table: dict[str, str]) {
                 }
             }
         }
-        for c in n.children {
+        for c in typing.cast(object, n).children {
             stack.append(c);
         }
     }
@@ -5028,7 +5028,7 @@ impl _swift_local_var_types(
         if n.type == "property_declaration" {
             prop_type: str | None = None;
             factory_bind: tuple[str, str] | None = None;
-            for child in n.children {
+            for child in typing.cast(object, n).children {
                 if child.type == "call_expression" {
                     prop_type = _swift_constructor_type(child, source);
                     if prop_type is None {
@@ -5059,7 +5059,7 @@ impl _swift_local_var_types(
                 factory[name] = factory_bind;
             }
         }
-        for c in n.children {
+        for c in typing.cast(object, n).children {
             stack.append(c);
         }
     }
@@ -5084,7 +5084,7 @@ impl _csharp_loop_element_types(type_node, source: bytes) -> dict[str, str] {
     } elif type_node.type == "generic_name" {
         info: any = _read_csharp_type_name(type_node, source);
         arg_list: any = next(
-            (c for c in type_node.children if c.type == "type_argument_list"), None
+            (c for c in typing.cast(object, type_node).children if c.type == "type_argument_list"), None
         );
         args = arg_list.named_children if arg_list is not None else [];
         if info and info[0] in _CSHARP_LOOP_SEQUENCES and len(args) == 1 {
@@ -5154,7 +5154,7 @@ impl _csharp_element_type_name(type_node, source: bytes) -> str | None {
         if not info or info[0] not in ("List", "IList", "IReadOnlyList") {
             return None;
         }
-        args: any = next((c for c in type_node.children if c.type == "type_argument_list"), None);
+        args: any = next((c for c in typing.cast(object, type_node).children if c.type == "type_argument_list"), None);
         named: any = args.named_children if args is not None else [];
         elem = named[0] if len(named) == 1 else None;
     } else {
@@ -5217,11 +5217,11 @@ impl _csharp_deferred_call(invocation, source: bytes) -> list | None {
     }
     args: list[str | None] = [];
     if fn.type == "generic_name" {
-        tal: any = next((c for c in fn.children if c.type == "type_argument_list"), None);
+        tal: any = next((c for c in typing.cast(object, fn).children if c.type == "type_argument_list"), None);
         for arg in tal.named_children if tal is not None else [] {
             args.append(_csharp_receiver_type_name(arg, source));
         }
-        name_node: any = next((c for c in fn.children if c.type == "identifier"), None);
+        name_node: any = next((c for c in typing.cast(object, fn).children if c.type == "identifier"), None);
     } else {
         name_node = fn;
     }
@@ -5279,14 +5279,14 @@ impl _csharp_method_receiver_types(
     params: any = method_node.child_by_field_name("parameters");
     if params is not None {
         param: any;
-        for param in params.children {
+        for param in typing.cast(object, params).children {
             if param.type == "parameter" {
                 bind_parameter(param, param_scope);
             }
         }
     }
 
-    stack: any = [(child, param_scope) for child in body.children] if body is not None else [];
+    stack: any = [(child, param_scope) for child in typing.cast(object, body).children] if body is not None else [];
     while stack {
         `node: any;
         scope: any;
@@ -5308,7 +5308,7 @@ impl _csharp_method_receiver_types(
                 if lam_params.type == "implicit_parameter" {
                     bind(_read_text(lam_params, source), None, `node);
                 } else {
-                    for param in lam_params.children {
+                    for param in typing.cast(object, lam_params).children {
                         if param.type == "parameter" {
                             bind_parameter(param, `node);
                         } elif param.type == "implicit_parameter" {
@@ -5320,31 +5320,31 @@ impl _csharp_method_receiver_types(
         } elif `node.type == "local_function_statement" {
             lf_params: any = `node.child_by_field_name("parameters");
             if lf_params is not None {
-                for param in lf_params.children {
+                for param in typing.cast(object, lf_params).children {
                     if param.type == "parameter" {
                         bind_parameter(param, `node);
                     }
                 }
             }
         } elif `node.type == "local_declaration_statement" {
-            vd: any = next((c for c in `node.children if c.type == "variable_declaration"), None);
+            vd: any = next((c for c in typing.cast(object, `node).children if c.type == "variable_declaration"), None);
             if vd is not None {
                 declared: any = _csharp_receiver_type_name(vd.child_by_field_name("type"), source);
                 declared_elem: any = _csharp_element_type_name(
                     vd.child_by_field_name("type"), source
                 );
-                for declarator in vd.children {
+                for declarator in typing.cast(object, vd).children {
                     if declarator.type != "variable_declarator" {
                         continue;
                     }
                     name_node: any = declarator.child_by_field_name("name")
-                        or next((g for g in declarator.children if g.type == "identifier"), None);
+                        or next((g for g in typing.cast(object, declarator).children if g.type == "identifier"), None);
                     if name_node is None {
                         continue;
                     }
                     type_name: any = declared;
                     if type_name is None {
-                        for g in declarator.children {
+                        for g in typing.cast(object, declarator).children {
                             if g.type == "object_creation_expression" {
                                 type_name = _csharp_receiver_type_name(
                                     g.child_by_field_name("type"), source
@@ -5392,7 +5392,7 @@ impl _csharp_method_receiver_types(
         child_scope = `node
             if `node.type in ("block", "lambda_expression", "local_function_statement")
             else scope;
-        stack.extend((child, child_scope) for child in `node.children);
+        stack.extend((child, child_scope) for child in typing.cast(object, `node).children);
     }
 
     name: any;
@@ -5468,10 +5468,10 @@ impl _ts_receiver_type_table(
     p: any;
     c: any;
     def _bare_type_ident(type_annotation) -> any {
-        idents: any = [c for c in type_annotation.children if c.type == "type_identifier"];
+        idents: any = [c for c in typing.cast(object, type_annotation).children if c.type == "type_identifier"];
         others: any = [
             c
-            for c in type_annotation.children
+            for c in typing.cast(object, type_annotation).children
             if c.is_named and c.type not in ("type_identifier",)
         ];
         if len(idents) == 1 and not others {
@@ -5481,7 +5481,7 @@ impl _ts_receiver_type_table(
     }
 
     def _optional_type_ident(type_annotation) -> any {
-        unions: any = [c for c in type_annotation.children if c.is_named];
+        unions: any = [c for c in typing.cast(object, type_annotation).children if c.is_named];
         if len(unions) != 1 or unions[0].type != "union_type" {
             return None;
         }
@@ -5545,7 +5545,7 @@ impl _ts_receiver_type_table(
         } elif t in ("public_field_definition", "field_definition") and field_table is not None {
             name_n = n.child_by_field_name("name") or n.child_by_field_name("property");
             owner_name: any = _class_name(n.parent);
-            if owner_name is not None and `any(operator.eq(c.type, "static") for c in n.children) {
+            if owner_name is not None and `any(operator.eq(c.type, "static") for c in typing.cast(object, n).children) {
                 owner_name += _TS_STATIC_SUFFIX;
             }
             if name_n is not None
@@ -5574,11 +5574,11 @@ impl _ts_receiver_type_table(
             if mname is not None and owner_name is not None {
                 method_name: any = _read_text(mname, source);
                 is_constructor: any = operator.eq(method_name, "constructor");
-                is_static: any = `any(operator.eq(c.type, "static") for c in n.children);
+                is_static: any = `any(operator.eq(c.type, "static") for c in typing.cast(object, n).children);
                 field_owner: any = owner_name + _TS_STATIC_SUFFIX if is_static else owner_name;
 
                 accessor: any = next(
-                    (c.type for c in n.children if c.type in ("get", "set")), None
+                    (c.type for c in typing.cast(object, n).children if c.type in ("get", "set")), None
                 );
                 if accessor is not None {
                     tname = None;
@@ -5591,7 +5591,7 @@ impl _ts_receiver_type_table(
                         params: any = n.child_by_field_name("parameters");
                         first: any = next(
                             (p
-                            for p in params.named_children
+                            for p in typing.cast(object, params).named_children
                             if p.type in ("required_parameter", "optional_parameter")),
                             None,
                         )
@@ -5610,7 +5610,7 @@ impl _ts_receiver_type_table(
                 }
                 params = n.child_by_field_name("parameters");
                 typed: dict[str, str] = {};
-                for p in params.named_children if params is not None else () {
+                for p in params.named_children if params is not None else [] {
                     if p.type not in ("required_parameter", "optional_parameter") {
                         continue;
                     }
@@ -5626,7 +5626,7 @@ impl _ts_receiver_type_table(
                     typed[pname] = tname;
                     if is_constructor
                         and `any(
-                            c.type in ("accessibility_modifier", "readonly") for c in p.children
+                            c.type in ("accessibility_modifier", "readonly") for c in typing.cast(object, p).children
                         )
                     {
                         field_table.setdefault(owner_name, {}).setdefault(pname, tname);
@@ -5679,7 +5679,7 @@ impl _ts_receiver_type_table(
                 }
             }
         }
-        for c in n.children {
+        for c in typing.cast(object, n).children {
             stack.append(c);
         }
     }
@@ -5744,7 +5744,7 @@ impl _ts_attach_class_fields(result: dict, field_table: dict[str, dict[str, str]
 impl _ts_in_static_method(`node) -> bool {
     while `node is not None {
         if `node.type == "method_definition" {
-            return `any(operator.eq(c.type, "static") for c in `node.children);
+            return `any(operator.eq(c.type, "static") for c in typing.cast(object, `node).children);
         }
         if `node.type in _TS_FUNCTION_NODES and `node.type != "arrow_function" {
             return False;
@@ -5774,7 +5774,7 @@ impl _ts_field_destructured_from_this(ident, name: str, source: bytes) -> str | 
                         and value is not None
                         and value.type == "this"
                     {
-                        for p in pattern.named_children {
+                        for p in typing.cast(object, pattern).named_children {
                             if p.type == "shorthand_property_identifier_pattern"
                                 and _read_text(p, source) == name
                             {
@@ -5798,7 +5798,7 @@ impl _ts_field_destructured_from_this(ident, name: str, source: bytes) -> str | 
                         }
                     }
                 }
-                stack.extend(c for c in n.children if c.type not in _TS_FUNCTION_NODES);
+                stack.extend(c for c in typing.cast(object, n).children if c.type not in _TS_FUNCTION_NODES);
             }
             if `node.type != "arrow_function" {
                 return None;
@@ -5844,7 +5844,7 @@ impl _js_require_specifier(value_node, source: bytes) -> str | None {
     if args is None {
         return None;
     }
-    for arg in args.children {
+    for arg in typing.cast(object, args).children {
         if arg.type == "string" {
             raw: any = _read_text(arg, source).strip("'\"` ");
             if raw {
@@ -5871,7 +5871,7 @@ impl _require_imports_js(
         return False;
     }
     found: any = False;
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type != "variable_declarator" {
             continue;
         }
@@ -5889,7 +5889,7 @@ impl _require_imports_js(
             continue;
         }
         raw: any = None;
-        for arg in args.children {
+        for arg in typing.cast(object, args).children {
             if arg.type == "string" {
                 raw = _read_text(arg, source).strip("'\"` ");
                 break;
@@ -5930,7 +5930,7 @@ impl _require_imports_js(
         sym_names: list[str] = [];
         if name_node is not None and name_node.type == "object_pattern" {
             prop: any;
-            for prop in name_node.children {
+            for prop in typing.cast(object, name_node).children {
                 if prop.type == "shorthand_property_identifier_pattern" {
                     sym_names.append(_read_text(prop, source));
                 } elif prop.type == "pair_pattern" {
@@ -5983,11 +5983,11 @@ impl _scan_js_nested_function_declarations(
     if container_node is None {
         return;
     }
-    for child in container_node.children {
+    for child in typing.cast(object, container_node).children {
         if child.type in ("function_declaration", "generator_function_declaration") {
             name_node: any = child.child_by_field_name(config.name_field);
             if name_node is None {
-                for c in child.children {
+                for c in typing.cast(object, child).children {
                     if c.type in config.name_fallback_child_types {
                         name_node = c;
                         break;
@@ -6080,7 +6080,7 @@ impl _scan_python_nested_function_declarations(
     if container_node is None {
         return;
     }
-    for child in container_node.children {
+    for child in typing.cast(object, container_node).children {
         target: any = child;
         if target.type == "decorated_definition" {
             inner: any = target.child_by_field_name("definition");
@@ -6091,7 +6091,7 @@ impl _scan_python_nested_function_declarations(
         if target.type == "function_definition" {
             name_node: any = target.child_by_field_name(config.name_field);
             if name_node is None {
-                for c in target.children {
+                for c in typing.cast(object, target).children {
                     if c.type in config.name_fallback_child_types {
                         name_node = c;
                         break;
@@ -6154,7 +6154,7 @@ impl _scan_python_nested_function_declarations(
 }
 
 impl _js_topmost_closures(`node, out: list) {
-    for c in `node.children {
+    for c in typing.cast(object, `node).children {
         if c.type in _JS_FUNCTION_VALUE_TYPES {
             out.append(c);
         } else {
@@ -6221,11 +6221,11 @@ impl _js_scan_member_assignments(
 ) {
     object_bindings: dict[str, object] = {};
     stmt: any;
-    for stmt in body.children {
+    for stmt in typing.cast(object, body).children {
         if stmt.type not in ("lexical_declaration", "variable_declaration") {
             continue;
         }
-        for declarator in stmt.children {
+        for declarator in typing.cast(object, stmt).children {
             if declarator.type != "variable_declarator" {
                 continue;
             }
@@ -6241,11 +6241,11 @@ impl _js_scan_member_assignments(
         }
     }
     contained_owners: set[str] = set[any]();
-    for stmt in body.children {
+    for stmt in typing.cast(object, body).children {
         if stmt.type != "expression_statement" {
             continue;
         }
-        assign: any = next((c for c in stmt.children if c.type == "assignment_expression"), None);
+        assign: any = next((c for c in typing.cast(object, stmt).children if c.type == "assignment_expression"), None);
         if assign is None {
             continue;
         }
@@ -6299,13 +6299,13 @@ impl _js_find_exported_objects(program_node, source: bytes) -> set[str] {
         return set[any]();
     }
     exported: any = set[any]();
-    for child in program_node.children {
+    for child in typing.cast(object, program_node).children {
         if child.type == "export_statement" {
-            for c in child.children {
+            for c in typing.cast(object, child).children {
                 if c.type == "identifier" {
                     exported.add(_read_text(c, source));
                 } elif c.type == "export_clause" {
-                    for sc in c.children {
+                    for sc in typing.cast(object, c).children {
                         if sc.type == "export_specifier" {
                             name_node: any = sc.child_by_field_name("name");
                             if name_node {
@@ -6315,7 +6315,7 @@ impl _js_find_exported_objects(program_node, source: bytes) -> set[str] {
                     }
                 } elif c.type in ("variable_declaration", "lexical_declaration") {
                     decl: any;
-                    for decl in c.children {
+                    for decl in typing.cast(object, c).children {
                         if decl.type == "variable_declarator" {
                             name_node = decl.child_by_field_name("name");
                             if name_node and name_node.type == "identifier" {
@@ -6326,7 +6326,7 @@ impl _js_find_exported_objects(program_node, source: bytes) -> set[str] {
                 }
             }
         } elif child.type in ("variable_declaration", "lexical_declaration") {
-            for decl in child.children {
+            for decl in typing.cast(object, child).children {
                 if decl.type != "variable_declarator" {
                     continue;
                 }
@@ -6358,7 +6358,7 @@ impl _js_find_exported_objects(program_node, source: bytes) -> set[str] {
             }
         } elif child.type == "expression_statement" {
             assign: any = next(
-                (c for c in child.children if c.type == "assignment_expression"), None
+                (c for c in typing.cast(object, child).children if c.type == "assignment_expression"), None
             );
             if assign {
                 left = assign.child_by_field_name("left");
@@ -6379,7 +6379,7 @@ impl _js_find_exported_objects(program_node, source: bytes) -> set[str] {
                         if curr and curr.type == "identifier" {
                             exported.add(_read_text(curr, source));
                         } elif curr and curr.type == "object" {
-                            for prop in curr.children {
+                            for prop in typing.cast(object, curr).children {
                                 if prop.type == "shorthand_property_identifier" {
                                     exported.add(_read_text(prop, source));
                                 } elif prop.type == "pair" {
@@ -6434,7 +6434,7 @@ impl _js_extra_walk(
     }
     if `node.type == "expression_statement" {
         call_stmt: any = next(
-            (c for c in `node.children if c.type in ("call_expression", "new_expression")), None
+            (c for c in typing.cast(object, `node).children if c.type in ("call_expression", "new_expression")), None
         );
         if call_stmt is not None {
             _stmt_closures: list = [];
@@ -6463,7 +6463,7 @@ impl _js_extra_walk(
                 }
             }
         }
-        assign: any = next((c for c in `node.children if c.type == "assignment_expression"), None);
+        assign: any = next((c for c in typing.cast(object, `node).children if c.type == "assignment_expression"), None);
         if assign is not None {
             value: any = assign.child_by_field_name("right");
             if value is not None {
@@ -6616,7 +6616,7 @@ impl _js_extra_walk(
         arrow_found: any = False;
         const_found: any = False;
         if `node.type == "lexical_declaration" and is_module_level {
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 if child.type == "variable_declarator" {
                     value = child.child_by_field_name("value");
                     name_node: any = child.child_by_field_name("name");
@@ -6693,7 +6693,7 @@ impl _js_extra_walk(
                             and is_exported
                         {
                             line = child.start_point[0] + 1;
-                            for prop in name_node.named_children {
+                            for prop in typing.cast(object, name_node).named_children {
                                 if prop.type == "shorthand_property_identifier_pattern" {
                                     export_name: any = _read_text(prop, source);
                                 } elif prop.type == "pair_pattern" {
@@ -6826,7 +6826,7 @@ impl _ts_extra_walk(
         name_node = `node.child_by_field_name("name");
         if name_node is None {
             child: any;
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 if child.is_named and child.type in ("identifier", "nested_identifier", "string") {
                     name_node = child;
                     break;
@@ -6835,7 +6835,7 @@ impl _ts_extra_walk(
         }
         body: any = `node.child_by_field_name("body");
         if body is None {
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 if child.type == "statement_block" {
                     body = child;
                     break;
@@ -6863,7 +6863,7 @@ impl _ts_extra_walk(
             namespace_stack.append(ns_name);
             try {
                 if body is not None {
-                    for child in body.children {
+                    for child in typing.cast(object, body).children {
                         walk_fn(child, parent_class_nid);
                     }
                 }
@@ -6871,7 +6871,7 @@ impl _ts_extra_walk(
                 namespace_stack.pop();
             }
         } elif body is not None {
-            for child in body.children {
+            for child in typing.cast(object, body).children {
                 walk_fn(child, parent_class_nid);
             }
         }
@@ -6892,7 +6892,7 @@ impl _csharp_namespace_name(`node, source: bytes) -> str {
     if name_node is not None {
         return _read_text(name_node, source).strip();
     }
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type in ("identifier", "qualified_name") {
             return _read_text(child, source).strip();
         }
@@ -6956,7 +6956,7 @@ impl _csharp_extra_walk(
         if body {
             try {
                 child: any;
-                for child in body.children {
+                for child in typing.cast(object, body).children {
                     walk_fn(child, parent_class_nid);
                 }
             } finally {
@@ -6987,7 +6987,7 @@ impl _csharp_extra_walk(
         return True;
     }
     if parent_class_nid and `node.type.startswith("preproc_") {
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             walk_fn(child, parent_class_nid);
         }
         return True;
@@ -7013,7 +7013,7 @@ impl _swift_extra_walk(
     if `node.type == "enum_entry" and parent_class_nid {
         line: any = `node.start_point[0] + 1;
         child: any;
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             if child.type == "simple_identifier" {
                 case_name: any = _read_text(child, source);
                 case_nid: any = _make_id(parent_class_nid, case_name);
@@ -7021,11 +7021,11 @@ impl _swift_extra_walk(
                 add_edge_fn(parent_class_nid, case_nid, "case_of", line);
             }
         }
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             if child.type != "enum_type_parameters" {
                 continue;
             }
-            for grand in child.children {
+            for grand in typing.cast(object, child).children {
                 if not grand.is_named {
                     continue;
                 }
@@ -7048,27 +7048,27 @@ impl _swift_extra_walk(
 impl _scala_extension_receiver_name(`node, source: bytes) -> str | None {
     clause: any = next(
         (c
-        for c in `node.children
-        if c.type == "parameters" and not `any(operator.eq(cc.type, "using") for cc in c.children)),
+        for c in typing.cast(object, `node).children
+        if c.type == "parameters" and not `any(operator.eq(cc.type, "using") for cc in typing.cast(object, c).children)),
         None,
     );
     if clause is None {
         return None;
     }
-    param: any = next((c for c in clause.children if c.type == "parameter"), None);
+    param: any = next((c for c in typing.cast(object, clause).children if c.type == "parameter"), None);
     if param is None {
         return None;
     }
     type_node: any = next(
         (c
-        for c in param.children
+        for c in typing.cast(object, param).children
         if c.type in ("type_identifier", "generic_type", "stable_type_identifier")),
         None,
     );
     if type_node is not None and type_node.type == "generic_type" {
         type_node = next(
             (c
-            for c in type_node.children
+            for c in typing.cast(object, type_node).children
             if c.type in ("type_identifier", "stable_type_identifier")),
             None,
         );
@@ -7105,11 +7105,11 @@ impl _scala_extra_walk(
     ensure_named_node_fn,
 ) -> bool {
     if `node.type == "enum_case_definitions" and parent_class_nid {
-        for `case in `node.children {
+        for `case in typing.cast(object, `node).children {
             if `case.type not in ("simple_enum_case", "full_enum_case") {
                 continue;
             }
-            name_node: any = next((c for c in `case.children if c.type == "identifier"), None);
+            name_node: any = next((c for c in typing.cast(object, `case).children if c.type == "identifier"), None);
             if name_node is None {
                 continue;
             }
@@ -7243,7 +7243,7 @@ impl _cpp_extra_walk(
     if `node.type == "enumerator" and parent_class_nid {
         name_node: any = `node.child_by_field_name("name");
         if name_node is None {
-            name_node = next((c for c in `node.children if c.type == "identifier"), None);
+            name_node = next((c for c in typing.cast(object, `node).children if c.type == "identifier"), None);
         }
         if name_node is None {
             return True;
@@ -7279,7 +7279,7 @@ impl _php_extra_walk(
     if `node.type == "enum_case" and parent_class_nid {
         name_node: any = `node.child_by_field_name("name");
         if name_node is None {
-            name_node = next((c for c in `node.children if c.type == "name"), None);
+            name_node = next((c for c in typing.cast(object, `node).children if c.type == "name"), None);
         }
         if name_node is None {
             return True;
@@ -7323,9 +7323,9 @@ impl _java_extra_walk(
         const_nid: any = _make_id(parent_class_nid, const_name);
         add_node_fn(const_nid, const_name, line);
         add_edge_fn(parent_class_nid, const_nid, "case_of", line);
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             if child.type == "class_body" {
-                for member in child.children {
+                for member in typing.cast(object, child).children {
                     walk_fn(member, parent_class_nid=const_nid);
                 }
             }
@@ -7353,7 +7353,7 @@ impl _kotlin_extra_walk(
     if `node.type == "enum_entry" and parent_class_nid {
         name_node: any = None;
         child: any;
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             if child.type in ("simple_identifier", "identifier") {
                 name_node = child;
                 break;
@@ -7367,9 +7367,9 @@ impl _kotlin_extra_walk(
         const_nid: any = _make_id(parent_class_nid, const_name);
         add_node_fn(const_nid, const_name, line);
         add_edge_fn(parent_class_nid, const_nid, "case_of", line);
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             if child.type == "class_body" {
-                for member in child.children {
+                for member in typing.cast(object, child).children {
                     walk_fn(member, parent_class_nid=const_nid);
                 }
             }
@@ -7380,11 +7380,11 @@ impl _kotlin_extra_walk(
 }
 
 impl _kotlin_package_name(`root, source: bytes) -> str | None {
-    for child in `root.children {
+    for child in typing.cast(object, `root).children {
         if child.type != "package_header" {
             continue;
         }
-        for c in child.children {
+        for c in typing.cast(object, child).children {
             if c.type in ("qualified_identifier", "identifier") {
                 pkg: any = _read_text(c, source).strip();
                 return pkg or None;
@@ -7399,7 +7399,7 @@ impl _kotlin_nav_identifier_segments(nav, source: bytes) -> list[str] | None {
     segments: list[str] = [];
     `node: any = nav;
     while `node is not None and `node.type == "navigation_expression" {
-        named: any = [c for c in `node.children if c.is_named];
+        named: any = [c for c in typing.cast(object, `node).children if c.is_named];
         if len(named) != 2 {
             return None;
         }
@@ -7422,18 +7422,18 @@ impl _kotlin_nav_identifier_segments(nav, source: bytes) -> list[str] | None {
 
 impl _kotlin_type_name(type_node, source: bytes) -> str | None {
     if type_node is not None and type_node.type == "nullable_type" {
-        type_node = next((c for c in type_node.children if c.type == "user_type"), None);
+        type_node = next((c for c in typing.cast(object, type_node).children if c.type == "user_type"), None);
     }
     if type_node is None or type_node.type != "user_type" {
         return None;
     }
-    parts: any = [c for c in type_node.children if c.type == "simple_user_type"] or [type_node];
+    parts: any = [c for c in typing.cast(object, type_node).children if c.type == "simple_user_type"] or [type_node];
     names: any = [c for c in parts[-1].children if c.type in _KOTLIN_IDENTIFIERS];
     return _read_text(names[-1 if len(parts) == 1 else 0], source) if names else None;
 }
 
 impl _kotlin_declared_type(decl, initializer, source: bytes) -> str {
-    for child in decl.children {
+    for child in typing.cast(object, decl).children {
         name: any = _kotlin_type_name(child, source);
         if name {
             return name;
@@ -7453,7 +7453,7 @@ impl _kotlin_declared_type(decl, initializer, source: bytes) -> str {
 
 impl _kotlin_binding_name(decl, source: bytes) -> str | None {
     return next(
-        (_read_text(c, source) for c in decl.children if c.type in _KOTLIN_IDENTIFIERS), None
+        (_read_text(c, source) for c in typing.cast(object, decl).children if c.type in _KOTLIN_IDENTIFIERS), None
     );
 }
 
@@ -7464,7 +7464,7 @@ impl _kotlin_variable_binding(decl, name: str, initializer, source: bytes) -> st
     if decl.type == "multi_variable_declaration"
         and `any(
             operator.eq(_kotlin_binding_name(v, source), name)
-            for v in decl.children
+            for v in typing.cast(object, decl).children
             if v.type == "variable_declaration",
         )
     {
@@ -7474,7 +7474,7 @@ impl _kotlin_variable_binding(decl, name: str, initializer, source: bytes) -> st
 }
 
 impl _kotlin_property_binding(prop, name: str, source: bytes) -> str | None {
-    named: any = [c for c in prop.children if c.is_named];
+    named: any = [c for c in typing.cast(object, prop).children if c.is_named];
     for (i, child) in enumerate(named) {
         initializer: any = named[i + 1] if i + 1 < len(named) else None;
         bound: any = _kotlin_variable_binding(child, name, initializer, source);
@@ -7494,11 +7494,11 @@ impl _kotlin_receiver_type(call, name: str, source: bytes, *, this_field: bool =
             bound: any = None;
             if t in ("function_declaration", "anonymous_function", "secondary_constructor") {
                 params: any;
-                for params in `node.children {
+                for params in typing.cast(object, `node).children {
                     param: any;
                     for param in params.children
                         if params.type == "function_value_parameters"
-                        else () {
+                        else [] {
                         if param.type == "parameter"
                             and _kotlin_binding_name(param, source) == name
                         {
@@ -7507,19 +7507,19 @@ impl _kotlin_receiver_type(call, name: str, source: bytes, *, this_field: bool =
                     }
                 }
             } elif t == "lambda_literal" {
-                params = next((c for c in `node.children if c.type == "lambda_parameters"), None);
+                params = next((c for c in typing.cast(object, `node).children if c.type == "lambda_parameters"), None);
                 if params is None {
                     bound = "" if name == "it" else None;
                 } else {
                     decl: any;
-                    for decl in params.children {
+                    for decl in typing.cast(object, params).children {
                         bound = _kotlin_variable_binding(decl, name, None, source)
                             if bound is None
                             else bound;
                     }
                 }
             } elif t == "for_statement" {
-                decl = next((c for c in `node.children if c.is_named), None);
+                decl = next((c for c in typing.cast(object, `node).children if c.is_named), None);
                 if decl is not None {
                     bound = _kotlin_variable_binding(decl, name, None, source);
                 }
@@ -7533,7 +7533,7 @@ impl _kotlin_receiver_type(call, name: str, source: bytes, *, this_field: bool =
             }
             if t in ("block", "statements", "source_file", "lambda_literal") {
                 stmt: any;
-                for stmt in `node.children {
+                for stmt in typing.cast(object, `node).children {
                     if stmt.start_byte >= call.start_byte {
                         break;
                     }
@@ -7548,7 +7548,7 @@ impl _kotlin_receiver_type(call, name: str, source: bytes, *, this_field: bool =
             }
         }
         if t == "class_body" {
-            for stmt in `node.children {
+            for stmt in typing.cast(object, `node).children {
                 if stmt.type == "property_declaration" {
                     bound = _kotlin_property_binding(stmt, name, source);
                     if bound is not None {
@@ -7557,11 +7557,11 @@ impl _kotlin_receiver_type(call, name: str, source: bytes, *, this_field: bool =
                 }
             }
         } elif t == "class_declaration" {
-            for ctor in `node.children {
-                for params in ctor.children if ctor.type == "primary_constructor" else () {
-                    for param in params.children if params.type == "class_parameters" else () {
+            for ctor in typing.cast(object, `node).children {
+                for params in ctor.children if ctor.type == "primary_constructor" else [] {
+                    for param in params.children if params.type == "class_parameters" else [] {
                         if param.type == "class_parameter"
-                            and `any(c.type in ("val", "var") for c in param.children)
+                            and `any(c.type in ("val", "var") for c in typing.cast(object, param).children)
                             and _kotlin_binding_name(param, source) == name
                         {
                             return _kotlin_declared_type(param, None, source);
@@ -7584,7 +7584,7 @@ impl _first_parse_error_line(`root) -> int {
         if `node.type == "ERROR" or `node.is_missing {
             return `node.start_point[0] + 1;
         }
-        child: any = next((c for c in `node.children if c.has_error), None);
+        child: any = next((c for c in typing.cast(object, `node).children if c.has_error), None);
         if child is None {
             return `node.start_point[0] + 1;
         }
@@ -7602,7 +7602,7 @@ impl _first_multiline_error_line(`root) -> int {
                 best = n;
             }
         }
-        stack.extend(c for c in n.children if c.has_error);
+        stack.extend(c for c in typing.cast(object, n).children if c.has_error);
     }
     if best is None {
         return _first_parse_error_line(`root);
@@ -7617,14 +7617,14 @@ impl _has_multiline_error(`root) -> bool {
         if n.type == "ERROR" and n.end_point[0] > n.start_point[0] {
             return True;
         }
-        stack.extend(c for c in n.children if c.has_error);
+        stack.extend(c for c in typing.cast(object, n).children if c.has_error);
     }
     return False;
 }
 
 impl _csharp_bare_call_name(name_node, source: bytes) -> str {
     if name_node.type == "generic_name" {
-        for child in name_node.children {
+        for child in typing.cast(object, name_node).children {
             if child.type == "identifier" {
                 return _read_text(child, source);
             }
@@ -7641,7 +7641,7 @@ impl _csharp_member_call_parts(fn_node) -> any {
         return (fn_node.child_by_field_name("name"), fn_node.child_by_field_name("expression"));
     }
     if fn_node.type == "conditional_access_expression" {
-        for child in fn_node.named_children {
+        for child in typing.cast(object, fn_node).named_children {
             if child.type == "member_binding_expression" {
                 return (
                     child.child_by_field_name("name"),
@@ -7676,7 +7676,7 @@ impl _read_csharp_type_name(`node, source: bytes) -> tuple[str, bool, str] | Non
             return (tail, qualified, prefix if qualified else "");
         }
     }
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if not child.is_named {
             continue;
         }
@@ -7709,7 +7709,7 @@ impl _python_class_ref(`node, source: bytes) -> str | None {
     }
     kind: any = `node.type;
     if kind == "type" {
-        named: any = [c for c in `node.children if c.is_named];
+        named: any = [c for c in typing.cast(object, `node).children if c.is_named];
         return _python_class_ref(named[0], source) if len(named) == 1 else None;
     }
     if kind == "identifier" {
@@ -7735,7 +7735,7 @@ impl _python_class_ref(`node, source: bytes) -> str | None {
         return None;
     }
     if kind == "generic_type" {
-        named = [c for c in `node.children if c.is_named];
+        named = [c for c in typing.cast(object, `node).children if c.is_named];
         if len(named) == 2
             and named[0].type == "identifier"
             and _read_text(named[0], source) == "Optional"
@@ -7804,10 +7804,10 @@ impl _python_local_class_bindings(
         bindings[name] = None;
     }
     if params is not None {
-        for child in params.children {
+        for child in typing.cast(object, params).children {
             if child.type in ("typed_parameter", "typed_default_parameter") {
                 name_n: any = child.child_by_field_name("name")
-                    or next((c for c in child.children if c.type == "identifier"), None);
+                    or next((c for c in typing.cast(object, child).children if c.type == "identifier"), None);
                 if name_n is not None {
                     name = _read_text(name_n, source);
                     bindings.pop(name, None);
@@ -7819,15 +7819,15 @@ impl _python_local_class_bindings(
 
     def `visit(n) {
         c: any;
-        for child in n.children {
+        for child in typing.cast(object, n).children {
             if child.type == "function_definition" {
-                stack: any = [child];
-                while stack {
-                    cur: any = stack.pop();
-                    if cur.type == "nonlocal_statement" {
-                        poison_identifiers(cur);
+                fn_stack = builtins.list((child,));
+                while fn_stack {
+                    fn_cur = fn_stack.pop();
+                    if fn_cur.type == "nonlocal_statement" {
+                        poison_identifiers(fn_cur);
                     }
-                    stack.extend(cur.children);
+                    fn_stack.extend(fn_cur.children);
                 }
                 continue;
             }
@@ -7876,10 +7876,10 @@ impl _python_local_class_bindings(
                 poison(child.child_by_field_name("left"));
             } elif child.type == "as_pattern" {
                 alias: any = child.child_by_field_name("alias");
-                target: any = next((c for c in alias.children if c.type == "identifier"), None)
+                target: any = next((c for c in typing.cast(object, alias).children if c.type == "identifier"), None)
                     if alias is not None
                     else None;
-                value: any = next((c for c in child.children if c.is_named), None);
+                value: any = next((c for c in typing.cast(object, child).children if c.is_named), None);
                 if target is not None {
                     name = _read_text(target, source);
                     if child.parent is not None
@@ -7901,7 +7901,7 @@ impl _python_local_class_bindings(
             } elif child.type == "named_expression" {
                 poison(child.child_by_field_name("name"));
             } elif child.type in ("global_statement", "nonlocal_statement") {
-                for c in child.children {
+                for c in typing.cast(object, child).children {
                     if c.type == "identifier" {
                         bindings[_read_text(c, source)] = None;
                     }
@@ -7929,7 +7929,7 @@ impl _ruby_local_class_bindings(body_node, source: bytes) -> dict[str, str | Non
     boundary = {"method", "singleton_method"};
 
     def `visit(n) {
-        for child in n.children {
+        for child in typing.cast(object, n).children {
             if child.type in boundary {
                 continue;
             }
@@ -7982,7 +7982,7 @@ impl _ruby_local_names(body_node, source: bytes) -> frozenset[str] {
         if n.type == "identifier" {
             return n;
         }
-        for c in n.children {
+        for c in typing.cast(object, n).children {
             found: any = _first_identifier(c);
             if found is not None {
                 return found;
@@ -7992,7 +7992,7 @@ impl _ruby_local_names(body_node, source: bytes) -> frozenset[str] {
     }
 
     def _add_params(param_list) {
-        for child in param_list.children {
+        for child in typing.cast(object, param_list).children {
             if child.type == "identifier" {
                 names.add(_read_text(child, source));
             } elif child.type in param_wrappers {
@@ -8009,13 +8009,13 @@ impl _ruby_local_names(body_node, source: bytes) -> frozenset[str] {
             names.add(_read_text(n, source));
             return;
         }
-        for c in n.children {
+        for c in typing.cast(object, n).children {
             _add_targets(c);
         }
     }
     parent: any = body_node.parent;
     if parent is not None {
-        for child in parent.children {
+        for child in typing.cast(object, parent).children {
             if child.type in param_lists {
                 _add_params(child);
             }
@@ -8023,7 +8023,7 @@ impl _ruby_local_names(body_node, source: bytes) -> frozenset[str] {
     }
 
     def `visit(n) {
-        for child in n.children {
+        for child in typing.cast(object, n).children {
             if child.type in boundary {
                 continue;
             }
@@ -8044,7 +8044,7 @@ impl _ruby_local_names(body_node, source: bytes) -> frozenset[str] {
                     names.add(_read_text(ident, source));
                 }
             } elif child.type == "for" {
-                for sub in child.children {
+                for sub in typing.cast(object, child).children {
                     if sub.type == "identifier" {
                         names.add(_read_text(sub, source));
                     } elif sub.type == "left_assignment_list" {
@@ -8068,7 +8068,7 @@ impl _ruby_const_last_name(`node, source: bytes) -> str {
         return _read_text(`node, source);
     }
     if `node.type == "scope_resolution" {
-        consts: any = [c for c in `node.children if c.type == "constant"];
+        consts: any = [c for c in typing.cast(object, `node).children if c.type == "constant"];
         if consts {
             return _read_text(consts[-1], source);
         }
@@ -8088,7 +8088,7 @@ impl _ruby_body_has_lookup_barrier(body_node, source: bytes) -> bool {
     method_scopes = {"method", "singleton_method"};
 
     def `visit(`node, *, direct: bool = False) -> bool {
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             if child.type in {"class", "module"} {
                 continue;
             }
@@ -8135,7 +8135,7 @@ impl _ruby_file_has_refinement_barrier(root_node, source: bytes) -> bool {
                 return True;
             }
         }
-        return `any(`visit(child) for child in `node.children);
+        return `any(`visit(child) for child in typing.cast(object, `node).children);
     }
 
     return `visit(root_node);
@@ -8155,7 +8155,7 @@ impl _ruby_external_method_owners(root_node, source: bytes) -> list[str] {
             return set[any]();
         }
         refs: set[str] = set[any]();
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             if child.is_named {
                 refs.update(constant_refs(child));
             }
@@ -8172,7 +8172,7 @@ impl _ruby_external_method_owners(root_node, source: bytes) -> list[str] {
             or allow_array and `node.type == "array"
         {
             refs: set[str] = set[any]();
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 if child.is_named {
                     refs.update(alias_rhs_refs(child, allow_array=allow_array));
                 }
@@ -8251,7 +8251,7 @@ impl _ruby_external_method_owners(root_node, source: bytes) -> list[str] {
         if `node.type == "method" {
             return;
         }
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             `visit(child);
         }
     }
@@ -8309,9 +8309,9 @@ impl _ruby_extra_walk(
     callable_class_nids.add(class_nid);
     add_edge(file_nid, class_nid, "contains", line);
     if _read_text(recv, source) == "Class" {
-        args: any = next((c for c in right.children if c.type == "argument_list"), None);
+        args: any = next((c for c in typing.cast(object, right).children if c.type == "argument_list"), None);
         if args is not None {
-            for arg in args.children {
+            for arg in typing.cast(object, args).children {
                 if arg.type in ("constant", "scope_resolution") {
                     base: any = _ruby_const_last_name(arg, source);
                     raw_base: any = _ruby_const_full_name(arg, source);
@@ -8347,13 +8347,13 @@ impl _ruby_extra_walk(
             }
         }
     }
-    block: any = next((c for c in right.children if c.type in ("do_block", "block")), None);
+    block: any = next((c for c in typing.cast(object, right).children if c.type in ("do_block", "block")), None);
     if block is not None {
-        body: any = next((c for c in block.children if c.type == "body_statement"), block);
+        body: any = next((c for c in typing.cast(object, block).children if c.type == "body_statement"), block);
         ruby_namespace.extend(const_segments);
         ruby_lexical_scopes.append(const_name);
         try {
-            for child in body.children {
+            for child in typing.cast(object, body).children {
                 walk(child, parent_class_nid=class_nid);
             }
         } finally {
@@ -8402,7 +8402,7 @@ impl _php_get_route_name(closure_node, src: bytes) -> str | None {
                     raw_method: any = (_read_text(name_node, src) if name_node else "").lower();
                     path_text: any = None;
 
-                    for sibling in arg_list.children {
+                    for sibling in typing.cast(object, arg_list).children {
                         if sibling == curr {
                             break;
                         }
@@ -8410,7 +8410,7 @@ impl _php_get_route_name(closure_node, src: bytes) -> str | None {
                         target: any = sibling;
                         if sibling.type == "argument" {
                             c: any;
-                            for c in sibling.children {
+                            for c in typing.cast(object, sibling).children {
                                 if c.type in ("string", "encapsed_string") {
                                     target = c;
                                     break;
@@ -8443,9 +8443,9 @@ impl _php_get_route_name(closure_node, src: bytes) -> str | None {
                     while fluent is not None and fluent.type == "member_call_expression" {
                         f_args: any = fluent.child_by_field_name("arguments");
                         if f_args {
-                            for c in f_args.children {
+                            for c in typing.cast(object, f_args).children {
                                 if c.type == "argument" {
-                                    for cc in c.children {
+                                    for cc in typing.cast(object, c).children {
                                         if cc.type in ("string", "encapsed_string") {
                                             f_path: any = _read_text(cc, src).strip("'\"");
                                             if f_path {
@@ -8738,7 +8738,7 @@ impl _extract_generic(
     java_package = "";
     java_imports = [];
     if ts_mod == "tree_sitter_java" {
-        for child in `root.children {
+        for child in typing.cast(object, `root).children {
             if child.type == "package_declaration" {
                 java_package = _read_text(child, source).removeprefix("package").strip().rstrip(
                     ";"
@@ -8913,7 +8913,7 @@ impl _extract_generic(
     decl_registry = DeclIdRegistry(reserved_ids=(file_nid,));
 
     def _php_const_ref_target(cca) -> "str | None" {
-        first: any = next((c for c in cca.children if c.is_named), None);
+        first: any = next((c for c in typing.cast(object, cca).children if c.is_named), None);
         if first is None or first.type not in ("name", "qualified_name") {
             return None;
         }
@@ -8990,7 +8990,7 @@ impl _extract_generic(
         bodies: any = [];
         accessors: any = decl.child_by_field_name("accessors");
         if accessors is not None {
-            for accessor in accessors.children {
+            for accessor in typing.cast(object, accessors).children {
                 if accessor.type == "accessor_declaration" {
                     body: any = accessor.child_by_field_name("body");
                     if body is not None {
@@ -9054,10 +9054,10 @@ impl _extract_generic(
                 }
             }
             if t == "export_statement" {
-                has_source: any = `any(operator.eq(c.type, "string") for c in `node.children);
+                has_source: any = `any(operator.eq(c.type, "string") for c in typing.cast(object, `node).children);
                 if not has_source {
                     child: any;
-                    for child in `node.children {
+                    for child in typing.cast(object, `node).children {
                         walk(child, parent_class_nid);
                     }
                 }
@@ -9067,7 +9067,7 @@ impl _extract_generic(
         if t in config.class_types {
             name_node: any = `node.child_by_field_name(config.name_field);
             if name_node is None {
-                for child in `node.children {
+                for child in typing.cast(object, `node).children {
                     if child.type in config.name_fallback_child_types {
                         name_node = child;
                         break;
@@ -9123,7 +9123,7 @@ impl _extract_generic(
                     and `any(
                         operator.eq(c.type, "modifier")
                             and operator.eq(_read_text(c, source), "partial")
-                        for c in `node.children,
+                        for c in typing.cast(object, `node).children,
                     )
                 {
                     partial_metadata: dict[str, object] = `dict(metadata or {});
@@ -9156,7 +9156,7 @@ impl _extract_generic(
                         c.is_named
                             and c.type not in ("keyword_argument", "comment")
                             and _python_base_name_node(c) is None
-                        for c in _py_bases.children,
+                        for c in typing.cast(object, _py_bases).children,
                     )
                 {
                     metadata = `dict(metadata or {});
@@ -9240,7 +9240,7 @@ impl _extract_generic(
             }
             if ts_mod == "tree_sitter_c_sharp" and t != "interface_declaration" {
                 primary_params: any = next(
-                    (c for c in `node.children if c.type == "parameter_list"), None
+                    (c for c in typing.cast(object, `node).children if c.type == "parameter_list"), None
                 );
                 if primary_params is not None {
                     csharp_add_constructor(
@@ -9255,7 +9255,7 @@ impl _extract_generic(
             }
 
             if ts_mod == "tree_sitter_swift"
-                and `any(operator.eq(c.type, "extension") for c in `node.children)
+                and `any(operator.eq(c.type, "extension") for c in typing.cast(object, `node).children)
             {
                 swift_extensions.append({"nid": class_nid, "label": class_name});
             }
@@ -9263,7 +9263,7 @@ impl _extract_generic(
                 args: any = `node.child_by_field_name("superclasses");
                 if args {
                     arg: any;
-                    for arg in args.children {
+                    for arg in typing.cast(object, args).children {
                         base_node: any = _python_base_name_node(arg);
                         if base_node is not None {
                             base: any = _read_text(base_node, source);
@@ -9278,14 +9278,14 @@ impl _extract_generic(
                     if t == "class_declaration"
                     else "protocol";
                 seen_swift_base: any = False;
-                for child in `node.children {
+                for child in typing.cast(object, `node).children {
                     if child.type != "inheritance_specifier" {
                         continue;
                     }
                     base_name: str | None = None;
                     user_type_node: any = None;
                     sub: any;
-                    for sub in child.children {
+                    for sub in typing.cast(object, child).children {
                         if sub.type == "user_type" {
                             user_type_node = sub;
                             base_name = _swift_user_type_name(sub, source);
@@ -9328,11 +9328,11 @@ impl _extract_generic(
                     add_edge(class_nid, base_nid, relation, line);
                     if user_type_node is not None {
                         arg_child: any;
-                        for arg_child in user_type_node.children {
+                        for arg_child in typing.cast(object, user_type_node).children {
                             if arg_child.type != "type_arguments" {
                                 continue;
                             }
-                            for arg in arg_child.children {
+                            for arg in typing.cast(object, arg_child).children {
                                 if not arg.is_named {
                                     continue;
                                 }
@@ -9373,9 +9373,9 @@ impl _extract_generic(
                     add_edge(class_nid, base_nid, rel, at_line);
                 }
 
-                for child in `node.children {
+                for child in typing.cast(object, `node).children {
                     if child.type == "base_clause" {
-                        for sub in child.children {
+                        for sub in typing.cast(object, child).children {
                             if sub.type in ("name", "qualified_name") {
                                 _php_emit_base(
                                     _php_name_text(sub, source) or "",
@@ -9385,7 +9385,7 @@ impl _extract_generic(
                             }
                         }
                     } elif child.type == "class_interface_clause" {
-                        for sub in child.children {
+                        for sub in typing.cast(object, child).children {
                             if sub.type in ("name", "qualified_name") {
                                 _php_emit_base(
                                     _php_name_text(sub, source) or "",
@@ -9398,7 +9398,7 @@ impl _extract_generic(
                 }
                 body: any = `node.child_by_field_name("body");
                 if body is None {
-                    for c in `node.children {
+                    for c in typing.cast(object, `node).children {
                         if c.type == "declaration_list" {
                             body = c;
                             break;
@@ -9407,11 +9407,11 @@ impl _extract_generic(
                 }
                 if body is not None {
                     member: any;
-                    for member in body.children {
+                    for member in typing.cast(object, body).children {
                         if member.type != "use_declaration" {
                             continue;
                         }
-                        for sub in member.children {
+                        for sub in typing.cast(object, member).children {
                             if sub.type in ("name", "qualified_name") {
                                 _php_emit_base(
                                     _php_name_text(sub, source) or "",
@@ -9424,22 +9424,22 @@ impl _extract_generic(
                 }
             }
             if ts_mod == "tree_sitter_kotlin" {
-                for child in `node.children {
+                for child in typing.cast(object, `node).children {
                     if child.type != "delegation_specifiers" {
                         continue;
                     }
                     spec: any;
-                    for spec in child.children {
+                    for spec in typing.cast(object, child).children {
                         if spec.type != "delegation_specifier" {
                             continue;
                         }
                         relation = "implements";
                         user_type_node = None;
-                        for sub in spec.children {
+                        for sub in typing.cast(object, spec).children {
                             if sub.type == "constructor_invocation" {
                                 relation = "inherits";
                                 inner: any;
-                                for inner in sub.children {
+                                for inner in typing.cast(object, sub).children {
                                     if inner.type == "user_type" {
                                         user_type_node = inner;
                                         break;
@@ -9452,7 +9452,7 @@ impl _extract_generic(
                                 break;
                             }
                             if sub.type == "explicit_delegation" {
-                                for inner in sub.children {
+                                for inner in typing.cast(object, sub).children {
                                     if inner.type == "user_type" {
                                         user_type_node = inner;
                                         break;
@@ -9470,13 +9470,13 @@ impl _extract_generic(
                         }
                         base_nid = ensure_named_node(base, line);
                         add_edge(class_nid, base_nid, relation, line);
-                        for arg_child in user_type_node.children {
+                        for arg_child in typing.cast(object, user_type_node).children {
                             if arg_child.type != "type_arguments" {
                                 continue;
                             }
-                            for arg in arg_child.children {
+                            for arg in typing.cast(object, arg_child).children {
                                 if arg.type == "type_projection" {
-                                    for inner in arg.children {
+                                    for inner in typing.cast(object, arg).children {
                                         if not inner.is_named {
                                             continue;
                                         }
@@ -9517,17 +9517,17 @@ impl _extract_generic(
                     }
                 }
 
-                for c in `node.children {
+                for c in typing.cast(object, `node).children {
                     if c.type == "primary_constructor" {
-                        for cp_list in c.children {
+                        for cp_list in typing.cast(object, c).children {
                             if cp_list.type == "class_parameters" {
                                 cp: any;
-                                for cp in cp_list.children {
+                                for cp in typing.cast(object, cp_list).children {
                                     if cp.type != "class_parameter" {
                                         continue;
                                     }
                                     has_val_var: any = False;
-                                    for sub in cp.children {
+                                    for sub in typing.cast(object, cp).children {
                                         if sub.type in ("val", "var") {
                                             has_val_var = True;
                                             break;
@@ -9537,7 +9537,7 @@ impl _extract_generic(
                                         continue;
                                     }
                                     ptype: any = None;
-                                    for sub in cp.children {
+                                    for sub in typing.cast(object, cp).children {
                                         if sub.type
                                             in ("user_type", "nullable_type", "type_reference")
                                         {
@@ -9612,7 +9612,7 @@ impl _extract_generic(
                 if sup is not None {
                     base = "";
                     raw_base: any = "";
-                    for sub in sup.children {
+                    for sub in typing.cast(object, sup).children {
                         if sub.type == "constant" {
                             base = _read_text(sub, source);
                             raw_base = base;
@@ -9620,7 +9620,7 @@ impl _extract_generic(
                         }
                         if sub.type == "scope_resolution" {
                             raw_base = _read_text(sub, source).strip();
-                            consts: any = [c for c in sub.children if c.type == "constant"];
+                            consts: any = [c for c in typing.cast(object, sub).children if c.type == "constant"];
                             if consts {
                                 base = _read_text(consts[-1], source);
                             }
@@ -9644,7 +9644,7 @@ impl _extract_generic(
                 _rb_body: any = _find_body(`node, config);
                 if _rb_body is not None {
                     _rb_mixin_stmts: any = `list(_rb_body.children);
-                    for _sc in _rb_body.children {
+                    for _sc in typing.cast(object, _rb_body).children {
                         if _sc.type != "singleton_class" {
                             continue;
                         }
@@ -9673,7 +9673,7 @@ impl _extract_generic(
                         if _args is None {
                             continue;
                         }
-                        for _arg in _args.children {
+                        for _arg in typing.cast(object, _args).children {
                             if _arg.type not in ("constant", "scope_resolution") {
                                 continue;
                             }
@@ -9693,11 +9693,11 @@ impl _extract_generic(
             }
             if ts_mod == "tree_sitter_c_sharp" {
                 csharp_type_params: any = _csharp_type_parameters_in_scope(`node, source);
-                for child in `node.children {
+                for child in typing.cast(object, `node).children {
                     if child.type != "base_list" {
                         continue;
                     }
-                    for sub in child.children {
+                    for sub in typing.cast(object, child).children {
                         if sub.type not in ("identifier", "generic_name", "qualified_name") {
                             continue;
                         }
@@ -9712,11 +9712,11 @@ impl _extract_generic(
                         }
                         base_arity: any = 0;
                         if sub.type == "generic_name" {
-                            for _tal in sub.children {
+                            for _tal in typing.cast(object, sub).children {
                                 if _tal.type != "type_argument_list" {
                                     continue;
                                 }
-                                base_arity = sum(1 for _a in _tal.children if _a.is_named);
+                                base_arity = sum(1 for _a in typing.cast(object, _tal).children if _a.is_named);
                             }
                         }
                         base_nid = None;
@@ -9764,11 +9764,11 @@ impl _extract_generic(
                         }
                         add_edge(class_nid, base_nid, relation, line, metadata=metadata);
                         if sub.type == "generic_name" {
-                            for tal in sub.children {
+                            for tal in typing.cast(object, sub).children {
                                 if tal.type != "type_argument_list" {
                                     continue;
                                 }
-                                for arg in tal.children {
+                                for arg in typing.cast(object, tal).children {
                                     if not arg.is_named {
                                         continue;
                                     }
@@ -9849,7 +9849,7 @@ impl _extract_generic(
 
                 sup = `node.child_by_field_name("superclass");
                 if sup is not None {
-                    for sub in sup.children {
+                    for sub in typing.cast(object, sup).children {
                         if sub.is_named {
                             _emit_java_parent_type(sub, "inherits", line);
                             break;
@@ -9859,10 +9859,10 @@ impl _extract_generic(
 
                 ifs: any = `node.child_by_field_name("interfaces");
                 if ifs is not None {
-                    for sub in ifs.children {
+                    for sub in typing.cast(object, ifs).children {
                         if sub.type == "type_list" {
                             tid: any;
-                            for tid in sub.children {
+                            for tid in typing.cast(object, sub).children {
                                 if tid.is_named {
                                     _emit_java_parent_type(tid, "implements", line);
                                 }
@@ -9872,11 +9872,11 @@ impl _extract_generic(
                 }
 
                 if t == "interface_declaration" {
-                    for child in `node.children {
+                    for child in typing.cast(object, `node).children {
                         if child.type == "extends_interfaces" {
-                            for sub in child.children {
+                            for sub in typing.cast(object, child).children {
                                 if sub.type == "type_list" {
-                                    for tid in sub.children {
+                                    for tid in typing.cast(object, sub).children {
                                         if tid.is_named {
                                             _emit_java_parent_type(tid, "inherits", line);
                                         }
@@ -9909,13 +9909,13 @@ impl _extract_generic(
                 if t == "record_declaration" {
                     components: any = `node.child_by_field_name("parameters");
                     if components is not None {
-                        for component in components.children {
+                        for component in typing.cast(object, components).children {
                             if component.type == "formal_parameter" {
                                 type_node: any = component.child_by_field_name("type");
                             } elif component.type == "spread_parameter" {
                                 type_node = next(
                                     (child
-                                    for child in component.children
+                                    for child in typing.cast(object, component).children
                                     if child.is_named
                                         and child.type not in ("modifiers", "variable_declarator")),
                                     None,
@@ -9946,7 +9946,7 @@ impl _extract_generic(
             if ts_mod == "tree_sitter_scala" {
                 extend: any = `node.child_by_field_name("extend");
                 if extend is None {
-                    for c in `node.children {
+                    for c in typing.cast(object, `node).children {
                         if c.type == "extends_clause" {
                             extend = c;
                             break;
@@ -9974,7 +9974,7 @@ impl _extract_generic(
                             if base is None {
                                 base = next(
                                     (child
-                                    for child in type_node.children
+                                    for child in typing.cast(object, type_node).children
                                     if child.type in ("type_identifier", "stable_type_identifier")),
                                     None,
                                 );
@@ -9984,7 +9984,7 @@ impl _extract_generic(
                         return None;
                     }
 
-                    for c in extend.children {
+                    for c in typing.cast(object, extend).children {
                         base_name = scala_base_name(c);
                         if base_name is not None {
                             bases.append((base_name, c.start_point[0] + 1));
@@ -9998,11 +9998,11 @@ impl _extract_generic(
                         }
                     }
                 }
-                for c in `node.children {
+                for c in typing.cast(object, `node).children {
                     if c.type != "class_parameters" {
                         continue;
                     }
-                    for cp in c.children {
+                    for cp in typing.cast(object, c).children {
                         if cp.type != "class_parameter" {
                             continue;
                         }
@@ -10022,7 +10022,7 @@ impl _extract_generic(
                         }
                     }
                 }
-                for c in `node.children {
+                for c in typing.cast(object, `node).children {
                     if c.type != "type_parameters" {
                         continue;
                     }
@@ -10037,7 +10037,7 @@ impl _extract_generic(
                     }
                 }
                 derive: any = `node.child_by_field_name("derive");
-                for d in derive.children_by_field_name("type") if derive is not None else () {
+                for d in derive.children_by_field_name("type") if derive is not None else [] {
                     tail: any = d
                         if d.type == "type_identifier"
                         else next(
@@ -10057,11 +10057,11 @@ impl _extract_generic(
                 and t in ("class_declaration", "record_declaration", "struct_declaration")
             {
                 csharp_type_params = _csharp_type_parameters_in_scope(`node, source);
-                for c in `node.children {
+                for c in typing.cast(object, `node).children {
                     if c.type != "parameter_list" {
                         continue;
                     }
-                    for param in c.children {
+                    for param in typing.cast(object, c).children {
                         if param.type != "parameter" {
                             continue;
                         }
@@ -10104,11 +10104,11 @@ impl _extract_generic(
                 }
             }
             if ts_mod == "tree_sitter_cpp" {
-                for child in `node.children {
+                for child in typing.cast(object, `node).children {
                     if child.type != "base_class_clause" {
                         continue;
                     }
-                    for sub in child.children {
+                    for sub in typing.cast(object, child).children {
                         base = "";
                         template_args_node: any = None;
                         if sub.type == "type_identifier" {
@@ -10130,7 +10130,7 @@ impl _extract_generic(
                         add_edge(class_nid, base_nid, "inherits", line);
                         if template_args_node is not None {
                             arg_refs: list[tuple[str, str]] = [];
-                            for arg in template_args_node.children {
+                            for arg in typing.cast(object, template_args_node).children {
                                 if arg.is_named {
                                     _cpp_collect_type_refs(
                                         arg,
@@ -10168,7 +10168,7 @@ impl _extract_generic(
                     ruby_singleton_context_depth = 0;
                 }
                 try {
-                    for child in body.children {
+                    for child in typing.cast(object, body).children {
                         walk(child, parent_class_nid=class_nid);
                     }
                 } finally {
@@ -10185,16 +10185,16 @@ impl _extract_generic(
         }
         if t == "property_declaration" and parent_class_nid and config.event_listener_properties {
             handled_event_listener: any = False;
-            for element in `node.children {
+            for element in typing.cast(object, `node).children {
                 if element.type != "property_element" {
                     continue;
                 }
                 prop_name: str | None = None;
                 array_node: any = None;
-                for c in element.children {
+                for c in typing.cast(object, element).children {
                     if c.type == "variable_name" {
                         sc: any;
-                        for sc in c.children {
+                        for sc in typing.cast(object, c).children {
                             if sc.type == "name" {
                                 prop_name = _read_text(sc, source);
                                 break;
@@ -10211,15 +10211,15 @@ impl _extract_generic(
                     continue;
                 }
                 handled_event_listener = True;
-                for `entry in array_node.children {
+                for `entry in typing.cast(object, array_node).children {
                     if `entry.type != "array_element_initializer" {
                         continue;
                     }
                     event_cls: str | None = None;
                     listener_arr: any = None;
-                    for sub in `entry.children {
+                    for sub in typing.cast(object, `entry).children {
                         if sub.type == "class_constant_access_expression" and event_cls is None {
-                            for sc in sub.children {
+                            for sc in typing.cast(object, sub).children {
                                 if sc.is_named and sc.type in ("name", "qualified_name") {
                                     event_cls = _read_text(sc, source);
                                     break;
@@ -10232,15 +10232,15 @@ impl _extract_generic(
                     if not event_cls or listener_arr is None {
                         continue;
                     }
-                    for listener_entry in listener_arr.children {
+                    for listener_entry in typing.cast(object, listener_arr).children {
                         if listener_entry.type != "array_element_initializer" {
                             continue;
                         }
-                        for item in listener_entry.children {
+                        for item in typing.cast(object, listener_entry).children {
                             if item.type != "class_constant_access_expression" {
                                 continue;
                             }
-                            for sc in item.children {
+                            for sc in typing.cast(object, item).children {
                                 if sc.is_named and sc.type in ("name", "qualified_name") {
                                     listener_cls: any = _read_text(sc, source);
                                     line_no: any = item.start_point[0] + 1;
@@ -10277,15 +10277,15 @@ impl _extract_generic(
                     `any(
                         operator.eq(c.type, "modifier")
                             and operator.eq(_read_text(c, source), "static")
-                        for c in `node.children,
+                        for c in typing.cast(object, `node).children,
                     ),
                 );
-                for part in `node.children {
+                for part in typing.cast(object, `node).children {
                     if part.type == "constructor_initializer" {
                         csharp_method_scopes[id(part)] = (`node, parent_class_nid);
                         function_bodies.append((ctor_nid, part));
                         keyword: any = next(
-                            (c.type for c in part.children if c.type in ("base", "this")), None
+                            (c.type for c in typing.cast(object, part).children if c.type in ("base", "this")), None
                         );
                         if keyword is not None {
                             csharp_ctor_records.append({
@@ -10315,7 +10315,7 @@ impl _extract_generic(
             meta: any;
             (signature, meta) = _csharp_method_signature(`node, source) as any;
             explicit: any = next(
-                (c for c in `node.children if c.type == "explicit_interface_specifier"), None
+                (c for c in typing.cast(object, `node).children if c.type == "explicit_interface_specifier"), None
             );
             if explicit is not None {
                 signature = "".join(_read_text(explicit, source).split()) + signature;
@@ -10394,7 +10394,7 @@ impl _extract_generic(
         {
             type_node = `node.child_by_field_name("type");
             if type_node is None {
-                for child in `node.children {
+                for child in typing.cast(object, `node).children {
                     if child.type == "variable_declaration" {
                         type_node = child.child_by_field_name("type");
                         if type_node is not None {
@@ -10417,18 +10417,18 @@ impl _extract_generic(
                     fields: any = csharp_field_types.setdefault(parent_class_nid, {});
                     elem_type: any = _csharp_element_type_name(type_node, source);
                     loop_elems: any = _csharp_loop_element_types(type_node, source);
-                    for child in `node.children {
+                    for child in typing.cast(object, `node).children {
                         if child.type != "variable_declaration" {
                             continue;
                         }
                         declarator: any;
-                        for declarator in child.children {
+                        for declarator in typing.cast(object, child).children {
                             if declarator.type != "variable_declarator" {
                                 continue;
                             }
                             name_node = declarator.child_by_field_name("name")
                                 or next(
-                                    (g for g in declarator.children if g.type == "identifier"), None
+                                    (g for g in typing.cast(object, declarator).children if g.type == "identifier"), None
                                 );
                             if name_node is not None {
                                 fields[_read_text(name_node, source)] = type_name;
@@ -10646,7 +10646,7 @@ impl _extract_generic(
             and t == "property_declaration"
             and parent_class_nid
         {
-            for c in `node.children {
+            for c in typing.cast(object, `node).children {
                 if c.type
                     not in (
                         "named_type",
@@ -10716,7 +10716,7 @@ impl _extract_generic(
             }
             owner_nid: any = parent_class_nid or file_nid;
             seen_eq: any = False;
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 if not child.is_named {
                     seen_eq = seen_eq or operator.eq(child.type, "=");
                     continue;
@@ -10724,7 +10724,7 @@ impl _extract_generic(
                 if seen_eq {
                     initializer_nodes.append((owner_nid, child));
                 } elif child.type == "property_delegate" {
-                    for sub in child.children {
+                    for sub in typing.cast(object, child).children {
                         if sub.is_named {
                             initializer_nodes.append((owner_nid, sub));
                         }
@@ -10757,7 +10757,7 @@ impl _extract_generic(
                 }
             }
             pending_factory: tuple[str, str] | None = None;
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 if child.type in config.call_types {
                     initializer_nodes.append((parent_class_nid, child));
                     if prop_type is None {
@@ -10792,7 +10792,7 @@ impl _extract_generic(
             }
             comp_bodies: any = [
                 c
-                for c in `node.children
+                for c in typing.cast(object, `node).children
                 if c.type in ("computed_property", "willset_didset_block")
             ];
             if comp_bodies and prop_name {
@@ -10825,7 +10825,7 @@ impl _extract_generic(
             }
         }
         if ts_mod == "tree_sitter_scala" and t == "self_type" and parent_class_nid {
-            named: any = [c for c in `node.children if c.is_named];
+            named: any = [c for c in typing.cast(object, `node).children if c.is_named];
             type_node = named[1] if len(named) >= 2 else None;
             if type_node is not None {
                 line = `node.start_point[0] + 1;
@@ -10854,7 +10854,7 @@ impl _extract_generic(
             is_method: any = `any(
                 operator.eq(d.type, "function_declarator")
                     or d.type in ("pointer_declarator", "reference_declarator")
-                        and `any(operator.eq(c.type, "function_declarator") for c in d.children)
+                        and `any(operator.eq(c.type, "function_declarator") for c in typing.cast(object, d).children)
                 for d in decls,
             );
             type_node = `node.child_by_field_name("type");
@@ -10920,7 +10920,7 @@ impl _extract_generic(
                 }
                 ruby_singleton_context_depth += 1;
                 try {
-                    for child in body.children {
+                    for child in typing.cast(object, body).children {
                         walk(child, parent_class_nid=parent_class_nid);
                     }
                 } finally {
@@ -10943,7 +10943,7 @@ impl _extract_generic(
             } else {
                 name_node = `node.child_by_field_name(config.name_field);
                 if name_node is None {
-                    for child in `node.children {
+                    for child in typing.cast(object, `node).children {
                         if child.type in config.name_fallback_child_types {
                             name_node = child;
                             break;
@@ -11027,7 +11027,7 @@ impl _extract_generic(
                         ) as any;
                         csharp_group_key: any = csharp_sig;
                         explicit = next(
-                            (c for c in `node.children if c.type == "explicit_interface_specifier"),
+                            (c for c in typing.cast(object, `node).children if c.type == "explicit_interface_specifier"),
                             None,
                         );
                         if explicit is not None {
@@ -11242,7 +11242,7 @@ impl _extract_generic(
                 if params_node is not None {
                     type_nodes: any = [
                         p.child_by_field_name("type")
-                        for p in params_node.children
+                        for p in typing.cast(object, params_node).children
                         if p.type == "parameter"
                     ];
                     type_nodes.append(params_node.child_by_field_name("type"));
@@ -11325,13 +11325,13 @@ impl _extract_generic(
             if ts_mod == "tree_sitter_java" {
                 params_node = `node.child_by_field_name("parameters");
                 if params_node is not None {
-                    for p in params_node.children {
+                    for p in typing.cast(object, params_node).children {
                         if p.type == "formal_parameter" {
                             type_node = p.child_by_field_name("type");
                         } elif p.type == "spread_parameter" {
                             type_node = next(
                                 (c
-                                for c in p.children
+                                for c in typing.cast(object, p).children
                                 if c.is_named
                                     and c.type not in ("modifiers", "variable_declarator")),
                                 None,
@@ -11383,14 +11383,14 @@ impl _extract_generic(
 
             if ts_mod == "tree_sitter_php" {
                 params_container: any = None;
-                for c in `node.children {
+                for c in typing.cast(object, `node).children {
                     if c.type == "formal_parameters" {
                         params_container = c;
                         break;
                     }
                 }
                 if params_container is not None {
-                    for p in params_container.children {
+                    for p in typing.cast(object, params_container).children {
                         if p.type
                             not in (
                                 "simple_parameter",
@@ -11402,7 +11402,7 @@ impl _extract_generic(
                         }
                         is_promoted: any = operator.eq(p.type, "property_promotion_parameter");
                         type_node = None;
-                        for sub in p.children {
+                        for sub in typing.cast(object, p).children {
                             if sub.type
                                 in (
                                     "named_type",
@@ -11472,19 +11472,19 @@ impl _extract_generic(
 
             if ts_mod == "tree_sitter_kotlin" {
                 params_container = None;
-                for c in `node.children {
+                for c in typing.cast(object, `node).children {
                     if c.type == "function_value_parameters" {
                         params_container = c;
                         break;
                     }
                 }
                 if params_container is not None {
-                    for p in params_container.children {
+                    for p in typing.cast(object, params_container).children {
                         if p.type != "parameter" {
                             continue;
                         }
                         param_type_node: any = None;
-                        for sub in p.children {
+                        for sub in typing.cast(object, p).children {
                             if sub.type in ("user_type", "nullable_type", "type_reference") {
                                 param_type_node = sub;
                                 break;
@@ -11524,7 +11524,7 @@ impl _extract_generic(
             }
 
             if ts_mod == "tree_sitter_swift" {
-                for p in `node.children {
+                for p in typing.cast(object, `node).children {
                     if p.type != "parameter" {
                         continue;
                     }
@@ -11580,12 +11580,12 @@ impl _extract_generic(
             {
                 params_node = `node.child_by_field_name("parameters");
                 if params_node is not None {
-                    for p in params_node.children {
+                    for p in typing.cast(object, params_node).children {
                         if p.type != "required_parameter" {
                             continue;
                         }
                         has_modifier: any = `any(
-                            c.type in ("accessibility_modifier", "readonly") for c in p.children
+                            c.type in ("accessibility_modifier", "readonly") for c in typing.cast(object, p).children
                         );
                         if not has_modifier {
                             continue;
@@ -11596,7 +11596,7 @@ impl _extract_generic(
                             continue;
                         }
                         pname = _read_text(name_n, source);
-                        for tc in type_n.children {
+                        for tc in typing.cast(object, type_n).children {
                             if tc.type == "type_identifier" {
                                 ptype = _read_text(tc, source);
                                 if pname and ptype {
@@ -11640,7 +11640,7 @@ impl _extract_generic(
                 if decl is not None and decl.type == "function_declarator" {
                     params_node = decl.child_by_field_name("parameters");
                     if params_node is not None {
-                        for p in params_node.children {
+                        for p in typing.cast(object, params_node).children {
                             if p.type != "parameter_declaration" {
                                 continue;
                             }
@@ -11664,14 +11664,14 @@ impl _extract_generic(
 
             if ts_mod == "tree_sitter_scala" {
                 params_node = None;
-                for c in `node.children {
+                for c in typing.cast(object, `node).children {
                     if c.type == "parameters" {
                         params_node = c;
                         break;
                     }
                 }
                 if params_node is not None {
-                    for p in params_node.children {
+                    for p in typing.cast(object, params_node).children {
                         if p.type != "parameter" {
                             continue;
                         }
@@ -11702,7 +11702,7 @@ impl _extract_generic(
                         }
                     }
                 }
-                for c in `node.children {
+                for c in typing.cast(object, `node).children {
                     if c.type != "type_parameters" {
                         continue;
                     }
@@ -11804,20 +11804,20 @@ impl _extract_generic(
                     for lit in _kt_literals {
                         lit_line: any = lit.start_point[0] + 1;
                         lit_bases: list[tuple[str, str]] = [];
-                        for dchild in lit.children {
+                        for dchild in typing.cast(object, lit).children {
                             if dchild.type != "delegation_specifiers" {
                                 continue;
                             }
-                            for spec in dchild.children {
+                            for spec in typing.cast(object, dchild).children {
                                 if spec.type != "delegation_specifier" {
                                     continue;
                                 }
                                 relation = "implements";
                                 user_type_node = None;
-                                for sub in spec.children {
+                                for sub in typing.cast(object, spec).children {
                                     if sub.type == "constructor_invocation" {
                                         relation = "inherits";
-                                        for inner in sub.children {
+                                        for inner in typing.cast(object, sub).children {
                                             if inner.type == "user_type" {
                                                 user_type_node = inner;
                                                 break;
@@ -11830,7 +11830,7 @@ impl _extract_generic(
                                         break;
                                     }
                                     if sub.type == "explicit_delegation" {
-                                        for inner in sub.children {
+                                        for inner in typing.cast(object, sub).children {
                                             if inner.type == "user_type" {
                                                 user_type_node = inner;
                                                 break;
@@ -11858,10 +11858,10 @@ impl _extract_generic(
                             }
                         }
                         lit_body: any = next(
-                            (c for c in lit.children if c.type == "class_body"), None
+                            (c for c in typing.cast(object, lit).children if c.type == "class_body"), None
                         );
                         if lit_body is not None {
-                            for child in lit_body.children {
+                            for child in typing.cast(object, lit_body).children {
                                 walk(child, parent_class_nid=obj_nid);
                             }
                         }
@@ -11876,7 +11876,7 @@ impl _extract_generic(
                             continue;
                         }
                         if _jv_node.type == "object_creation_expression"
-                            and `any(operator.eq(c.type, "class_body") for c in _jv_node.children)
+                            and `any(operator.eq(c.type, "class_body") for c in typing.cast(object, _jv_node).children)
                         {
                             _jv_anon.append(_jv_node);
                             continue;
@@ -11895,10 +11895,10 @@ impl _extract_generic(
                         callable_def_nids.add(obj_nid);
                         callable_class_nids.add(obj_nid);
                         anon_body: any = next(
-                            (c for c in anon.children if c.type == "class_body"), None
+                            (c for c in typing.cast(object, anon).children if c.type == "class_body"), None
                         );
                         if anon_body is not None {
-                            for child in anon_body.children {
+                            for child in typing.cast(object, anon_body).children {
                                 walk(child, parent_class_nid=obj_nid);
                             }
                         }
@@ -12153,7 +12153,7 @@ impl _extract_generic(
                     } else {
                         owner_nid = _make_id(stem, inner_name);
                     }
-                    for child in `node.children {
+                    for child in typing.cast(object, `node).children {
                         if child.type != "decorator" {
                             continue;
                         }
@@ -12178,15 +12178,15 @@ impl _extract_generic(
                     }
                 }
             }
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 walk(child, parent_class_nid=parent_class_nid);
             }
             return;
         }
         if ts_mod == "tree_sitter_kotlin" and t == "companion_object" {
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 if child.type == "class_body" {
-                    for member in child.children {
+                    for member in typing.cast(object, child).children {
                         walk(member, parent_class_nid=parent_class_nid);
                     }
                 } else {
@@ -12196,19 +12196,19 @@ impl _extract_generic(
             return;
         }
         if t == "enum_body_declarations" {
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 walk(child, parent_class_nid=parent_class_nid);
             }
             return;
         }
         if t == "ERROR" {
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 walk(child, parent_class_nid=parent_class_nid);
             }
             return;
         }
         if ts_mod == "tree_sitter_cpp" and t == "template_declaration" {
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 walk(child, parent_class_nid=parent_class_nid);
             }
             return;
@@ -12219,10 +12219,10 @@ impl _extract_generic(
             and `node.child_by_field_name("receiver") is None
         {
             args = `node.child_by_field_name("arguments");
-            if args is not None and `any(c.type in config.function_types for c in args.children) {
-                for child in `node.children {
+            if args is not None and `any(c.type in config.function_types for c in typing.cast(object, args).children) {
+                for child in typing.cast(object, `node).children {
                     if child == args {
-                        for arg in args.children {
+                        for arg in typing.cast(object, args).children {
                             walk(
                                 arg,
                                 parent_class_nid=parent_class_nid
@@ -12237,7 +12237,7 @@ impl _extract_generic(
                 return;
             }
         }
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             walk(child, parent_class_nid=None);
         }
     }
@@ -12589,7 +12589,7 @@ impl _extract_generic(
     }
     def _python_dispatch_value_idents(coll_node) -> Generator[any, any, any] {
         if coll_node.type == "dictionary" {
-            for pair in coll_node.children {
+            for pair in typing.cast(object, coll_node).children {
                 if pair.type == "pair" {
                     val: any = pair.child_by_field_name("value");
                     if val is not None and val.type == "identifier" {
@@ -12598,7 +12598,7 @@ impl _extract_generic(
                 }
             }
         } else {
-            for el in coll_node.children {
+            for el in typing.cast(object, coll_node).children {
                 if el.type == "identifier" {
                     yield el;
                 }
@@ -12608,7 +12608,7 @@ impl _extract_generic(
     def _python_dispatch_value_attrs(coll_node) -> Generator[any, any, any] {
         if coll_node.type == "dictionary" {
             values: any = (p.child_by_field_name("value")
-            for p in coll_node.children
+            for p in typing.cast(object, coll_node).children
             if p.type == "pair");
         } else {
             values = iter(coll_node.children);
@@ -12649,7 +12649,7 @@ impl _extract_generic(
         if value_node.type == "identifier" {
             yield value_node;
         } elif value_node.type == "expression_list" {
-            for ch in value_node.children {
+            for ch in typing.cast(object, value_node).children {
                 if ch.type == "identifier" {
                     yield ch;
                 }
@@ -12667,7 +12667,7 @@ impl _extract_generic(
         }
         positional: any = [
             c
-            for c in args.children
+            for c in typing.cast(object, args).children
             if c.is_named and c.type not in ("keyword_argument", "comment")
         ];
         if len(positional) < 2 {
@@ -12675,11 +12675,11 @@ impl _extract_generic(
         }
         name_node: any = positional[1];
         if name_node.type != "string"
-            or `any(operator.eq(ch.type, "interpolation") for ch in name_node.children)
+            or `any(operator.eq(ch.type, "interpolation") for ch in typing.cast(object, name_node).children)
         {
             return None;
         }
-        content: any = next((ch for ch in name_node.children if ch.type == "string_content"), None);
+        content: any = next((ch for ch in typing.cast(object, name_node).children if ch.type == "string_content"), None);
         if content is None {
             return None;
         }
@@ -12689,7 +12689,7 @@ impl _extract_generic(
     def _php_class_const_scope(n) -> str | None {
         scope: any = n.child_by_field_name("scope");
         if scope is None {
-            for c in n.children {
+            for c in typing.cast(object, n).children {
                 if c.is_named and c.type in ("name", "qualified_name", "identifier") {
                     scope = c;
                     break;
@@ -12718,16 +12718,17 @@ impl _extract_generic(
         receiver_types: dict[str, str] | tuple | None = None,
         extra_locals: frozenset[str] = extra_locals_default_,
     ) {
-        ntype: any = `node.type;
+        wn = typing.cast(object, `node);
+        ntype = wn.type;
         if ntype in fn_boundary_types {
             if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
                 and ntype in _JS_DESCEND_TYPES
             {
-                body: any = `node.child_by_field_name("body");
+                body: any = wn.child_by_field_name("body");
                 if body is not None and body not in _tracked_body_ids {
                     closure_locals: any = extra_locals | _js_local_bound_names(`node, source);
                     child: any;
-                    for child in `node.children {
+                    for child in wn.children {
                         walk_calls(child, caller_nid, receiver_types, closure_locals);
                     }
                 }
@@ -12741,7 +12742,7 @@ impl _extract_generic(
         }
         _ruby_bare_self_send: any = False;
         if ts_mod == "tree_sitter_ruby" and ntype == "identifier" {
-            _parent: any = `node.parent;
+            _parent: any = wn.parent;
             _call_field: any = _parent is not None
                 and operator.eq(_parent.type, "call")
                 and `node
@@ -12765,7 +12766,7 @@ impl _extract_generic(
                 if _dynamic_import_js(
                     `node, source, caller_nid, str_path, edges, seen_dyn_import_pairs
                 ) {
-                    for child in `node.children {
+                    for child in wn.children {
                         walk_calls(child, caller_nid, receiver_types, extra_locals);
                     }
                     return;
@@ -12792,24 +12793,24 @@ impl _extract_generic(
                 self_receiver = "self";
             } elif ts_mod == "tree_sitter_swift" {
                 if ntype == "macro_invocation" {
-                    for child in `node.children {
+                    for child in wn.children {
                         if child.type == "simple_identifier" {
                             callee_name = _read_text(child, source);
                             break;
                         }
                     }
                 }
-                first: any = _swift_operand_tail(`node.children[0]) if `node.children else None;
+                first: any = _swift_operand_tail(wn.children[0]) if wn.children else None;
                 if ntype != "macro_invocation" and first {
                     if first.type == "simple_identifier" {
                         callee_name = _read_text(first, source);
                         self_receiver = "self";
                     } elif first.type == "navigation_expression" {
                         is_member_call = True;
-                        for child in first.children {
+                        for child in typing.cast(object, first).children {
                             if child.type == "navigation_suffix" {
                                 sc: any;
-                                for sc in child.children {
+                                for sc in typing.cast(object, child).children {
                                     if sc.type == "simple_identifier" {
                                         callee_name = _read_text(sc, source);
                                     }
@@ -12828,7 +12829,7 @@ impl _extract_generic(
                     }
                 }
             } elif ts_mod == "tree_sitter_kotlin" {
-                first = `node.children[0] if `node.children else None;
+                first = wn.children[0] if wn.children else None;
                 while first is not None and first.type == "unary_expression" {
                     first = first.child_by_field_name("argument");
                 }
@@ -12858,8 +12859,8 @@ impl _extract_generic(
                                 if not segments[0][:1].isupper()
                                 else None;
                         } else {
-                            head: any = next((c for c in first.children if c.is_named), None);
-                            parts: any = [c for c in head.children if c.is_named]
+                            head: any = next((c for c in typing.cast(object, first).children if c.is_named), None);
+                            parts: any = [c for c in typing.cast(object, head).children if c.is_named]
                                 if head is not None
                                 else [];
                             if head is not None
@@ -12882,7 +12883,7 @@ impl _extract_generic(
                     }
                 }
             } elif ts_mod == "tree_sitter_scala" {
-                first = `node.children[0] if `node.children else None;
+                first = wn.children[0] if wn.children else None;
                 if first {
                     if first.type == "identifier" {
                         callee_name = _read_text(first, source);
@@ -12904,7 +12905,7 @@ impl _extract_generic(
             } elif ts_mod == "tree_sitter_php"
                 and ntype == "object_creation_expression"
             {
-                for _oce_child in `node.children {
+                for _oce_child in wn.children {
                     if _oce_child.type in ("name", "qualified_name") {
                         _oce_text: any = _read_text(_oce_child, source).rsplit("\\", 1)[-1];
                         if _oce_text.lower() not in ("self", "static", "parent") {
@@ -12916,7 +12917,7 @@ impl _extract_generic(
             } elif ts_mod == "tree_sitter_c_sharp"
                 and ntype == "object_creation_expression"
             {
-                type_info: any = _read_csharp_type_name(`node.child_by_field_name("type"), source);
+                type_info: any = _read_csharp_type_name(wn.child_by_field_name("type"), source);
                 if type_info and type_info[0] {
                     callee_name = type_info[0];
                     if type_info[1] and type_info[2] {
@@ -12926,7 +12927,7 @@ impl _extract_generic(
             } elif ts_mod == "tree_sitter_c_sharp"
                 and ntype == "invocation_expression"
             {
-                fn_node: any = `node.child_by_field_name("function");
+                fn_node: any = wn.child_by_field_name("function");
                 member_parts: any = _csharp_member_call_parts(fn_node);
                 csharp_table: any = receiver_types if isinstance(receiver_types, `tuple) else None;
                 if member_parts is not None {
@@ -12957,14 +12958,14 @@ impl _extract_generic(
                                 and fname.type == "identifier"
                             {
                                 root_type: any = _csharp_scoped_receiver_type(
-                                    csharp_table, _read_text(inner, source), `node.start_byte
+                                    csharp_table, _read_text(inner, source), wn.start_byte
                                 );
                                 if isinstance(root_type, `str) {
                                     csharp_receiver_chain = [root_type, _read_text(fname, source)];
                                 } elif root_type is None
                                     and csharp_table is not None
                                     and not _csharp_receiver_is_declared(
-                                        csharp_table, _read_text(inner, source), `node.start_byte
+                                        csharp_table, _read_text(inner, source), wn.start_byte
                                     )
                                 {
                                     csharp_receiver_chain = [
@@ -12977,7 +12978,7 @@ impl _extract_generic(
                             inner = recv.child_by_field_name("expression");
                             if inner is not None and inner.type == "identifier" {
                                 elem_type: any = _csharp_scoped_receiver_type(
-                                    csharp_table, _read_text(inner, source) + "[]", `node.start_byte
+                                    csharp_table, _read_text(inner, source) + "[]", wn.start_byte
                                 );
                                 if isinstance(elem_type, `str) {
                                     csharp_receiver_chain = [elem_type];
@@ -13009,11 +13010,11 @@ impl _extract_generic(
                 } elif fn_node is not None and fn_node.type == "generic_name" {
                     callee_name = _csharp_bare_call_name(fn_node, source);
                 } else {
-                    name_node: any = `node.child_by_field_name("name");
+                    name_node: any = wn.child_by_field_name("name");
                     if name_node {
                         callee_name = _read_text(name_node, source);
                     } else {
-                        for child in `node.children {
+                        for child in wn.children {
                             if child.is_named {
                                 raw: any = _read_text(child, source);
                                 if "." in raw {
@@ -13037,7 +13038,7 @@ impl _extract_generic(
                         ma_name: any = member_parts[0];
                         if ma_name is not None and ma_name.type == "generic_name" {
                             tal_child: any;
-                            for tal_child in ma_name.children {
+                            for tal_child in typing.cast(object, ma_name).children {
                                 if tal_child.type == "type_argument_list" {
                                     call_tal = tal_child;
                                     break;
@@ -13045,7 +13046,7 @@ impl _extract_generic(
                             }
                         }
                     } elif fn_node.type == "generic_name" {
-                        for tal_child in fn_node.children {
+                        for tal_child in typing.cast(object, fn_node).children {
                             if tal_child.type == "type_argument_list" {
                                 call_tal = tal_child;
                                 break;
@@ -13054,8 +13055,8 @@ impl _extract_generic(
                     }
                     if call_tal is not None {
                         call_type_params: any = _csharp_type_parameters_in_scope(`node, source);
-                        call_line: any = `node.start_point[0] + 1;
-                        for call_arg in call_tal.children {
+                        call_line: any = wn.start_point[0] + 1;
+                        for call_arg in typing.cast(object, call_tal).children {
                             if not call_arg.is_named {
                                 continue;
                             }
@@ -13094,7 +13095,7 @@ impl _extract_generic(
                 }
             } elif ts_mod == "tree_sitter_php" {
                 if ntype == "function_call_expression" {
-                    func_node: any = `node.child_by_field_name("function");
+                    func_node: any = wn.child_by_field_name("function");
                     if func_node {
                         callee_name = _read_text(func_node, source);
                         if callee_name.lower() in _PHP_LANGUAGE_CONSTRUCTS {
@@ -13104,21 +13105,21 @@ impl _extract_generic(
                 } elif ntype == "scoped_call_expression" {
                     is_member_call = True;
                     is_scoped_call = True;
-                    name_node = `node.child_by_field_name("name");
+                    name_node = wn.child_by_field_name("name");
                     if name_node {
                         callee_name = _read_text(name_node, source);
                     }
-                    scope_node: any = `node.child_by_field_name("scope");
+                    scope_node: any = wn.child_by_field_name("scope");
                     if scope_node {
                         member_receiver = _read_text(scope_node, source);
                     }
                 } else {
                     is_member_call = True;
-                    name_node = `node.child_by_field_name("name");
+                    name_node = wn.child_by_field_name("name");
                     if name_node {
                         callee_name = _read_text(name_node, source);
                     }
-                    receiver: any = `node.child_by_field_name("object");
+                    receiver: any = wn.child_by_field_name("object");
                     if receiver is not None
                         and _read_text(receiver, source) == "$this"
                         and callee_name
@@ -13126,7 +13127,7 @@ impl _extract_generic(
                     {
                         self_receiver = "this";
                     }
-                    `obj: any = `node.child_by_field_name("object");
+                    `obj: any = wn.child_by_field_name("object");
                     if `obj is not None and `obj.type == "variable_name" {
                         member_receiver = _php_variable_text(`obj, source);
                     } elif `obj is not None and `obj.type == "member_access_expression" {
@@ -13142,7 +13143,7 @@ impl _extract_generic(
             } elif ts_mod == "tree_sitter_cpp" {
                 cpp_chain: any = [];
                 cpp_binding: any = None;
-                func_node = `node.child_by_field_name(config.call_function_field)
+                func_node = wn.child_by_field_name(config.call_function_field)
                     if config.call_function_field
                     else None;
                 if func_node {
@@ -13150,7 +13151,7 @@ impl _extract_generic(
                         callee_name = _cpp_call_name(func_node, source);
                         if callee_name
                             and `any(
-                                _span[0] <= `node.start_byte and `node.start_byte < _span[1]
+                                _span[0] <= wn.start_byte and wn.start_byte < _span[1]
                                 for _span in cpp_local_bindings.get(caller_nid, {}).get(
                                     callee_name, ()
                                 ),
@@ -13195,7 +13196,7 @@ impl _extract_generic(
                 }
             } elif ts_mod == "tree_sitter_java" {
                 if ntype == "object_creation_expression" {
-                    type_node: any = `node.child_by_field_name("type");
+                    type_node: any = wn.child_by_field_name("type");
                     if type_node is not None {
                         raw = _read_text(type_node, source).split("<", 1)[0].strip();
                         if raw {
@@ -13203,11 +13204,11 @@ impl _extract_generic(
                         }
                     }
                 } elif ntype == "method_invocation" {
-                    name_node = `node.child_by_field_name("name");
+                    name_node = wn.child_by_field_name("name");
                     if name_node is not None {
                         callee_name = _read_text(name_node, source);
                     }
-                    receiver = `node.child_by_field_name("object");
+                    receiver = wn.child_by_field_name("object");
                     if receiver is not None {
                         is_member_call = True;
                         if receiver.type == "identifier" {
@@ -13229,11 +13230,11 @@ impl _extract_generic(
                     }
                 }
             } elif ts_mod == "tree_sitter_ruby" {
-                meth: any = `node.child_by_field_name("method");
+                meth: any = wn.child_by_field_name("method");
                 if meth is not None {
                     callee_name = _read_text(meth, source);
                 }
-                recv = `node.child_by_field_name("receiver");
+                recv = wn.child_by_field_name("receiver");
                 if recv is None or recv.type == "self" {
                     self_receiver = "self";
                 }
@@ -13246,14 +13247,14 @@ impl _extract_generic(
                     }
                 }
             } else {
-                func_node = `node.child_by_field_name(config.call_function_field)
+                func_node = wn.child_by_field_name(config.call_function_field)
                     if config.call_function_field
                     else None;
                 if func_node is None and ntype == "new_expression" {
-                    func_node = `node.child_by_field_name("constructor");
+                    func_node = wn.child_by_field_name("constructor");
                 }
                 if ntype in _JSX_ELEMENT_TYPES {
-                    func_node = `node.child_by_field_name("name");
+                    func_node = wn.child_by_field_name("name");
                     if func_node is None
                         or func_node.type != "identifier"
                         or _read_text(func_node, source)[:1].islower()
@@ -13530,7 +13531,7 @@ impl _extract_generic(
                         "csharp_ctor_site": callee_name,
                         "arity": _csharp_creation_argc(`node),
                         "source_file": str_path,
-                        "source_location": f"L{`node.start_point[0] + 1}",
+                        "source_location": f"L{wn.start_point[0] + 1}",
                     });
                 }
                 external_stub_target: any = `bool(tgt_nid and not nid_to_sf.get(tgt_nid));
@@ -13538,7 +13539,7 @@ impl _extract_generic(
                     pair: any = (caller_nid, tgt_nid);
                     if preserve_call_sites or pair not in seen_call_pairs {
                         seen_call_pairs.add(pair);
-                        line: any = `node.start_point[0] + 1;
+                        line: any = wn.start_point[0] + 1;
                         edges.append({
                             "source": caller_nid,
                             "target": tgt_nid,
@@ -13561,7 +13562,7 @@ impl _extract_generic(
                             "callee": callee_name,
                             "is_member_call": is_member_call,
                             "source_file": str_path,
-                            "source_location": f"L{`node.start_point[0] + 1}",
+                            "source_location": f"L{wn.start_point[0] + 1}",
                             "receiver": swift_receiver or member_receiver,
                         };
                         if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
@@ -13578,7 +13579,7 @@ impl _extract_generic(
                             );
                         }
                         if ts_mod == "tree_sitter_python" and is_member_call {
-                            _fn: any = `node.child_by_field_name("function");
+                            _fn: any = wn.child_by_field_name("function");
                             _recv: any = _fn.child_by_field_name("object")
                                 if _fn is not None
                                 else None;
@@ -13622,17 +13623,17 @@ impl _extract_generic(
                             }
                         }
                         if ts_mod == "tree_sitter_python" {
-                            rc_entry["_python_call_site"] = [`node.start_byte, `node.end_byte];
+                            rc_entry["_python_call_site"] = [wn.start_byte, wn.end_byte];
                         }
                         if member_receiver == "super" and ts_mod == "tree_sitter_python" {
-                            _sfn: any = `node.child_by_field_name("function");
+                            _sfn: any = wn.child_by_field_name("function");
                             _sobj: any = _sfn.child_by_field_name("object")
                                 if _sfn is not None
                                 else None;
                             _sargs: any = _sobj.child_by_field_name("arguments")
                                 if _sobj is not None
                                 else None;
-                            if _sargs is not None and `any(c.is_named for c in _sargs.children) {
+                            if _sargs is not None and `any(c.is_named for c in typing.cast(object, _sargs).children) {
                                 rc_entry["_python_super_args"] = True;
                             }
                         }
@@ -13647,7 +13648,7 @@ impl _extract_generic(
                         }
                         if ts_mod == "tree_sitter_cpp" {
                             rc_entry["lang"] = "cpp";
-                            rc_entry["cpp_call_byte"] = `node.start_byte;
+                            rc_entry["cpp_call_byte"] = wn.start_byte;
                             rc_entry["cpp_call_scope"] = _cpp_lookup_scope(`node, source);
                             rc_entry["cpp_scoped_call"] = func_node is not None
                                 and operator.eq(func_node.type, "qualified_identifier");
@@ -13679,7 +13680,7 @@ impl _extract_generic(
                                 rc_entry["receiver_chain"] = csharp_receiver_chain;
                             }
                             receiver_type: any = _csharp_scoped_receiver_type(
-                                receiver_types, member_receiver, `node.start_byte
+                                receiver_types, member_receiver, wn.start_byte
                             );
                             if isinstance(receiver_type, `list) and receiver_type[0] == "member" {
                                 _: any;
@@ -13690,14 +13691,14 @@ impl _extract_generic(
                                     if isinstance(receiver_types, `tuple)
                                     else None;
                                 recv_t: any = _csharp_scoped_receiver_type(
-                                    csharp_scope, recv, `node.start_byte
+                                    csharp_scope, recv, wn.start_byte
                                 );
                                 if isinstance(recv_t, `str) {
                                     rc_entry["receiver_var_chain"] = [recv_t, member];
                                 } elif recv_t is None
                                     and csharp_scope is not None
                                     and not _csharp_receiver_is_declared(
-                                        csharp_scope, recv, `node.start_byte
+                                        csharp_scope, recv, wn.start_byte
                                     )
                                 {
                                     rc_entry["receiver_var_chain"] = [recv, member];
@@ -13712,7 +13713,7 @@ impl _extract_generic(
                                             if isinstance(receiver_types, `tuple)
                                             else None,
                                         recv,
-                                        `node.start_byte,
+                                        wn.start_byte,
                                     );
                                     if isinstance(recv_t, `str) {
                                         recv = recv_t;
@@ -13729,7 +13730,7 @@ impl _extract_generic(
                                 and not _csharp_receiver_is_declared(
                                     receiver_types if isinstance(receiver_types, `tuple) else None,
                                     member_receiver,
-                                    `node.start_byte,
+                                    wn.start_byte,
                                 )
                             {
                                 rc_entry["receiver_undeclared"] = True;
@@ -13792,12 +13793,12 @@ impl _extract_generic(
                 }
             }
             if ts_mod == "tree_sitter_python" {
-                args_node: any = `node.child_by_field_name("arguments");
+                args_node: any = wn.child_by_field_name("arguments");
                 if args_node is not None {
                     enclosing_locals: any = local_bound_names.get(caller_nid, frozenset())
                         | extra_locals;
                     arg: any;
-                    for arg in args_node.children {
+                    for arg in typing.cast(object, args_node).children {
                         if arg.type == "identifier" {
                             _emit_indirect_ref(arg, caller_nid, enclosing_locals, "argument");
                         } elif arg.type == "keyword_argument" {
@@ -13818,11 +13819,11 @@ impl _extract_generic(
                     _emit_indirect_by_name(ref_name, loc, caller_nid, "getattr");
                 }
             } elif ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript") {
-                args_node = `node.child_by_field_name("arguments");
+                args_node = wn.child_by_field_name("arguments");
                 if args_node is not None {
                     enclosing_locals = local_bound_names.get(caller_nid, frozenset())
                         | extra_locals;
-                    for arg in args_node.children {
+                    for arg in typing.cast(object, args_node).children {
                         if arg.type == "identifier" {
                             _emit_indirect_ref(arg, caller_nid, enclosing_locals, "argument");
                         }
@@ -13830,16 +13831,16 @@ impl _extract_generic(
                 }
             }
             if callee_name and callee_name in config.helper_fn_names {
-                args_node = `node.child_by_field_name("arguments");
+                args_node = wn.child_by_field_name("arguments");
                 first_key: str | None = None;
                 if args_node {
-                    for arg in args_node.children {
+                    for arg in typing.cast(object, args_node).children {
                         if arg.type != "argument" {
                             continue;
                         }
-                        for inner in arg.children {
+                        for inner in typing.cast(object, arg).children {
                             if inner.type == "string" {
-                                for sc in inner.children {
+                                for sc in typing.cast(object, inner).children {
                                     if sc.type == "string_content" {
                                         first_key = _read_text(sc, source);
                                         break;
@@ -13862,7 +13863,7 @@ impl _extract_generic(
                         pair3: any = (caller_nid, tgt_nid, relation);
                         if pair3 not in seen_helper_ref_pairs {
                             seen_helper_ref_pairs.add(pair3);
-                            line = `node.start_point[0] + 1;
+                            line = wn.start_point[0] + 1;
                             edges.append({
                                 "source": caller_nid,
                                 "target": tgt_nid,
@@ -13881,14 +13882,14 @@ impl _extract_generic(
                 and callee_name
                 and callee_name in config.container_bind_methods
             {
-                args_node = `node.child_by_field_name("arguments");
+                args_node = wn.child_by_field_name("arguments");
                 class_args: list[str] = [];
                 if args_node {
-                    for arg in args_node.children {
+                    for arg in typing.cast(object, args_node).children {
                         if arg.type != "argument" {
                             continue;
                         }
-                        for inner in arg.children {
+                        for inner in typing.cast(object, arg).children {
                             if inner.type == "class_constant_access_expression" {
                                 cls: any = _php_class_const_scope(inner);
                                 if cls {
@@ -13912,7 +13913,7 @@ impl _extract_generic(
                         pair3 = (contract_nid, impl_nid, "bound_to");
                         if pair3 not in seen_bind_pairs {
                             seen_bind_pairs.add(pair3);
-                            line = `node.start_point[0] + 1;
+                            line = wn.start_point[0] + 1;
                             edges.append({
                                 "source": contract_nid,
                                 "target": impl_nid,
@@ -13929,9 +13930,9 @@ impl _extract_generic(
             }
         }
         if ntype in config.static_prop_types {
-            scope_node = `node.child_by_field_name("scope");
+            scope_node = wn.child_by_field_name("scope");
             if scope_node is None {
-                for child in `node.children {
+                for child in wn.children {
                     if child.is_named and child.type in ("name", "qualified_name", "identifier") {
                         scope_node = child;
                         break;
@@ -13945,7 +13946,7 @@ impl _extract_generic(
                     pair3 = (caller_nid, tgt_nid, "uses_static_prop");
                     if pair3 not in seen_static_ref_pairs {
                         seen_static_ref_pairs.add(pair3);
-                        line = `node.start_point[0] + 1;
+                        line = wn.start_point[0] + 1;
                         edges.append({
                             "source": caller_nid,
                             "target": tgt_nid,
@@ -13970,7 +13971,7 @@ impl _extract_generic(
                     pair3 = (caller_nid, tgt_nid, "references_constant");
                     if pair3 not in seen_static_ref_pairs {
                         seen_static_ref_pairs.add(pair3);
-                        line = `node.start_point[0] + 1;
+                        line = wn.start_point[0] + 1;
                         edges.append({
                             "source": caller_nid,
                             "target": tgt_nid,
@@ -14006,12 +14007,12 @@ impl _extract_generic(
         }
         if ts_mod == "tree_sitter_python" and ntype == "assignment" {
             enclosing_locals = local_bound_names.get(caller_nid, frozenset()) | extra_locals;
-            for ident in _python_ref_value_idents(`node.child_by_field_name("right")) {
+            for ident in _python_ref_value_idents(wn.child_by_field_name("right")) {
                 _emit_indirect_ref(ident, caller_nid, enclosing_locals, "assignment");
             }
         } elif ts_mod == "tree_sitter_python" and ntype == "return_statement" {
             enclosing_locals = local_bound_names.get(caller_nid, frozenset()) | extra_locals;
-            value: any = next((c for c in `node.children if c.is_named), None);
+            value: any = next((c for c in wn.children if c.is_named), None);
             for ident in _python_ref_value_idents(value) {
                 _emit_indirect_ref(ident, caller_nid, enclosing_locals, "return");
             }
@@ -14019,7 +14020,7 @@ impl _extract_generic(
         if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
             and ntype == "catch_clause"
         {
-            param: any = `node.child_by_field_name("parameter");
+            param: any = wn.child_by_field_name("parameter");
             if param is not None {
                 caught: set[str] = set[any]();
                 _js_collect_pattern_idents(param, source, caught);
@@ -14037,7 +14038,7 @@ impl _extract_generic(
         if ts_mod in ("tree_sitter_javascript", "tree_sitter_typescript")
             and ntype == "for_in_statement"
         {
-            left: any = `node.child_by_field_name("left");
+            left: any = wn.child_by_field_name("left");
             if left is not None {
                 loop_locals: set[str] = set[any]();
                 _js_collect_pattern_idents(left, source, loop_locals);
@@ -14047,7 +14048,7 @@ impl _extract_generic(
             }
         }
 
-        for child in `node.children {
+        for child in wn.children {
             walk_calls(child, caller_nid, receiver_types, extra_locals);
         }
     }
@@ -14213,7 +14214,7 @@ impl _extract_generic(
                     _emit_indirect_by_name(ref_name, loc, file_nid, "getattr");
                 }
             }
-            for c in n.children {
+            for c in typing.cast(object, n).children {
                 _scan_module_dispatch(c);
             }
         }
@@ -14233,14 +14234,14 @@ impl _extract_generic(
             } elif n.type in ("call_expression", "new_expression") {
                 margs: any = n.child_by_field_name("arguments");
                 if margs is not None {
-                    for marg in margs.children {
+                    for marg in typing.cast(object, margs).children {
                         if marg.type == "identifier" {
                             _emit_indirect_ref(marg, file_nid, js_module_bound, "argument");
                         }
                     }
                 }
             }
-            for c in n.children {
+            for c in typing.cast(object, n).children {
                 _scan_js_module_dispatch(c);
             }
         }
@@ -14405,7 +14406,7 @@ impl _ts_mark_public_twins(`root, source: bytes, result: dict) {
             cls: any = n.parent.child_by_field_name("name");
             public: set[str] = set[any]();
             private: set[str] = set[any]();
-            for member in n.named_children {
+            for member in typing.cast(object, n).named_children {
                 if member.type
                     not in ("method_definition", "public_field_definition", "field_definition")
                 {
@@ -14448,7 +14449,7 @@ impl _ts_mark_public_twins(`root, source: bytes, result: dict) {
 }
 
 impl _python_decorator_name(deco_node, source: bytes) -> str | None {
-    for child in deco_node.children {
+    for child in typing.cast(object, deco_node).children {
         if not child.is_named {
             continue;
         }
@@ -14473,14 +14474,14 @@ impl _ts_decorator_target_name(expr, source: bytes) -> str | None {
         return None;
     }
     if expr.type == "parenthesized_expression" {
-        calls: any = [c for c in expr.named_children if c.type == "call_expression"];
+        calls: any = [c for c in typing.cast(object, expr).named_children if c.type == "call_expression"];
         if calls {
             return _ts_decorator_target_name(calls[-1], source);
         }
-        if `any(operator.eq(c.type, "ERROR") for c in expr.named_children) {
+        if `any(operator.eq(c.type, "ERROR") for c in typing.cast(object, expr).named_children) {
             return None;
         }
-        named: any = [c for c in expr.named_children if c.type != "ERROR"];
+        named: any = [c for c in typing.cast(object, expr).named_children if c.type != "ERROR"];
         return _ts_decorator_target_name(named[0], source) if named else None;
     }
     if expr.type == "call_expression" {
@@ -14508,7 +14509,7 @@ impl _ts_decorator_target_name(expr, source: bytes) -> str | None {
 }
 
 impl _ts_decorator_name(deco_node, source: bytes) -> str | None {
-    for child in deco_node.children {
+    for child in typing.cast(object, deco_node).children {
         if not child.is_named {
             continue;
         }
@@ -14527,7 +14528,7 @@ impl _ts_descendant_decorators(`node) -> list {
     out = [];
 
     def rec(n, top: bool) {
-        for child in n.children {
+        for child in typing.cast(object, n).children {
             ct: any = child.type;
             if ct == "decorator" {
                 out.append(child);
@@ -14560,14 +14561,14 @@ impl _ts_emit_decorator_edges(
         }
     }
     child: any;
-    for child in class_node.children {
+    for child in typing.cast(object, class_node).children {
         if child.type == "decorator" {
             emit(child, class_nid);
         }
     }
     parent: any = class_node.parent;
     if parent is not None and parent.type == "export_statement" {
-        for child in parent.children {
+        for child in typing.cast(object, parent).children {
             if child.type == "decorator" {
                 emit(child, class_nid);
             } elif child.type in ("class_declaration", "abstract_class_declaration") {
@@ -14575,11 +14576,11 @@ impl _ts_emit_decorator_edges(
             }
         }
     }
-    body: any = next((c for c in class_node.children if c.type == "class_body"), None);
+    body: any = next((c for c in typing.cast(object, class_node).children if c.type == "class_body"), None);
     if body is None {
         return;
     }
-    for member in body.children {
+    for member in typing.cast(object, body).children {
         mt: any = member.type;
         if mt == "decorator" {
             owner: any = class_nid;

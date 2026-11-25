@@ -29,6 +29,8 @@ import from pathlib { Path, PurePath }
 
 import from typing { Any, Callable, List, Tuple }
 
+import typing;
+
 glob _RECURSION_LIMIT: any = 10000;
 
 def _raise_recursion_limit;

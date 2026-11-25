@@ -14,7 +14,9 @@ impl _make_id(*parts_: str) -> str {
 }
 
 impl _read_text(`node, source: bytes) -> str {
-    return source[`node.start_byte:`node.end_byte].decode("utf-8", errors="replace");
+    n = typing.cast(object, `node);
+    src = typing.cast(object, source);
+    return src[n.start_byte:n.end_byte].decode("utf-8", errors="replace");
 }
 
 impl _read_source_bytes(path: Path, *, warn: bool = True) -> bytes {

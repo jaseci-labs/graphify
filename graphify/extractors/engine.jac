@@ -13,6 +13,8 @@ import re;
 
 import threading;
 
+import typing;
+
 import from unicodedata { normalize }
 
 import from pathlib { Path }

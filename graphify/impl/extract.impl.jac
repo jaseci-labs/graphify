@@ -600,7 +600,7 @@ impl _repoint_python_sys_path_imports(per_file, all_nodes, all_edges, `root) {
 impl _python_import_bindings(`node, source: bytes) -> list[tuple[str, str]] {
     bindings: list[tuple[str, str]] = [];
     past_import: any = False;
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type == "import" {
             past_import = True;
             continue;
@@ -687,7 +687,7 @@ impl _import_python(
     } except OSError {}
     type_only: any = _python_under_type_checking(`node, source);
     if t == "import_statement" {
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             if child.type in ("dotted_name", "aliased_import") {
                 raw: any = _read_text(child, source);
                 raw_module: any;
@@ -831,7 +831,7 @@ impl _import_js(
     if is_reexport {
         has_from: any = `any(
             operator.eq(child.type, "from") or operator.eq(_read_text(child, source), "from")
-            for child in `node.children
+            for child in typing.cast(object, `node).children
             if child.type in ("from", "identifier"),
         );
         if not has_from {
@@ -839,17 +839,17 @@ impl _import_js(
         }
     }
     is_type_only: any = `any(
-        operator.eq(child.type, "type") and not child.is_named for child in `node.children
+        operator.eq(child.type, "type") and not child.is_named for child in typing.cast(object, `node).children
     );
     resolved_path: "Path | None" = None;
     module_string: any = None;
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type == "string" {
             module_string = child;
             break;
         }
         if child.type == "import_require_clause" {
-            module_string = next((sub for sub in child.children if sub.type == "string"), None);
+            module_string = next((sub for sub in typing.cast(object, child).children if sub.type == "string"), None);
             break;
         }
     }
@@ -892,10 +892,10 @@ impl _import_js(
         line: any = `node.start_point[0] + 1;
 
         if is_reexport {
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 if child.type == "export_clause" {
                     spec: any;
-                    for spec in child.children {
+                    for spec in typing.cast(object, child).children {
                         if spec.type == "export_specifier" {
                             name_node: any = spec.child_by_field_name("name");
                             if name_node {
@@ -921,11 +921,11 @@ impl _import_js(
                 }
             }
         } else {
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 if child.type == "import_clause" {
-                    for sub in child.children {
+                    for sub in typing.cast(object, child).children {
                         if sub.type == "named_imports" {
-                            for spec in sub.children {
+                            for spec in typing.cast(object, sub).children {
                                 if spec.type == "import_specifier" {
                                     name_node = spec.child_by_field_name("name");
                                     if name_node {
@@ -982,7 +982,7 @@ impl _import_java(
         return ".".join(parts);
     }
 
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type in ("scoped_identifier", "identifier") {
             path_str: any = _walk_scoped(child);
             module_name: any = path_str.split(".")[-1].strip("*").strip(".")
@@ -1014,7 +1014,7 @@ impl _import_c(
     str_path: str,
     scope_stack: list[str] | None = None,
 ) {
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type in ("string_literal", "system_lib_string", "string") {
             raw: any = _read_text(child, source).strip("\"<> ");
             if child.type != "system_lib_string" {
@@ -1136,24 +1136,24 @@ impl _import_kotlin(
 ) {
     path_node: any = `node.child_by_field_name("path");
     if path_node is None {
-        path_node = next((c for c in `node.children if c.type == "qualified_identifier"), None);
+        path_node = next((c for c in typing.cast(object, `node).children if c.type == "qualified_identifier"), None);
     }
     if path_node is not None {
         raw: any = _read_text(path_node, source).strip();
     } else {
         raw = next(
-            (_read_text(c, source).strip() for c in `node.children if c.type == "identifier"), ""
+            (_read_text(c, source).strip() for c in typing.cast(object, `node).children if c.type == "identifier"), ""
         );
     }
     if not raw {
         return;
     }
-    if raw.endswith(".*") or raw == "*" or `any(operator.eq(c.type, "*") for c in `node.children) {
+    if raw.endswith(".*") or raw == "*" or `any(operator.eq(c.type, "*") for c in typing.cast(object, `node).children) {
         return;
     }
     alias: any = None;
     saw_as: any = False;
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if not saw_as {
             saw_as = operator.eq(child.type, "as");
         } elif child.type in ("identifier", "simple_identifier") {
@@ -1191,7 +1191,7 @@ impl _import_scala(
     str_path: str,
     scope_stack: list[str] | None = None,
 ) {
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type in ("stable_id", "identifier") {
             raw: any = _read_text(child, source);
             module_name: any = raw.split(".")[-1].strip("{} ");
@@ -1224,7 +1224,7 @@ impl _import_php(
 ) {
     saw_as: any = False;
     module_name: any = None;
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type == "as" {
             saw_as = True;
             continue;
@@ -1263,7 +1263,7 @@ impl _get_c_func_name(`node, source: bytes) -> str | None {
     if decl {
         return _get_c_func_name(decl, source);
     }
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type == "identifier" {
             return _read_text(child, source);
         }
@@ -1330,7 +1330,7 @@ impl _import_swift(
     scope_stack: list[str] | None = None,
 ) -> list[tuple[str, str]] {
     modules: list[tuple[str, str]] = [];
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type == "identifier" {
             raw: any = _read_text(child, source);
             tgt_nid: any = _make_id(raw);
@@ -1400,11 +1400,11 @@ impl _extract_python_rationale(path: Path, result: dict) {
         return;
     }
     sys_path_entries: list[str] = [];
-    for stmt in `root.children {
+    for stmt in typing.cast(object, `root).children {
         if stmt.type != "expression_statement" {
             continue;
         }
-        for child in stmt.children {
+        for child in typing.cast(object, stmt).children {
             if child.type == "call" {
                 fn: any = child.child_by_field_name("function");
                 if fn and fn.type == "attribute" {
@@ -1419,7 +1419,7 @@ impl _extract_python_rationale(path: Path, result: dict) {
                         {
                             args: any = child.child_by_field_name("arguments");
                             if args {
-                                for a in args.children {
+                                for a in typing.cast(object, args).children {
                                     if a.type in ("string", "concatenated_string") {
                                         val: any = source[a.start_byte:a.end_byte].decode(
                                             "utf-8", errors="replace"
@@ -1451,12 +1451,12 @@ impl _extract_python_rationale(path: Path, result: dict) {
         if not body_node {
             return None;
         }
-        for child in body_node.children {
+        for child in typing.cast(object, body_node).children {
             if child.type == "comment" {
                 continue;
             }
             if child.type == "expression_statement" {
-                for sub in child.children {
+                for sub in typing.cast(object, child).children {
                     if sub.type in ("string", "concatenated_string") {
                         text: any = source[sub.start_byte:sub.end_byte].decode(
                             "utf-8", errors="replace"
@@ -1519,7 +1519,7 @@ impl _extract_python_rationale(path: Path, result: dict) {
                     _add_rationale(ds[0], ds[1], nid);
                 }
                 child: any;
-                for child in body.children {
+                for child in typing.cast(object, body).children {
                     walk_docstrings(child, nid);
                 }
             }
@@ -1542,7 +1542,7 @@ impl _extract_python_rationale(path: Path, result: dict) {
             }
             return;
         }
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             walk_docstrings(child, parent_nid);
         }
     }

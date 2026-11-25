@@ -3,7 +3,7 @@ impl _python_param_names(params_node, source: bytes) -> set[str] {
     if params_node is None {
         return out;
     }
-    for child in params_node.children {
+    for child in typing.cast(object, params_node).children {
         if child.type == "identifier" {
             out.add(_read_text(child, source));
         } elif child.type
@@ -17,7 +17,7 @@ impl _python_param_names(params_node, source: bytes) -> set[str] {
         {
             name_n: any = child.child_by_field_name("name");
             if name_n is None {
-                name_n = next((c for c in child.children if c.type == "identifier"), None);
+                name_n = next((c for c in typing.cast(object, child).children if c.type == "identifier"), None);
             }
             if name_n is not None {
                 out.add(_read_text(name_n, source));
@@ -43,7 +43,7 @@ impl _python_param_shadow_checker(source: bytes) -> any {
                     names.add(_read_text(name, source));
                 }
             } elif kind == "global_statement" {
-                names.update(_read_text(c, source) for c in `node.named_children);
+                names.update(_read_text(c, source) for c in typing.cast(object, `node).named_children);
             } elif kind in ("import_statement", "import_from_statement") {
                 for item in `node.children_by_field_name("name") {
                     alias: any = item.child_by_field_name("alias");

@@ -2077,13 +2077,13 @@ impl _walk_js_tree(`node) -> Generator[any, any, any] {
 impl _js_module_specifier(`node, source: bytes) -> str | None {
     source_node: any = `node.child_by_field_name("source");
     if source_node is None and `node.type != "export_statement" {
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             if child.type == "string" {
                 source_node = child;
                 break;
             }
             if child.type == "import_require_clause" {
-                source_node = next((sub for sub in child.children if sub.type == "string"), None);
+                source_node = next((sub for sub in typing.cast(object, child).children if sub.type == "string"), None);
                 break;
             }
         }
@@ -2116,7 +2116,7 @@ impl _js_named_specifiers(`node, source: bytes, specifier_type: str) -> list[tup
 }
 
 impl _js_export_clause(`node) -> any {
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type == "export_clause" {
             return child;
         }
@@ -2125,15 +2125,15 @@ impl _js_export_clause(`node) -> any {
 }
 
 impl _js_export_statement_is_star(`node) -> bool {
-    return `any(operator.eq(child.type, "*") for child in `node.children);
+    return `any(operator.eq(child.type, "*") for child in typing.cast(object, `node).children);
 }
 
 impl _js_namespace_export_name(`node, source: bytes) -> str | None {
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type != "namespace_export" {
             continue;
         }
-        for sub in child.children {
+        for sub in typing.cast(object, child).children {
             if sub.type == "identifier" {
                 return _read_text(sub, source) or None;
             }
@@ -2147,7 +2147,7 @@ impl _js_lexical_aliases(`node, source: bytes) -> list[tuple[str, str]] {
     if `node.type != "lexical_declaration" {
         return aliases;
     }
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type != "variable_declarator" {
             continue;
         }
@@ -2172,7 +2172,7 @@ impl _js_exported_declaration_names(`node, source: bytes) -> list[str] {
 
     if declaration.type in ("lexical_declaration", "variable_declaration") {
         names.extend(alias for (alias, _target) in _js_lexical_aliases(declaration, source));
-        for declarator in declaration.named_children {
+        for declarator in typing.cast(object, declaration).named_children {
             if declarator.type != "variable_declarator" {
                 continue;
             }
@@ -2205,9 +2205,9 @@ impl _js_exported_declaration_names(`node, source: bytes) -> list[str] {
 }
 
 impl _js_default_import_name(`node, source: bytes) -> str | None {
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type == "import_clause" {
-            for sub in child.children {
+            for sub in typing.cast(object, child).children {
                 if sub.type == "identifier" {
                     return _read_text(sub, source);
                 }
@@ -2218,12 +2218,12 @@ impl _js_default_import_name(`node, source: bytes) -> str | None {
 }
 
 impl _js_namespace_import_name(`node, source: bytes) -> str | None {
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type == "import_clause" {
             sub: any;
-            for sub in child.children {
+            for sub in typing.cast(object, child).children {
                 if sub.type == "namespace_import" {
-                    for nested in sub.children {
+                    for nested in typing.cast(object, sub).children {
                         if nested.type == "identifier" {
                             return _read_text(nested, source) or None;
                         }
@@ -2231,7 +2231,7 @@ impl _js_namespace_import_name(`node, source: bytes) -> str | None {
                 }
             }
         } elif child.type == "namespace_import" {
-            for sub in child.children {
+            for sub in typing.cast(object, child).children {
                 if sub.type == "identifier" {
                     return _read_text(sub, source) or None;
                 }
@@ -2242,7 +2242,7 @@ impl _js_namespace_import_name(`node, source: bytes) -> str | None {
 }
 
 impl _js_default_export_name(`node, source: bytes) -> str | None {
-    if not `any(operator.eq(child.type, "default") for child in `node.children) {
+    if not `any(operator.eq(child.type, "default") for child in typing.cast(object, `node).children) {
         return None;
     }
     declaration: any = `node.child_by_field_name("declaration");
@@ -2265,9 +2265,9 @@ impl _js_default_object_members(path: Path) -> dict[str, tuple[str, str]] {
     source: any;
     root_node: any;
     (source, root_node) = parsed as any;
-    for `node in root_node.named_children {
+    for `node in typing.cast(object, root_node).named_children {
         if `node.type != "export_statement"
-            or not `any(operator.eq(child.type, "default") for child in `node.children)
+            or not `any(operator.eq(child.type, "default") for child in typing.cast(object, `node).children)
         {
             continue;
         }
@@ -2277,7 +2277,7 @@ impl _js_default_object_members(path: Path) -> dict[str, tuple[str, str]] {
         }
         members: dict[str, tuple[str, str]] = {};
         seen: set[str] = set[any]();
-        for prop in value.named_children {
+        for prop in typing.cast(object, value).named_children {
             if prop.type == "comment" {
                 continue;
             }
@@ -2296,7 +2296,7 @@ impl _js_default_object_members(path: Path) -> dict[str, tuple[str, str]] {
             }
             seen.add(name);
             if prop.type == "method_definition"
-                and not `any(child.type in ("get", "set") for child in prop.children)
+                and not `any(child.type in ("get", "set") for child in typing.cast(object, prop).children)
             {
                 members[name] = (f"{raw_name}()", f"L{prop.start_point[0] + 1}");
             }
@@ -2313,13 +2313,13 @@ impl _js_top_level_function_bodies(
     stem: any = _file_stem(path);
     top_nodes: list = [];
     `node: any;
-    for `node in root_node.children {
+    for `node in typing.cast(object, root_node).children {
         if `node.type == "export_statement"
-            and not `any(operator.eq(c.type, "string") for c in `node.children)
+            and not `any(operator.eq(c.type, "string") for c in typing.cast(object, `node).children)
         {
             top_nodes.extend(
                 c
-                for c in `node.children
+                for c in typing.cast(object, `node).children
                 if c.type in ("function_declaration", "lexical_declaration"),
             );
         } else {
@@ -2338,7 +2338,7 @@ impl _js_top_level_function_bodies(
         if `node.type != "lexical_declaration" {
             continue;
         }
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             if child.type != "variable_declarator" {
                 continue;
             }
@@ -2361,7 +2361,7 @@ impl _js_call_identifier(`node, source: bytes) -> str | None {
     }
     function_node: any = `node.child_by_field_name("function");
     if function_node is None {
-        for child in `node.children {
+        for child in typing.cast(object, `node).children {
             if child.is_named {
                 function_node = child;
                 break;
@@ -2376,7 +2376,7 @@ impl _js_call_identifier(`node, source: bytes) -> str | None {
 
 impl _ts_heritage_clause_entries(clause_node, source: bytes) -> list[str] {
     out: list[str] = [];
-    for child in clause_node.children {
+    for child in typing.cast(object, clause_node).children {
         if not child.is_named {
             continue;
         }
@@ -2388,7 +2388,7 @@ impl _ts_heritage_clause_entries(clause_node, source: bytes) -> list[str] {
         } elif child.type == "generic_type" {
             name_node: any = child.child_by_field_name("name");
             if name_node is None {
-                for sub in child.children {
+                for sub in typing.cast(object, child).children {
                     if sub.type in ("type_identifier", "nested_type_identifier", "identifier") {
                         name_node = sub;
                         break;
@@ -2418,7 +2418,7 @@ impl _ts_collect_type_refs(`node, source: bytes, generic: bool, out: list[tuple[
     t: any = `node.type;
     if t == "type_annotation" {
         c: any;
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _ts_collect_type_refs(c, source, generic, out);
             }
@@ -2447,7 +2447,7 @@ impl _ts_collect_type_refs(`node, source: bytes, generic: bool, out: list[tuple[
                 out.append((text, "generic_arg" if generic else "type"));
             }
         } else {
-            for c in `node.children {
+            for c in typing.cast(object, `node).children {
                 if c.type in ("type_identifier", "nested_type_identifier") {
                     text = _read_text(c, source).rsplit(".", 1)[-1];
                     if text and text not in _JS_PRIMITIVE_TYPES {
@@ -2457,9 +2457,9 @@ impl _ts_collect_type_refs(`node, source: bytes, generic: bool, out: list[tuple[
                 }
             }
         }
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.type == "type_arguments" {
-                for sub in c.children {
+                for sub in typing.cast(object, c).children {
                     if sub.is_named {
                         _ts_collect_type_refs(sub, source, True, out);
                     }
@@ -2469,7 +2469,7 @@ impl _ts_collect_type_refs(`node, source: bytes, generic: bool, out: list[tuple[
         return;
     }
     if `node.is_named {
-        for c in `node.children {
+        for c in typing.cast(object, `node).children {
             if c.is_named {
                 _ts_collect_type_refs(c, source, generic, out);
             }
@@ -2481,10 +2481,10 @@ impl _ts_walk_class_members(
     class_node, source: bytes, path: Path, class_nid: str, facts: _SymbolResolutionFacts
 ) {
     line: any = class_node.start_point[0] + 1;
-    for child in class_node.children {
+    for child in typing.cast(object, class_node).children {
         if child.type == "class_heritage" {
             saw_clause: any = False;
-            for clause in child.children {
+            for clause in typing.cast(object, child).children {
                 if clause.type == "extends_clause" {
                     saw_clause = True;
                     name: any;
@@ -2536,7 +2536,7 @@ impl _ts_walk_class_members(
         return;
     }
 
-    for member in body.children {
+    for member in typing.cast(object, body).children {
         m_line: any = member.start_point[0] + 1;
         if member.type in ("method_definition", "method_signature", "abstract_method_signature") {
             name_node: any = member.child_by_field_name("name");
@@ -2547,7 +2547,7 @@ impl _ts_walk_class_members(
             method_nid: any = _make_id(class_nid, method_name);
             params: any = member.child_by_field_name("parameters");
             if params is not None {
-                for p in params.children {
+                for p in typing.cast(object, params).children {
                     if p.type not in ("required_parameter", "optional_parameter") {
                         continue;
                     }
@@ -2579,7 +2579,7 @@ impl _ts_walk_class_members(
             }
         } elif member.type in ("public_field_definition", "property_signature") {
             type_anno = None;
-            for c in member.children {
+            for c in typing.cast(object, member).children {
                 if c.type == "type_annotation" {
                     type_anno = c;
                     break;
@@ -2621,7 +2621,7 @@ impl _js_require_call_and_specifier(value_node, source: bytes) -> any {
         return None;
     }
     raw: any = None;
-    for arg in args.children {
+    for arg in typing.cast(object, args).children {
         if arg.type == "string" {
             raw = _read_text(arg, source).strip("'\"` ");
             break;
@@ -2686,7 +2686,7 @@ impl _js_cjs_export_facts(`node, source: bytes, path: Path) -> list[_SymbolExpor
     if `node.type != "expression_statement" {
         return [];
     }
-    assign: any = next((c for c in `node.children if c.type == "assignment_expression"), None);
+    assign: any = next((c for c in typing.cast(object, `node).children if c.type == "assignment_expression"), None);
     if assign is None {
         return [];
     }
@@ -2707,7 +2707,7 @@ impl _js_cjs_export_facts(`node, source: bytes, path: Path) -> list[_SymbolExpor
             }
         } elif right.type == "object" {
             prop: any;
-            for prop in right.children {
+            for prop in typing.cast(object, right).children {
                 if prop.type == "shorthand_property_identifier" {
                     name: any = _read_text(prop, source);
                     if name {
@@ -2803,7 +2803,7 @@ impl _collect_js_symbol_resolution_facts(paths: list[Path], facts: _SymbolResolu
 
             if `node.type in ("lexical_declaration", "variable_declaration") {
                 child: any;
-                for child in `node.children {
+                for child in typing.cast(object, `node).children {
                     if child.type != "variable_declarator" {
                         continue;
                     }
@@ -2874,11 +2874,11 @@ impl _collect_js_symbol_resolution_facts(paths: list[Path], facts: _SymbolResolu
                     ),
                 );
             }
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 if child.type != "import_require_clause" {
                     continue;
                 }
-                local_node: any = next((c for c in child.children if c.type == "identifier"), None);
+                local_node: any = next((c for c in typing.cast(object, child).children if c.type == "identifier"), None);
                 if local_node is None {
                     continue;
                 }
@@ -2914,7 +2914,7 @@ impl _collect_js_symbol_resolution_facts(paths: list[Path], facts: _SymbolResolu
             raw_module = _js_module_specifier(`node, source);
             export_clause: any = _js_export_clause(`node);
             stmt_type_only: any = `any(
-                operator.eq(child.type, "type") and not child.is_named for child in `node.children
+                operator.eq(child.type, "type") and not child.is_named for child in typing.cast(object, `node).children
             );
             if raw_module is not None {
                 target_path = _resolve_js_module_path(raw_module, path.parent);
@@ -3039,9 +3039,9 @@ impl _parse_python_tree(path: Path) -> any {
 }
 
 impl _walk_python_tree(`node) -> Generator[any, any, any] {
-    stack: any = [`node];
+    stack = builtins.list((typing.cast(object, `node),));
     while stack {
-        current: any = stack.pop();
+        current = stack.pop();
         yield current;
         stack.extend(reversed(current.children));
     }
@@ -3050,7 +3050,7 @@ impl _walk_python_tree(`node) -> Generator[any, any, any] {
 impl _python_import_from_module(`node, source: bytes) -> tuple[int, str] | None {
     level: any = 0;
     module_name: any = "";
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type == "import" {
             break;
         }
@@ -3061,7 +3061,7 @@ impl _python_import_from_module(`node, source: bytes) -> tuple[int, str] | None 
             if remainder {
                 module_name = remainder;
             }
-            for sub in child.children {
+            for sub in typing.cast(object, child).children {
                 if sub.type == "dotted_name" {
                     module_name = _read_text(sub, source);
                 }
@@ -3079,7 +3079,7 @@ impl _python_import_from_module(`node, source: bytes) -> tuple[int, str] | None 
 impl _python_imported_names(`node, source: bytes) -> list[tuple[str, str]] {
     names: list[tuple[str, str]] = [];
     past_import: any = False;
-    for child in `node.children {
+    for child in typing.cast(object, `node).children {
         if child.type == "import" {
             past_import = True;
             continue;
@@ -3328,7 +3328,7 @@ impl _python_top_level_function_bodies(
 
     bodies: list[tuple[str, object]] = [];
     stem: any = _file_stem(path);
-    for top in root_node.children {
+    for top in typing.cast(object, root_node).children {
         `node: any = definition(top);
         if `node is None {
             continue;
@@ -3342,7 +3342,7 @@ impl _python_top_level_function_bodies(
         if `node.type == "function_definition" {
             bodies.append((_make_id(stem, name), body));
         } elif `node.type == "class_definition" {
-            for member in body.children {
+            for member in typing.cast(object, body).children {
                 method: any = definition(member);
                 if method is None or method.type != "function_definition" {
                     continue;
@@ -3362,10 +3362,11 @@ impl _python_top_level_function_bodies(
 }
 
 impl _python_call_identifier(`node, source: bytes) -> str | None {
-    if `node.type != "call" {
+    n = typing.cast(object, `node);
+    if n.type != "call" {
         return None;
     }
-    function_node: any = `node.child_by_field_name("function");
+    function_node = n.child_by_field_name("function");
     if function_node is not None and function_node.type == "identifier" {
         return _read_text(function_node, source);
     }
@@ -3408,7 +3409,8 @@ impl _collect_python_symbol_resolution_facts(
 
         `node: any;
         for `node in _walk_python_tree(root_node) {
-            if `node.type in ("import_statement", "import_from_statement") {
+            ntype = typing.cast(object, `node).type;
+            if ntype in ("import_statement", "import_from_statement") {
                 scope: any = `node.parent;
                 while scope is not None
                     and scope.type
@@ -3426,7 +3428,7 @@ impl _collect_python_symbol_resolution_facts(
                     }
                 }
             }
-            if `node.type != "import_from_statement" {
+            if ntype != "import_from_statement" {
                 continue;
             }
             module: any = _python_import_from_module(`node, source);
@@ -3667,18 +3669,21 @@ impl _resolve_cross_file_imports(
         ref_sources = {};
 
         def _text(n) -> str {
-            return source[n.start_byte:n.end_byte].decode("utf-8", errors="replace");
+            tn = typing.cast(object, n);
+            return typing.cast(object, source)[tn.start_byte:tn.end_byte].decode(
+                "utf-8", errors="replace"
+            );
         }
 
         def resolve_import(`node) {
             target_fq: str | None = None;
             absolute_module: str | None = None;
             child: any;
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 if child.type == "relative_import" {
                     prefix_text: any = "";
                     dotted_text: any = "";
-                    for sub in child.children {
+                    for sub in typing.cast(object, child).children {
                         if sub.type == "import_prefix" {
                             prefix_text = _text(sub);
                         } elif sub.type == "dotted_name" {
@@ -3733,7 +3738,7 @@ impl _resolve_cross_file_imports(
                 return;
             }
             past_import_kw: any = False;
-            for child in `node.children {
+            for child in typing.cast(object, `node).children {
                 if child.type == "import" {
                     past_import_kw = True;
                     continue;
@@ -3771,12 +3776,14 @@ impl _resolve_cross_file_imports(
         }
 
         def `visit(`node, current_nid: str | None) {
-            if `node.type == "import_from_statement" {
+            vnode = typing.cast(object, `node);
+            vtype = vnode.type;
+            if vtype == "import_from_statement" {
                 resolve_import(`node);
                 return;
             }
-            if current_nid is None and `node.type in ("class_definition", "function_definition") {
-                name_node: any = `node.child_by_field_name("name");
+            if current_nid is None and vtype in ("class_definition", "function_definition") {
+                name_node = vnode.child_by_field_name("name");
                 if name_node is not None {
                     mapped: any = name_to_nid.get(_text(name_node));
                     if mapped is not None {
@@ -3784,11 +3791,11 @@ impl _resolve_cross_file_imports(
                     }
                 }
             }
-            if `node.type == "identifier" and current_nid is not None {
+            if vtype == "identifier" and current_nid is not None {
                 slot: any = ref_sources.setdefault(_text(`node), {});
-                slot.setdefault(current_nid, `node.start_point[0] + 1);
+                slot.setdefault(current_nid, vnode.start_point[0] + 1);
             }
-            for child in `node.children {
+            for child in typing.cast(object, vnode).children {
                 `visit(child, current_nid);
             }
         }
@@ -4542,7 +4549,7 @@ impl _java_import_rows(root_node, source: bytes) -> list[tuple[str, str, int]] {
             }
             rows.append((last, imp_pkg, n.start_point[0] + 1));
         }
-        for child in n.children {
+        for child in typing.cast(object, n).children {
             walk(child);
         }
     }
@@ -4794,7 +4801,7 @@ impl _resolve_java_type_references(
                     imps[simple] = body;
                 }
             }
-            for child in n.children {
+            for child in typing.cast(object, n).children {
                 walk(child);
             }
         }
@@ -5061,7 +5068,7 @@ impl _resolve_php_type_references(
             target: any = None;
             alias: any = None;
             saw_as: any = False;
-            for c in clause.children {
+            for c in typing.cast(object, clause).children {
                 if c.type in ("function", "const") {
                     return;
                 }
@@ -5089,7 +5096,7 @@ impl _resolve_php_type_references(
             t: any = n.type;
             if t == "namespace_definition" {
                 c: any;
-                for c in n.children {
+                for c in typing.cast(object, n).children {
                     if c.type == "namespace_name" {
                         namespaces.append(_read_text(c, source));
                         break;
@@ -5098,7 +5105,7 @@ impl _resolve_php_type_references(
             } elif t == "namespace_use_declaration" {
                 prefix: any = "";
                 group: any = None;
-                for c in n.children {
+                for c in typing.cast(object, n).children {
                     if c.type == "namespace_name" {
                         prefix = _read_text(c, source);
                     } elif c.type == "namespace_use_group" {
@@ -5108,7 +5115,7 @@ impl _resolve_php_type_references(
                     }
                 }
                 if group is not None {
-                    for c in group.children {
+                    for c in typing.cast(object, group).children {
                         if c.type == "namespace_use_clause" {
                             _record_use_clause(c, prefix);
                         }
@@ -5117,26 +5124,26 @@ impl _resolve_php_type_references(
                 return;
             } elif t == "class_declaration" {
                 child: any;
-                for child in n.children {
+                for child in typing.cast(object, n).children {
                     if child.type == "base_clause" {
                         sub: any;
-                        for sub in child.children {
+                        for sub in typing.cast(object, child).children {
                             if sub.type in ("name", "qualified_name") {
                                 _record_raw("inherits", _read_text(sub, source));
                             }
                         }
                     } elif child.type == "class_interface_clause" {
-                        for sub in child.children {
+                        for sub in typing.cast(object, child).children {
                             if sub.type in ("name", "qualified_name") {
                                 _record_raw("implements", _read_text(sub, source));
                             }
                         }
                     } elif child.type == "declaration_list" {
-                        for member in child.children {
+                        for member in typing.cast(object, child).children {
                             if member.type != "use_declaration" {
                                 continue;
                             }
-                            for sub in member.children {
+                            for sub in typing.cast(object, member).children {
                                 if sub.type in ("name", "qualified_name") {
                                     _record_raw("mixes_in", _read_text(sub, source));
                                 }
@@ -5145,7 +5152,7 @@ impl _resolve_php_type_references(
                     }
                 }
             }
-            for child in n.children {
+            for child in typing.cast(object, n).children {
                 walk(child);
             }
         }

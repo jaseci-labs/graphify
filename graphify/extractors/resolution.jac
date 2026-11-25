@@ -1,6 +1,10 @@
 import importlib;
 
 import operator;
+
+import typing;
+
+import builtins;
 import from __future__ { annotations }
 
 import from typing { Any, Callable }

@@ -406,12 +406,12 @@ impl _relativize_source_files_in(payload: dict, `root: Path) {
         return;
     }
     for bucket in ("nodes", "edges", "hyperedges", "raw_calls") {
-        for item in payload.get(bucket, []) {
+        for item in typing.cast(object, payload.get(bucket, [])) {
             if not isinstance(item, `dict) {
                 continue;
             }
             for key in ("source_file", "definition_file") {
-                source: any = item.get(key);
+                source = item.get(key);
                 if not source {
                     continue;
                 }
@@ -551,6 +551,7 @@ impl _rewrite_id_keyed_table_keys(payload: object, fn) {
 }
 
 impl _rewrite_strings(`obj: object, fn) {
+    rewrite = typing.cast(object, fn);
     if isinstance(`obj, `dict) {
         items: "Iterable" = `obj.items();
     } elif isinstance(`obj, `list) {
@@ -560,7 +561,7 @@ impl _rewrite_strings(`obj: object, fn) {
     }
     for (key, value) in `list(items) {
         if isinstance(value, `str) {
-            new: any = fn(value);
+            new: any = rewrite(value);
             if new != value {
                 `obj[key] = new;
             }
@@ -616,7 +617,7 @@ impl _absolutize_ids_in(payload: dict, path: "str | Path", `root: Path) {
     (_, id_restore, _, path_restore) = _portability_anchors(path, `root) as any;
 
     def restore(value: str) -> str {
-        if not value.startswith(_ROOT_MARKER) {
+        if not typing.cast(object, value).startswith(_ROOT_MARKER) {
             return value;
         }
         rest: any = value[len(_ROOT_MARKER):];
@@ -644,12 +645,12 @@ impl _absolutize_source_files_in(payload: dict, `root: Path) {
         return;
     }
     for bucket in ("nodes", "edges", "hyperedges", "raw_calls") {
-        for item in payload.get(bucket, []) {
+        for item in typing.cast(object, payload.get(bucket, [])) {
             if not isinstance(item, `dict) {
                 continue;
             }
             for key in ("source_file", "definition_file") {
-                source: any = item.get(key);
+                source = item.get(key);
                 if not source {
                     continue;
                 }

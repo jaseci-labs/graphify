@@ -1,5 +1,7 @@
 # MCP stdio server - exposes graph query tools to Claude and other agents
 from __future__ import annotations
+import builtins
+import functools
 import json
 import math
 import os
@@ -2925,6 +2927,97 @@ def _neighbor_lines(G: nx.Graph, nid: str, rel_filter: str = "") -> list[str]:
     return lines
 
 
+async def _warm_graph(resolve, load, project_path) -> None:
+    """Load (or reload) the target graph in a worker thread (#5371).
+
+    ``_ctx_cache.load`` parses graph.json and builds its trigram index,
+    which takes seconds on a large graph. Run on the event loop, it stops
+    every other request, so the stale entry ``load`` hands concurrent
+    callers during a rebuild (#5177) was never reachable. After this
+    returns, ``_select_graph`` is a cache hit, or gets the current
+    entry while another call's rebuild is still in flight.
+
+    Only the load leaves the loop. ``_select_graph`` and the handler still
+    run with no await between them, so the shared ``G`` cannot be rebound
+    by another call in the middle of a handler.
+    """
+    # Imported here: the CLI imports this module without the `mcp` extra.
+    import anyio
+
+    await anyio.to_thread.run_sync(load, resolve(project_path))
+
+
+async def _after_warm(warm, project_path, run, *args):
+    """``run(*args)``, once ``warm`` (when given) has loaded the graph."""
+    if warm is not None:
+        await warm(project_path)
+    return run(*args)
+
+
+async def _call_tool(handlers, warm, select, name: str, arguments: dict):
+    from mcp import types
+
+    arguments = dict(arguments or {})
+    project_path = arguments.pop("project_path", None)
+    handler = handlers.get(name)
+    if not handler:
+        return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
+    try:
+        await warm(project_path)
+        select(project_path)  # bind G/communities to the target graph
+        return [types.TextContent(type="text", text=handler(arguments))]
+    except ToolError:
+        # A handler-signalled error: propagate so the result is marked
+        # isError:true (the mcp 1.x decorator wraps a raised exception into
+        # an error result; the 2.x path catches it in _on_call_tool).
+        raise
+    except Exception as exc:
+        return [types.TextContent(type="text", text=f"Error executing {name}: {exc}")]
+
+
+# mcp 2.x: handlers ride the Server constructor as on_* callbacks with the
+# (ctx, params) -> Result contract, so these wrap the same impls and build the
+# result models the 1.x decorators used to build for us.
+async def _on_list_tools(list_tools, ctx, params):
+    from mcp import types
+
+    return types.ListToolsResult(tools=await list_tools())
+
+
+async def _on_call_tool(call_tool, ctx, params):
+    from mcp import types
+
+    try:
+        content = await call_tool(params.name, dict(params.arguments or {}))
+    except ToolError as exc:
+        return types.CallToolResult(
+            content=[types.TextContent(type="text", text=str(exc))],
+            isError=True,
+        )
+    return types.CallToolResult(content=content)
+
+
+async def _on_list_resources(list_resources, ctx, params):
+    from mcp import types
+
+    return types.ListResourcesResult(resources=await list_resources())
+
+
+async def _on_read_resource(read_resource, ctx, params):
+    from mcp import types
+
+    text = await read_resource(params.uri)
+    mime = "text/markdown" if str(params.uri).startswith("graphify://report") else "text/plain"
+    return types.ReadResourceResult(
+        contents=[types.TextResourceContents(uri=params.uri, mimeType=mime, text=text)]
+    )
+
+
+async def _run_stdio(server, stdio_server) -> None:
+    async with stdio_server() as streams:
+        await server.run(streams[0], streams[1], server.create_initialization_options())
+
+
 def _build_server(graph_path: str):
     """Build the configured low-level MCP Server (shared by every transport).
 
@@ -2992,30 +3085,13 @@ def _build_server(graph_path: str):
         G, communities = _load_ctx(path)
         active_graph_path = str(Path(path).resolve())
 
-    async def _warm_graph(project_path) -> None:
-        """Load (or reload) the target graph in a worker thread (#5371).
-
-        ``_ctx_cache.load`` parses graph.json and builds its trigram index,
-        which takes seconds on a large graph. Run on the event loop, it stops
-        every other request, so the stale entry ``load`` hands concurrent
-        callers during a rebuild (#5177) was never reachable. After this
-        returns, ``_select_graph`` is a cache hit, or gets the current
-        entry while another call's rebuild is still in flight.
-
-        Only the load leaves the loop. ``_select_graph`` and the handler still
-        run with no await between them, so the shared ``G`` cannot be rebound
-        by another call in the middle of a handler.
-        """
-        # Imported here: the CLI imports this module without the `mcp` extra.
-        import anyio
-
-        await anyio.to_thread.run_sync(_load_ctx, _resolve_graph_path(project_path))
+    warm = functools.partial(_warm_graph, _resolve_graph_path, _load_ctx)
 
     # NOTE: no decorators here — the handlers below are plain coroutines,
     # bound to the Server at the END of this function in a version-aware way:
     # mcp 1.x exposes the @server.list_tools()/... decorator API, mcp 2.x
     # replaced it with on_list_tools=/... constructor callbacks.
-    async def list_tools() -> list[types.Tool]:
+    def list_tools_now() -> list[types.Tool]:
         _tools = [
             types.Tool(
                 name="query_graph",
@@ -3483,7 +3559,7 @@ def _build_server(graph_path: str):
                 pass
         return {cid: f"Community {cid}" for cid in communities}
 
-    async def list_resources() -> list[types.Resource]:
+    def list_resources_now() -> list[types.Resource]:
         # Plain-string URIs on purpose: mcp 1.x types the field as AnyUrl and
         # coerces strings, mcp 2.x types it as str and REJECTS AnyUrl objects.
         return [
@@ -3495,8 +3571,7 @@ def _build_server(graph_path: str):
             types.Resource(uri="graphify://questions", name="Suggested Questions", description="Suggested questions for this codebase", mimeType="text/plain"),
         ]
 
-    async def read_resource(uri: AnyUrl) -> str:
-        await _warm_graph(None)
+    def read_resource_now(uri: AnyUrl) -> str:
         _select_graph(None)  # resources read the server's default graph
         uri_str = str(uri)
         if uri_str == "graphify://report":
@@ -3547,23 +3622,12 @@ def _build_server(graph_path: str):
                 return f"Could not generate questions: {exc}"
         raise ValueError(f"Unknown resource: {uri_str}")
 
-    async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
-        arguments = dict(arguments or {})
-        project_path = arguments.pop("project_path", None)
-        handler = _handlers.get(name)
-        if not handler:
-            return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
-        try:
-            await _warm_graph(project_path)
-            _select_graph(project_path)  # bind G/communities to the target graph
-            return [types.TextContent(type="text", text=handler(arguments))]
-        except ToolError:
-            # A handler-signalled error: propagate so the result is marked
-            # isError:true (the mcp 1.x decorator wraps a raised exception into
-            # an error result; the 2.x path catches it in _on_call_tool).
-            raise
-        except Exception as exc:
-            return [types.TextContent(type="text", text=f"Error executing {name}: {exc}")]
+    # The handlers are coroutines: each loads its graph off the event loop
+    # first, then runs synchronously against it (see _after_warm).
+    list_tools = functools.partial(_after_warm, None, None, list_tools_now)
+    list_resources = functools.partial(_after_warm, None, None, list_resources_now)
+    read_resource = functools.partial(_after_warm, warm, None, read_resource_now)
+    call_tool = functools.partial(_call_tool, _handlers, warm, _select_graph)
 
     if hasattr(Server, "list_tools"):
         # mcp 1.x: decorator-based registration. The SDK wraps the raw returns
@@ -3577,29 +3641,6 @@ def _build_server(graph_path: str):
         # mcp 2.x: handlers ride the Server constructor as on_* callbacks with
         # the (ctx, params) -> Result contract, so wrap the same impls and
         # build the result models the 1.x decorators used to build for us.
-        async def _on_list_tools(ctx, params) -> types.ListToolsResult:
-            return types.ListToolsResult(tools=await list_tools())
-
-        async def _on_call_tool(ctx, params) -> types.CallToolResult:
-            try:
-                content = await call_tool(params.name, dict(params.arguments or {}))
-            except ToolError as exc:
-                return types.CallToolResult(
-                    content=[types.TextContent(type="text", text=str(exc))],
-                    isError=True,
-                )
-            return types.CallToolResult(content=content)
-
-        async def _on_list_resources(ctx, params) -> types.ListResourcesResult:
-            return types.ListResourcesResult(resources=await list_resources())
-
-        async def _on_read_resource(ctx, params) -> types.ReadResourceResult:
-            text = await read_resource(params.uri)
-            mime = "text/markdown" if str(params.uri).startswith("graphify://report") else "text/plain"
-            return types.ReadResourceResult(
-                contents=[types.TextResourceContents(uri=params.uri, mimeType=mime, text=text)]
-            )
-
         try:
             from importlib.metadata import version as _pkg_version
             _version = _pkg_version("graphifyy")
@@ -3608,10 +3649,10 @@ def _build_server(graph_path: str):
         server = Server(
             "graphify",
             version=_version,
-            on_list_tools=_on_list_tools,
-            on_call_tool=_on_call_tool,
-            on_list_resources=_on_list_resources,
-            on_read_resource=_on_read_resource,
+            on_list_tools=functools.partial(_on_list_tools, list_tools),
+            on_call_tool=functools.partial(_on_call_tool, call_tool),
+            on_list_resources=functools.partial(_on_list_resources, list_resources),
+            on_read_resource=functools.partial(_on_read_resource, read_resource),
         )
 
     return server
@@ -3627,70 +3668,71 @@ def serve(graph_path: str | None = None) -> None:
     import asyncio
 
     server = _build_server(graph_path)
-
-    async def main() -> None:
-        async with stdio_server() as streams:
-            await server.run(streams[0], streams[1], server.create_initialization_options())
-
     _filter_blank_stdin()
-    asyncio.run(main())
+    asyncio.run(_run_stdio(server, stdio_server))
 
 
-class _MCPASGIApp:
-    """Raw-ASGI wrapper around the Streamable HTTP session manager.
-
-    Passed to a Starlette ``Route`` as a class instance (not a function) so
-    Starlette treats it as an ASGI app: it serves the exact mount path for all
-    methods (GET/POST/DELETE) with no request/response wrapping and no
-    trailing-slash redirect — mirroring how FastMCP mounts the same manager.
-    """
-
-    def __init__(self, manager) -> None:
-        self._manager = manager
-
-    async def __call__(self, scope, receive, send) -> None:
-        await self._manager.handle_request(scope, receive, send)
+async def _mcp_asgi_call(self, scope, receive, send) -> None:
+    await self._manager.handle_request(scope, receive, send)
 
 
-class _ApiKeyMiddleware:
-    """Pure-ASGI API-key gate for the HTTP transport.
+def _mcp_asgi_init(self, manager) -> None:
+    self._manager = manager
 
-    Implemented as raw ASGI (not Starlette's BaseHTTPMiddleware) on purpose:
-    BaseHTTPMiddleware buffers responses and breaks the Streamable HTTP SSE
-    stream. This short-circuits with 401 before the request ever reaches the
-    session manager, leaving the streaming path untouched for authorized calls.
-    """
 
-    def __init__(self, app, api_key: str) -> None:
-        self.app = app
-        self._expected = api_key.encode("utf-8")
+# Raw-ASGI wrapper around the Streamable HTTP session manager.
+#
+# Passed to a Starlette ``Route`` as a class instance (not a function) so
+# Starlette treats it as an ASGI app: it serves the exact mount path for all
+# methods (GET/POST/DELETE) with no request/response wrapping and no
+# trailing-slash redirect — mirroring how FastMCP mounts the same manager.
+_MCPASGIApp = builtins.type("_MCPASGIApp", (), {
+    "__init__": _mcp_asgi_init, "__call__": _mcp_asgi_call,
+})
 
-    async def __call__(self, scope, receive, send) -> None:
-        if scope["type"] != "http":
-            await self.app(scope, receive, send)
-            return
-        import hmac
-        headers = dict(scope.get("headers") or [])
-        provided = headers.get(b"x-api-key")
-        if provided is None:
-            # RFC 6750: the auth scheme token is case-insensitive.
-            scheme, _, token = headers.get(b"authorization", b"").partition(b" ")
-            if scheme.lower() == b"bearer" and token:
-                provided = token.strip()
-        # Constant-time compare; reject when no key was supplied at all.
-        if provided is None or not hmac.compare_digest(provided, self._expected):
-            body = b'{"error": "unauthorized"}'
-            await send({
-                "type": "http.response.start",
-                "status": 401,
-                "headers": [
-                    (b"content-type", b"application/json"),
-                    (b"content-length", str(len(body)).encode("ascii")),
-                ],
-            })
-            await send({"type": "http.response.body", "body": body})
-            return
+
+async def _api_key_call(self, scope, receive, send) -> None:
+    if scope["type"] != "http":
         await self.app(scope, receive, send)
+        return
+    import hmac
+    headers = dict(scope.get("headers") or [])
+    provided = headers.get(b"x-api-key")
+    if provided is None:
+        # RFC 6750: the auth scheme token is case-insensitive.
+        scheme, _, token = headers.get(b"authorization", b"").partition(b" ")
+        if scheme.lower() == b"bearer" and token:
+            provided = token.strip()
+    # Constant-time compare; reject when no key was supplied at all.
+    if provided is None or not hmac.compare_digest(provided, self._expected):
+        body = b'{"error": "unauthorized"}'
+        await send({
+            "type": "http.response.start",
+            "status": 401,
+            "headers": [
+                (b"content-type", b"application/json"),
+                (b"content-length", str(len(body)).encode("ascii")),
+            ],
+        })
+        await send({"type": "http.response.body", "body": body})
+        return
+    await self.app(scope, receive, send)
+
+
+def _api_key_init(self, app, api_key: str) -> None:
+    self.app = app
+    self._expected = api_key.encode("utf-8")
+
+
+# Pure-ASGI API-key gate for the HTTP transport.
+#
+# Implemented as raw ASGI (not Starlette's BaseHTTPMiddleware) on purpose:
+# BaseHTTPMiddleware buffers responses and breaks the Streamable HTTP SSE
+# stream. This short-circuits with 401 before the request ever reaches the
+# session manager, leaving the streaming path untouched for authorized calls.
+_ApiKeyMiddleware = builtins.type("_ApiKeyMiddleware", (), {
+    "__init__": _api_key_init, "__call__": _api_key_call,
+})
 
 
 def _build_http_app(
@@ -3715,8 +3757,6 @@ def _build_http_app(
     to ``None`` in stateless mode, which has no sessions to reap.
     """
     try:
-        import contextlib
-
         from starlette.applications import Starlette
         from starlette.middleware import Middleware
         from starlette.routing import Route
@@ -3759,12 +3799,11 @@ def _build_http_app(
         session_idle_timeout=idle_timeout,
     )
 
-    @contextlib.asynccontextmanager
-    async def lifespan(_app):
+    def lifespan(_app):
         # The session manager owns an anyio task group that must wrap the whole
-        # server lifetime, so enter it here rather than per-request.
-        async with manager.run():
-            yield
+        # server lifetime, so enter it here rather than per-request: run() is
+        # itself the async context manager Starlette enters.
+        return manager.run()
 
     middleware = []
     if api_key:

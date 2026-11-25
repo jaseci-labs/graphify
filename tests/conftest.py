@@ -16,12 +16,12 @@ def _lay_built_package() -> None:
     a child process's PYTHONPATH at the repository root, find it through these
     links.
     """
-    import graphify
-
-    built = Path(graphify.__file__).resolve().parent
     repo = Path(__file__).resolve().parent.parent
     if (repo / "graphify").exists():
         return
+    import graphify
+
+    built = Path(graphify.__file__).resolve().parent
     for entry in [built, *built.parent.glob("_jac_*.py")]:
         try:
             (repo / entry.name).symlink_to(entry)
